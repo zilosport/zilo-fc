@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* منع تحديد النصوص وتأثيرات النقر المزعجة في الهواتف */
 * { 
     box-sizing: border-box; 
@@ -130,4 +131,120 @@ body {
 .nav-item { background: transparent; border: none; color: #8a99ad; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; transition: color 0.2s; }
 .nav-item i { font-size: 20px; }
 .nav-item span { font-size: 10px; font-weight: 600; }
+=======
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: #06080c;
+    color: #f0f2f5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 420px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+/* نظام إدارة الصفحات */
+.page { display: none; flex-direction: column; height: calc(100vh - 110px); overflow-y: auto; padding-top: 10px; }
+.page.active { display: flex; }
+.page-title { font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 5px; }
+.page-subtitle { color: #8a99ad; font-size: 13px; text-align: center; margin-bottom: 20px; }
+.section-title { font-size: 16px; font-weight: 700; margin: 20px 0 10px 5px; color: #8a99ad; }
+
+/* كرت حساب المستخدم الحقيقي أعلى الشاشة */
+.user-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #111622;
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid #1f293d;
+    width: fit-content;
+    margin: 0 auto 10px auto;
+}
+#user-avatar { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #4a90e2; object-fit: cover; }
+#user-name { font-size: 13px; font-weight: 600; color: #f0f2f5; }
+
+/* قسم الرصيد والتكبيس */
+.balance-section { text-align: center; margin-top: 10px; }
+.crypto-label { color: #8a99ad; font-size: 13px; letter-spacing: 2px; font-weight: 600; }
+#balance { font-size: 44px; font-weight: 800; margin-top: 5px; background: linear-gradient(135deg, #ffffff 0%, #a1b5cc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+.core-section { display: flex; justify-content: center; align-items: center; flex-grow: 1; }
+.star-core { 
+    width: 210px; height: 210px; border-radius: 50%; 
+    background: radial-gradient(circle, #1a273a 0%, #080d14 100%); 
+    border: 4px solid #4a90e2; cursor: pointer; position: relative; 
+    box-shadow: 0 0 40px rgba(74, 144, 226, 0.25); outline: none; transition: transform 0.05s;
+    display: flex; justify-content: center; align-items: center;
+}
+.star-core:active { transform: scale(0.94); box-shadow: 0 0 50px rgba(74, 144, 226, 0.6); }
+
+/* طائر الزرزور الدائري المتوهج */
+.starling-avatar {
+    width: 100px; height: 100px; border-radius: 50%;
+    background: linear-gradient(135deg, #2c3e50, #000000);
+    display: flex; justify-content: center; align-items: center;
+    border: 2px solid #6ba4e8; z-index: 2;
+    box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.2);
+}
+.starling-avatar i { font-size: 54px; color: #4a90e2; text-shadow: 0 0 15px #4a90e2; }
+.inner-pulse { width: 140px; height: 140px; background: #4a90e2; border-radius: 50%; position: absolute; filter: blur(25px); opacity: 0.15; z-index: 1; }
+
+.quick-referral-stats { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
+.q-stat { background: #111622; border: 1px solid #1f293d; padding: 10px 20px; border-radius: 25px; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #f0f2f5; }
+.q-stat i { color: #4a90e2; font-size: 16px; }
+.q-stat strong { color: #00ff9d; }
+
+/* صفحة نظام الإحالة الحقيقي */
+.invite-box { background: #111622; border: 1px solid #1f293d; border-radius: 16px; padding: 25px 15px; text-align: center; }
+.invite-big-icon { font-size: 48px; color: #4a90e2; margin-bottom: 10px; display: inline-block; }
+.link-container { display: flex; background: #080d14; border: 1px solid #2c3e50; border-radius: 8px; margin-top: 15px; overflow: hidden; }
+.link-container input { background: transparent; border: none; color: #8a99ad; padding: 10px; flex-grow: 1; font-size: 12px; outline: none; }
+.link-container button { background: #4a90e2; color: white; border: none; padding: 0 15px; cursor: pointer; }
+
+/* قائمة الأ bạn الأنيقة */
+.friends-list { display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
+.friend-card { background: #111622; border: 1px solid #1f293d; padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+.friend-meta { display: flex; align-items: center; gap: 12px; }
+.friend-avatar-box { width: 35px; height: 35px; background: #1f293d; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #4a90e2; font-weight: bold; }
+.friend-name { font-size: 14px; font-weight: 600; }
+.friend-profit { text-align: right; }
+.friend-profit p { font-size: 12px; color: #8a99ad; }
+.friend-profit span { font-size: 13px; color: #00ff9d; font-weight: bold; }
+.no-friends-msg { color: #8a99ad; font-size: 13px; text-align: center; padding: 20px; }
+
+.action-btn { background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%); color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2); }
+
+/* كروت المهام والمحفظة */
+.task-list { display: flex; flex-direction: column; gap: 12px; }
+.task-card { background: #111622; padding: 15px; border-radius: 12px; border: 1px solid #1f293d; display: flex; justify-content: space-between; align-items: center; }
+.task-info { display: flex; align-items: center; gap: 12px; }
+.task-icon { font-size: 26px; color: #4a90e2; }
+.task-info h4 { font-size: 14px; font-weight: 600; }
+.task-info p { color: #00ff9d; font-size: 12px; font-weight: bold; }
+.task-btn { background: #4a90e2; color: #fff; border: none; padding: 8px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 13px; }
+.task-btn.done { background: #1f293d; color: #8a99ad; cursor: not-allowed; }
+
+.wallet-box { background: #111622; border: 1px solid #1f293d; border-radius: 16px; padding: 30px 15px; text-align: center; margin-bottom: 20px; }
+.wallet-big-icon { font-size: 54px; color: #4a90e2; margin-bottom: 10px; display: inline-block; }
+.wallet-box p { color: #8a99ad; font-size: 13px; }
+
+/* شريط القائمة السفلي */
+.bottom-nav { display: flex; justify-content: space-around; background: #111622; padding: 10px 5px; border-radius: 16px; border: 1px solid #1f293d; }
+.nav-item { background: transparent; border: none; color: #8a99ad; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; transition: color 0.2s; }
+.nav-item i { font-size: 20px; }
+.nav-item span { font-size: 10px; font-weight: 600; }
+>>>>>>> 443c322294bcbd4b3738f51ab66bbee48194b646
 .nav-item.active { color: #4a90e2; }

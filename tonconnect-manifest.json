@@ -1,5 +1,12 @@
+<<<<<<< HEAD
 {
   "url": "https://StarlingCoin.github.io/starling-app/",
   "name": "Starling App",
   "iconUrl": "https://StarlingCoin.github.io/starling-app/user-avatar"
+=======
+{
+  "url": "https://StarlingCoin.github.io/starling-app/",
+  "name": "Starling App",
+  "iconUrl": "https://StarlingCoin.github.io/starling-app/user-avatar"
+>>>>>>> 443c322294bcbd4b3738f51ab66bbee48194b646
 }
