@@ -1,13 +1,20 @@
-// --- إعدادات التطبيق (استبدل هذه القيم ببياناتك الحقيقية) ---
-const CONFIG = {
-    SUPABASE_URL: "https://YOUR_PROJECT_ID.supabase.co",
-    SUPABASE_KEY: "YOUR_SUPABASE_ANON_KEY",
-    BOT_USERNAME: "YourStarlingBot", // معرف البوت بدون @
-    MANIFEST_URL: "https://yourdomain.com/tonconnect-manifest.json"
+// --- قراءة الإعدادات العالمية الممررة من المتصفح ---
+const CONFIG = window.APP_CONFIG || {
+    SUPABASE_URL: "", 
+    SUPABASE_KEY: "", 
+    BOT_USERNAME: "", 
+    MANIFEST_URL: "" 
 };
 
-// تهيئة الاتصال بـ Supabase
-const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+// تهيئة الاتصال بـ Supabase مع حماية الكود من التوقف
+let supabase = null;
+try {
+    if (CONFIG.SUPABASE_URL && !CONFIG.SUPABASE_URL.includes("YOUR_PROJECT_ID")) {
+        supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+    }
+} catch (error) {
+    console.error("فشل تهيئة Supabase:", error);
+}
 
 // تهيئة Telegram WebApp
 const tg = window.Telegram.WebApp;
@@ -16,93 +23,121 @@ if (tg) {
     tg.ready();
 }
 
-// جلب بيانات تيليجرام الحقيقية تلقائياً
-const telegramUser = tg.initDataUnsafe?.user || {
-    id: 123456789, // للحاسوب فقط
-    first_name: "Test",
+// جلب بيانات تيليجرام الحقيقية تلقائياً أو وضع بيانات تجريبية للمتصفح (الحاسوب)
+const telegramUser = tg?.initDataUnsafe?.user || {
+    id: 123456789, 
+    first_name: "مستخدم تجريبي",
     username: "test_user",
     photo_url: "https://via.placeholder.com/40"
 };
 
-const referrerId = tg.initDataUnsafe?.start_param ? tg.initDataUnsafe.start_param.replace('ref_', '') : null;
-let currentUserData = null;
+const referrerId = tg?.initDataUnsafe?.start_param ? tg.initDataUnsafe.start_param.replace('ref_', '') : null;
+let currentUserData = { balance: 0, telegram_id: telegramUser.id }; 
 let syncTimeout = null; 
+let pendingTaps = 0; // متغير تخزين النقرات المعلقة التي لم تُرسل للسيرفر بعد
 
-// بدء تشغيل التطبيق
+// بدء تشغيل التطبيق وجلب البيانات
 async function initializeApp() {
     if (!telegramUser) return;
 
-    // حقن الاسم والصورة في الواجهة
+    // حقن الاسم والصورة في الواجهة فوراً
     document.getElementById('user-name').innerText = telegramUser.first_name;
     if (telegramUser.photo_url) {
         document.getElementById('user-avatar').src = telegramUser.photo_url;
     }
 
-    // جلب أو إنشاء المستخدم في السيرفر
-    let { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('telegram_id', telegramUser.id)
-        .single();
+    // جلب أو إنشاء المستخدم في قاعدة البيانات الحقيقية
+    if (supabase) {
+        try {
+            let { data: user, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('telegram_id', telegramUser.id)
+                .single();
 
-    if (error && error.code === 'PGRST116') {
-        const newUser = {
-            telegram_id: telegramUser.id,
-            first_name: telegramUser.first_name,
-            username: telegramUser.username || null,
-            photo_url: telegramUser.photo_url || null,
-            balance: 0,
-            referred_by: referrerId ? parseInt(referrerId) : null
-        };
+            // إذا كان المستخدم جديداً (غير مسجل)، نقوم بإنشائه في الجداول
+            if (error && error.code === 'PGRST116') {
+                const newUser = {
+                    telegram_id: telegramUser.id,
+                    first_name: telegramUser.first_name,
+                    username: telegramUser.username || null,
+                    photo_url: telegramUser.photo_url || null,
+                    balance: 0,
+                    referred_by: referrerId ? parseInt(referrerId) : null
+                };
 
-        const { data: createdUser } = await supabase.from('users').insert([newUser]).select().single();
-        user = createdUser;
+                const { data: createdUser } = await supabase.from('users').insert([newUser]).select().single();
+                user = createdUser;
+            }
+
+            if (user) currentUserData = user;
+        } catch (dbError) {
+            console.error("خطأ أثناء جلب البيانات من السيرفر:", dbError);
+        }
     }
 
-    currentUserData = user;
+    // تحديث رصيد البداية في الواجهة
     document.getElementById('balance').innerText = currentUserData.balance.toLocaleString();
     
     setupReferralSystem();
-    fetchRealReferrals();
+    if (supabase) fetchRealReferrals();
     setupRealWallet();
 }
 
-// التكبيس مع المؤثرات البصرية والاهتزاز
+// التكبيس المحمي والآمن (Server-Side Anti-Cheat)
 function handleTap(event) {
     if (!currentUserData) return;
 
-    // 1. زيادة الرصيد محلياً
+    // 1. زيادة الرصيد محلياً فوراً (لكي لا يشعر المستخدم بأي تأخير أو ثقل)
     currentUserData.balance += 1;
+    pendingTaps += 1; // إضافة النقرة الحالية إلى عداد الانتظار
     document.getElementById('balance').innerText = currentUserData.balance.toLocaleString();
 
-    // 2. اهتزاز الهاتف
+    // 2. اهتزاز الهاتف داخل تيليجرام
     if (tg && tg.HapticFeedback) {
         tg.HapticFeedback.impactOccurred('medium');
     }
 
-    // 3. مؤثر طائر الزرزور الطائر
+    // 3. تأثير طائر الزرزور الطائر والمؤثر البصري للنقرة
     const floatingText = document.createElement('div');
     floatingText.classList.add('floating-tap');
     floatingText.innerHTML = '🐦 +1';
     
-    // تحديد مكان الضغطة
     floatingText.style.left = `${event.clientX}px`;
     floatingText.style.top = `${event.clientY}px`;
     document.body.appendChild(floatingText);
 
     setTimeout(() => { floatingText.remove(); }, 800);
 
-    // 4. الحفظ الآمن في السيرفر (Debounce)
-    clearTimeout(syncTimeout);
-    syncTimeout = setTimeout(async () => {
-        await supabase
-            .from('users')
-            .update({ balance: currentUserData.balance })
-            .eq('telegram_id', currentUserData.telegram_id);
-    }, 1000); 
+    // 4. الإرسال الآمن للسيرفر بنظام التجميع الذكي (Debounce)
+    if (supabase) {
+        clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(async () => {
+            const tapsToSend = pendingTaps;
+            if (tapsToSend === 0) return;
+            
+            pendingTaps = 0; 
+
+            try {
+                // استدعاء دالة RPC الآمنة من قاعدة البيانات
+                const { error } = await supabase.rpc('increment_balance', {
+                    user_tid: currentUserData.telegram_id,
+                    taps: tapsToSend
+                });
+
+                if (error) {
+                    console.error("فشل إرسال النقرات للسيرفر، سيتم المحاولة مجدداً:", error);
+                    pendingTaps += tapsToSend;
+                }
+            } catch (err) {
+                console.error("خطأ في الاتصال بالشبكة:", err);
+                pendingTaps += tapsToSend;
+            }
+        }, 1000); // تجميع كافة النقرات وإرسالها دفعة واحدة كل ثانية
+    }
 }
 
-// نظام المهام
+// نظام المهام وتحديث رصيدها
 async function completeTask(button, reward, taskUrl) {
     if (button.innerText === 'Done') return;
     if (tg) tg.openLink(taskUrl);
@@ -116,17 +151,24 @@ async function completeTask(button, reward, taskUrl) {
         button.innerText = "Done";
         button.style.color = "#00ff9d";
         
-        await supabase.from('users').update({ balance: currentUserData.balance }).eq('telegram_id', currentUserData.telegram_id);
+        if (supabase) {
+            await supabase
+                .from('users')
+                .update({ balance: currentUserData.balance })
+                .eq('telegram_id', currentUserData.telegram_id);
+        }
     }, 3000);
 }
 
-// نظام الإحالة (10% أرباح)
+// توليد رابط الإحالة الخاص بالمستخدم
 function setupReferralSystem() {
     const fullRefLink = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${currentUserData.telegram_id}`;
     document.getElementById('ref-link-input').value = fullRefLink;
 }
 
+// جلب قائمة الأصدقاء المسجلين من خلال المستخدم
 async function fetchRealReferrals() {
+    if (!supabase) return;
     let { data: referrals, error } = await supabase
         .from('users')
         .select('first_name, username, balance')
@@ -141,7 +183,7 @@ async function fetchRealReferrals() {
             container.innerHTML = "";
             referrals.forEach(friend => {
                 const nameDisplay = friend.username ? `@${friend.username}` : friend.first_name;
-                const commission = Math.floor(friend.balance * 0.1); 
+                const commission = Math.floor(friend.balance * 0.1); // حساب الـ 10% أرباح المكافأة بصرياً
                 
                 container.innerHTML += `
                     <div class="friend-card">
@@ -162,6 +204,7 @@ async function fetchRealReferrals() {
     }
 }
 
+// نسخ رابط الإحالة
 function copyRefLink() {
     const copyText = document.getElementById("ref-link-input");
     copyText.select();
@@ -169,39 +212,60 @@ function copyRefLink() {
     if (tg) tg.showAlert("Link copied! 🚀");
 }
 
+// مشاركة ودعوة الأصدقاء عبر رسائل تيليجرام
 function inviteFriend() {
     const refLink = document.getElementById("ref-link-input").value;
     const shareText = encodeURIComponent("Join Starling App! Tap the bird and mine $STAR tokens! 🐦🌟");
     if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${refLink}&text=${shareText}`);
 }
 
-// محفظة TON Connect الحقيقية
+// إعداد وربط محفظة TON Connect الحقيقية بالخلفية وحفظ العنوان
 function setupRealWallet() {
-    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-        manifestUrl: CONFIG.MANIFEST_URL,
-        buttonRootId: 'ton-connect-btn'
-    });
+    if (typeof TON_CONNECT_UI === 'undefined') {
+        console.error("مكتبة TON Connect UI لم يتم تحميلها بشكل صحيح.");
+        return;
+    }
+    try {
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: CONFIG.MANIFEST_URL,
+            buttonRootId: 'ton-connect-btn'
+        });
 
-    tonConnectUI.onStatusChange(async (wallet) => {
-        if (wallet) {
-            const rawAddress = wallet.account.address;
-            document.getElementById('wallet-status').innerHTML = `<span style='color: #00ff9d; font-weight: bold;'>Connected: ${rawAddress.slice(0,4)}...${rawAddress.slice(-4)}</span>`;
-            
-            await supabase.from('users').update({ wallet_address: rawAddress }).eq('telegram_id', currentUserData.telegram_id);
-        } else {
-            document.getElementById('wallet-status').innerText = "Click above to connect securely";
-        }
-    });
+        tonConnectUI.onStatusChange(async (wallet) => {
+            if (wallet) {
+                const rawAddress = wallet.account.address;
+                document.getElementById('wallet-status').innerHTML = `<span style='color: #00ff9d; font-weight: bold;'>Connected: ${rawAddress.slice(0,4)}...${rawAddress.slice(-4)}</span>`;
+                
+                if (supabase) {
+                    await supabase
+                        .from('users')
+                        .update({ wallet_address: rawAddress })
+                        .eq('telegram_id', currentUserData.telegram_id);
+                }
+            } else {
+                document.getElementById('wallet-status').innerText = "Click above to connect securely";
+            }
+        });
+    } catch(e) {
+        console.error("حدث خطأ أثناء إعداد محفظة TON:", e);
+    }
 }
 
-// التنقل بين الصفحات
+// التنقل البرمجي السلس بين الصفحات والأزرار السفلية
 function switchPage(pageId, element) {
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-    document.getElementById(`page-${pageId}`).classList.add('active');
-    element.classList.add('active');
     
-    if(pageId === 'friends' && currentUserData) fetchRealReferrals();
+    const targetPage = document.getElementById(`page-${pageId}`);
+    if(targetPage) {
+        targetPage.classList.add('active');
+    }
+    if(element) {
+        element.classList.add('active');
+    }
+    
+    if(pageId === 'friends' && currentUserData && supabase) fetchRealReferrals();
 }
 
+// تشغيل التطبيق بالكامل بمجرد تحميل المتصفح/تيليجرام للنافذة
 window.onload = initializeApp;
