@@ -2,37 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Starling App</title>
-    <!-- تلجرام SDK الرسمي -->
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- مكتبة Supabase الحقيقية للـ JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- مكتبة TON Connect الحقيقية للمحافظ -->
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <!-- الأيقونات الحديثة Remix Icon -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-container">
         
-        <!-- 1. الصفحة الرئيسية (التكبيس ومعلومات الحساب) -->
         <div id="page-home" class="page active">
-            <!-- كرت بيانات المستخدم الحقيقي من تيليجرام -->
             <div class="user-profile-header">
                 <img id="user-avatar" src="https://via.placeholder.com/40" alt="Avatar">
-                <span id="user-name">Loading Profile...</span>
+                <span id="user-name">Loading...</span>
             </div>
 
             <div class="balance-section">
-                <p class="crypto-label">$STAR Balance</p>
+                <p class="crypto-label">$STAR BALANCE</p>
                 <h1 id="balance">0</h1>
             </div>
             
             <div class="core-section">
-                <!-- زر الزرزور المطور للتكبيس -->
-                <button id="star-core" class="star-core" onclick="handleTap()">
+                <button id="star-core" class="star-core" onclick="handleTap(event)">
                     <div class="starling-avatar">
                         <i class="ri-twitter-fill"></i> 
                     </div>
@@ -40,7 +35,6 @@
                 </button>
             </div>
 
-            <!-- إحصائيات الإحالة السريعة أسفل التكبيس -->
             <div class="quick-referral-stats">
                 <div class="q-stat">
                     <i class="ri-group-line"></i>
@@ -49,58 +43,63 @@
             </div>
         </div>
 
-        <!-- 2. صفحة المهام -->
         <div id="page-tasks" class="page">
             <h2 class="page-title">Tasks</h2>
-            <p class="page-subtitle">Earn more $STAR by completing tasks</p>
+            <p class="page-subtitle">Earn more $STAR instantly</p>
             <div class="task-list">
+                <div class="task-card">
+                    <div class="task-info">
+                        <i class="ri-telegram-fill task-icon"></i>
+                        <div>
+                            <h4>Join our Channel</h4>
+                            <p>+5,000 $STAR</p>
+                        </div>
+                    </div>
+                    <button class="task-btn" onclick="completeTask(this, 5000, 'https://t.me/telegram')">Start</button>
+                </div>
                 <div class="task-card">
                     <div class="task-info">
                         <i class="ri-twitter-x-fill task-icon"></i>
                         <div>
-                            <h4>Follow our X account</h4>
-                            <p>+5,000 $STAR</p>
+                            <h4>Follow on X</h4>
+                            <p>+2,500 $STAR</p>
                         </div>
                     </div>
-                    <button class="task-btn" onclick="completeTask(this, 5000, 'https://x.com')">Start</button>
+                    <button class="task-btn" onclick="completeTask(this, 2500, 'https://x.com')">Start</button>
                 </div>
             </div>
         </div>
 
-        <!-- 3. صفحة دعوة الأصدقاء الحقيقية -->
         <div id="page-friends" class="page">
             <h2 class="page-title">Ref System</h2>
-            <p class="page-subtitle">Earn 10% from every tap your friends make!</p>
+            <p class="page-subtitle">Earn 10% from your friends' taps!</p>
             
             <div class="invite-box">
                 <i class="ri-gift-2-line invite-big-icon"></i>
                 <h3>Your Referral Link</h3>
                 <div class="link-container">
-                    <input type="text" id="ref-link-input" readonly value="Generating link...">
+                    <input type="text" id="ref-link-input" readonly value="Generating...">
                     <button onclick="copyRefLink()"><i class="ri-file-copy-line"></i></button>
                 </div>
             </div>
 
             <h3 class="section-title">My Referrals (<span id="friends-count-label">0</span>)</h3>
             <div class="friends-list" id="friends-list-container">
-                <p class="no-friends-msg">Loading your real-time referrals...</p>
+                <p class="no-friends-msg">Loading referrals...</p>
             </div>
             
             <button class="action-btn" onclick="inviteFriend()">Invite a Friend</button>
         </div>
 
-        <!-- 4. صفحة المحفظة الحقيقية -->
         <div id="page-wallet" class="page">
             <h2 class="page-title">Wallet</h2>
-            <p class="page-subtitle">Connect your real Telegram TON Wallet</p>
+            <p class="page-subtitle">Connect your TON Wallet</p>
             <div class="wallet-box">
-                <!-- زر المحفظة الرسمي الذي توفره مكتبة TON Connect -->
                 <div id="ton-connect-btn" style="display: flex; justify-content: center; margin: 20px 0;"></div>
-                <p id="wallet-status" style="margin-top: 15px; color: #8a99ad;">Click above to link your wallet securely.</p>
+                <p id="wallet-status">Click above to connect securely</p>
             </div>
         </div>
 
-        <!-- القائمة السفلية للتنقل -->
         <div class="bottom-nav">
             <button class="nav-item active" onclick="switchPage('home', this)">
                 <i class="ri-home-5-line"></i>
@@ -121,9 +120,6 @@
         </div>
     </div>
 
-    <!-- استدعاء ملف الروابط والمفاتيح المنفصل أولاً لحمايتها -->
-    <script src="config.js"></script>
-    <!-- استدعاء منطق اللعبة والربط الحقيقي ثانياً -->
     <script src="app.js"></script>
 </body>
 </html>
