@@ -2,8 +2,9 @@
 // 🚀 ملف المهام (tasks.js)
 // ==========================================
 
-// تعريف المهام الأساسية ليتم سحبها في app.js
+// تعريف المهام الأساسية
 const initialTasksData = [
+    { id: "daily_checkin", textAr: "تسجيل الدخول اليومي", textEn: "Daily Check-in", points: 100, completed: false, url: "#" },
     { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zelo Sport on X", points: 500, completed: false, url: "https://x.com" },
     { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me" },
     { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com" },
@@ -21,7 +22,7 @@ function renderTasksPage(container) {
         <div style="background: rgba(28, 28, 34, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
             <div style="display: flex; flex-direction: column; gap: 5px;">
                 <span style="color: #fff; font-weight: bold; font-size: 0.95rem;">${getTaskName(task)}</span>
-                <span style="color: #ffd700; font-size: 0.8rem; background: rgba(255, 215, 0, 0.1); padding: 2px 8px; border-radius: 6px; width: fit-content;">+${task.points} ZILO</span>
+                <span style="color: #ffd700; font-size: 0.8rem; background: rgba(255, 215, 0, 0.1); padding: 2px 8px; border-radius: 6px; width: fit-content;">+${task.points} ZELO FC</span>
             </div>
             ${task.completed ? 
                 `<button disabled style="background: rgba(76, 175, 80, 0.2); color: #4caf50; border: 1px solid #4caf50; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: not-allowed;">${userState.lang === 'ar' ? 'مكتمل ✅' : 'Done ✅'}</button>` : 
@@ -41,25 +42,33 @@ function renderTasksPage(container) {
     `;
 }
 
-// وظيفة تنفيذ المهمة الوهمية (محاكاة)
+// وظيفة تنفيذ المهمة
 window.startTask = function(taskId) {
     const taskIndex = userState.tasks.findIndex(t => t.id === taskId);
     if(taskIndex > -1) {
         const task = userState.tasks[taskIndex];
-        // فتح الرابط
-        window.open(task.url, '_blank');
         
-        // محاكاة إكمال المهمة بعد العودة
-        setTimeout(() => {
-            userState.tasks[taskIndex].completed = true;
-            userState.points += task.points;
-            updateTopBar();
-            
-            // إعادة رسم الصفحة لتحديث الأزرار
-            const contentDiv = document.getElementById("main-content");
-            if (contentDiv) renderTasksPage(contentDiv);
-            
-            alert(userState.lang === 'ar' ? `تهانينا! حصلت على ${task.points} ZILO` : `Congrats! You earned ${task.points} ZILO`);
-        }, 3000);
+        if (taskId === 'daily_checkin') {
+            completeTaskAction(taskIndex, task);
+        } else {
+            window.open(task.url, '_blank');
+            setTimeout(() => {
+                completeTaskAction(taskIndex, task);
+            }, 3000);
+        }
+    }
+}
+
+// دالة مساعدة لتحديث البيانات بعد إتمام المهمة
+function completeTaskAction(index, task) {
+    if (!userState.tasks[index].completed) {
+        userState.tasks[index].completed = true;
+        userState.points += task.points;
+        updateTopBar();
+        
+        const contentDiv = document.getElementById("main-content");
+        if (contentDiv) renderTasksPage(contentDiv);
+        
+        alert(userState.lang === 'ar' ? `تهانينا! حصلت على ${task.points} ZELO FC` : `Congrats! You earned ${task.points} ZELO FC`);
     }
 }
