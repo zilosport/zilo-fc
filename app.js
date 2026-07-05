@@ -1,11 +1,10 @@
 // ==========================================
-// 🚀 تطبيق زيلو إف سي (Zilo FC) - الكود الأساسي (app.js)
-// تم إضافة الاستيراد الحديث (ES6 Modules)
+// 🚀 تطبيق زيلو إف سي (Zilo FC) - الكود المطور
 // ==========================================
 
 import { clubsData, i18n } from './data.js';
 
-// 2. إدارة بيانات المستخدم
+// 1. إدارة بيانات المستخدم مع الحفظ التلقائي
 let userState = {
     username: "Zilo Fan",
     userParam: "", 
@@ -27,14 +26,31 @@ let userState = {
     ]
 };
 
-const clubFansLeaderboard = {};
+// دالتان لحفظ واسترجاع حالة المستخدم محلياً لحين ربط الـ Backend
+function saveStateToStorage() {
+    localStorage.setItem('zilo_user_state', JSON.stringify(userState));
+}
 
+function loadStateFromStorage() {
+    const saved = localStorage.getItem('zilo_user_state');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            // دمج البيانات المحفوظة مع الهيكل الأساسي لتجنب المشاكل عند إضافة مهام جديدة مستقبلاً
+            userState = { ...userState, ...parsed };
+        } catch (e) {
+            console.error("Error loading state:", e);
+        }
+    }
+}
+
+const clubFansLeaderboard = {};
 let tonConnectUI = null;
 const tg = window.Telegram?.WebApp;
 
-// 4. دوال مساعدة للترجمة
+// 2. دوال مساعدة للترجمة
 window.t = function(key) {
-    return i18n[userState.lang][key] || key;
+    return i18n[userState.lang]?.[key] || key;
 }
 
 window.getClubName = function(club) {
@@ -45,12 +61,13 @@ window.getTaskName = function(task) {
     return userState.lang === 'ar' ? task.textAr : task.textEn;
 }
 
-// تغيير لغة التطبيق بالكامل
+// تغيير لغة التطبيق بالكامل وتحديث النوافذ بذكاء
 window.toggleLanguage = function() {
     userState.lang = userState.lang === 'ar' ? 'en' : 'ar';
-    document.documentElement.dir = userState.lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = userState.lang;
+    saveStateToStorage();
+    window.refreshDOMDirection();
     
+    // تحديث نصوص القائمة السفلية
     const navItems = document.querySelectorAll('.nav-item span:not(.icon)');
     if (navItems.length >= 5) {
         navItems[0].innerText = window.t('navHome');
@@ -61,6 +78,8 @@ window.toggleLanguage = function() {
     }
     
     window.updateTopBar();
+    
+    // إعادة ريندر الصفحة الحالية لتحديث النصوص فوراً
     const activeNav = document.querySelector(".nav-item.active");
     if (activeNav) {
         const pageId = activeNav.getAttribute("onclick").match(/'([^']+)'/)[1];
@@ -70,10 +89,17 @@ window.toggleLanguage = function() {
     }
 }
 
-// 5. تهيئة التطبيق (سحب بيانات تليجرام)
+window.refreshDOMDirection = function() {
+    document.documentElement.dir = userState.lang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = userState.lang;
+}
+
+// 3. تهيئة التطبيق
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
-        const tg = window.Telegram.WebApp;
+    // تحميل البيانات المحفوظة أولاً
+    loadStateFromStorage();
+
+    if (tg) {
         tg.ready();
         tg.expand();
         
@@ -83,22 +109,21 @@ document.addEventListener("DOMContentLoaded", () => {
             userState.userId = tgUser.id;
             userState.userParam = tgUser.username || tgUser.id;
             
-            if (tgUser.photo_url) {
-                userState.photoUrl = tgUser.photo_url;
-            }
+            if (tgUser.photo_url) userState.photoUrl = tgUser.photo_url;
             
-            if (tgUser.language_code && tgUser.language_code.startsWith('en')) {
+            // الاعتماد على لغة التليجرام فقط إذا لم يكن هناك خيار محفوظ مسبقاً للمستخدم
+            if (!localStorage.getItem('zilo_user_state') && tgUser.language_code && tgUser.language_code.startsWith('en')) {
                 userState.lang = 'en';
             }
         } else {
-            userState.username = "مستخدم تليجرام";
-            userState.userId = "غير معروف";
+            userState.username = userState.username || "مستخدم تليجرام";
+            userState.userId = userState.userId || "غير معروف";
         }
     }
 
-    document.documentElement.dir = userState.lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = userState.lang;
+    window.refreshDOMDirection();
 
+    // تهيئة محفظة TON
     try {
         tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://zilosport.github.io/zilo-fc/tonconnect-manifest.json',
@@ -115,14 +140,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 userState.walletAddress = null;
                 userState.walletBalance = "0.00";
             }
-            if (userState.hasLoggedIn && document.querySelector(".nav-item[onclick*='wallet']").classList.contains("active")) {
-                window.renderWalletPage(document.getElementById("main-content"));
+            saveStateToStorage();
+            
+            if (userState.hasLoggedIn) {
+                const walletNav = document.querySelector(".nav-item[onclick*='wallet']");
+                if (walletNav && walletNav.classList.contains("active")) {
+                    window.renderWalletPage(document.getElementById("main-content"));
+                }
             }
         });
     } catch (error) {
         console.error("TON Connect Error: ", error);
     }
 
+    // التوجيه بناءً على حالة تسجيل الدخول الاختيارية
     if (!userState.selectedClub) {
         window.renderLoginScreen();
     } else {
@@ -146,7 +177,7 @@ window.injectLangButton = function() {
     }
 }
 
-// 📱 6. شاشة تسجيل الدخول
+// 📱 4. شاشة اختيار النادي وتسجيل الدخول
 window.renderLoginScreen = function() {
     if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'none';
     if (document.querySelector('.bottom-nav')) document.querySelector('.bottom-nav').style.display = 'none';
@@ -179,12 +210,10 @@ window.renderLoginScreen = function() {
 window.selectClubAndLogin = function(clubId) {
     userState.selectedClub = clubId;
     userState.hasLoggedIn = true;
+    saveStateToStorage();
 
     if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'flex';
     if (document.querySelector('.bottom-nav')) document.querySelector('.bottom-nav').style.display = 'flex';
-
-    window.toggleLanguage(); 
-    window.toggleLanguage(); 
 
     window.updateTopBar();
     window.showPage('home');
@@ -221,7 +250,7 @@ window.showPage = function(pageId) {
     }
 }
 
-// 🏠 7. الرئيسية
+// 🏠 5. الصفحة الرئيسية
 window.renderHomePage = function(container) {
     const currentClub = clubsData.find(c => c.id === userState.selectedClub) || clubsData[0];
     
@@ -255,7 +284,7 @@ window.renderHomePage = function(container) {
     `;
 }
 
-// 🛠️ 8. المهام
+// 🛠️ 6. صفحة المهام
 window.renderTasksPage = function(container) {
     let tasksHtml = userState.tasks.map(task => `
         <div class="task-card" style="display: flex; justify-content: space-between; align-items: center; background: #1c1c22; margin: 8px 0; padding: 14px; border-radius: 12px; border: 1px solid #25252d;">
@@ -292,6 +321,7 @@ window.executeTask = function(taskId, url) {
         if (task && !task.completed) {
             task.completed = true;
             userState.points += task.points;
+            saveStateToStorage();
             alert(`${window.t('alertTaskDone')} ${task.points} ZILOFC.`);
             window.updateTopBar();
             window.showPage('tasks');
@@ -303,13 +333,14 @@ window.claimDaily = function() {
     if(!userState.dailyCheckInClaimed) {
         userState.dailyCheckInClaimed = true;
         userState.points += 200;
+        saveStateToStorage();
         alert(window.t('alertDailyDone'));
         window.updateTopBar();
         window.showPage('tasks');
     }
 }
 
-// 👥 9. الأصدقاء
+// 👥 7. صفحة الأصدقاء
 window.renderFriendsPage = function(container) {
     const referralLink = `https://t.me/ZiloFC_Bot/app?startapp=ref_${userState.userParam}`;
     let friendsListHtml = userState.referrals.map(friend => `
@@ -346,7 +377,7 @@ window.shareOnTelegram = function(link) {
     if (tg && tg.openTelegramLink) tg.openTelegramLink(shareUrl); else window.open(shareUrl, '_blank');
 }
 
-// 🏆 10. الترتيب
+// 🏆 8. متصدرين الأندية والجماهير
 window.renderLeaderboardPage = function(container) {
     let sortedClubs = [...clubsData].sort((a, b) => b.points - a.points);
     let leaderboardHtml = sortedClubs.map((club, index) => `
@@ -393,23 +424,25 @@ window.openSpecificClubFans = function(clubId) {
             <img src="${club.logo}" onerror="this.style.display='none'" style="width: 24px; height: 24px; object-fit: contain;"> ${window.t('topFansOf')} [ ${window.getClubName(club)} ]
         </h3>
         <p style="color:#aaa; font-size:0.8rem; margin-bottom:15px;">${window.t('topFansSub')}</p>
-        <table style="width: 100%; border-collapse: collapse; background: #121215; border-radius: 12px; overflow: hidden;">
-            <thead style="background: #1c1c22;">
-                <tr>
-                    <th style="padding: 12px; color: #aaa;">${window.t('colRank')}</th>
-                    <th style="padding: 12px; color: #aaa;">${window.t('colFan')}</th>
-                    <th style="padding: 12px; color: #aaa;">${window.t('colPoints')}</th>
-                    <th style="padding: 12px; color: #aaa;">${window.t('colActivity')}</th>
-                </tr>
-            </thead>
-            <tbody>${fansTableRows}</tbody>
-        </table>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; background: #121215; border-radius: 12px; overflow: hidden; min-width: 400px;">
+                <thead style="background: #1c1c22;">
+                    <tr>
+                        <th style="padding: 12px; color: #aaa;">${window.t('colRank')}</th>
+                        <th style="padding: 12px; color: #aaa;">${window.t('colFan')}</th>
+                        <th style="padding: 12px; color: #aaa;">${window.t('colPoints')}</th>
+                        <th style="padding: 12px; color: #aaa;">${window.t('colActivity')}</th>
+                    </tr>
+                </thead>
+                <tbody>${fansTableRows}</tbody>
+            </table>
+        </div>
     `;
 }
 
-// 👛 11. المحفظة
+// 👛 9. المحفظة (TON Connect)
 window.renderWalletPage = function(container) {
-    if (userState.walletConnected) {
+    if (userState.walletConnected && userState.walletAddress) {
         const shortAddress = `${userState.walletAddress.slice(0, 6)}...${userState.walletAddress.slice(-6)}`;
         container.innerHTML = `
             <div style="background: linear-gradient(145deg, #16161a, #1c1c22); border: 1px solid rgba(76, 175, 80, 0.4); border-radius: 20px; padding: 30px 20px; text-align: center;">
