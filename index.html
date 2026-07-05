@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zelo FC App</title>
+    <title>Zilo FC App</title>
     
     <!-- تضمين مكتبة تليجرام الأساسية لكي يعمل التطبيق ويسحب بيانات المستخدم -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -96,7 +96,7 @@
 <body>
 
     <!-- البار العلوي -->
-    <div class="top-bar" style="display: none;">
+    <div class="top-bar">
         <div id="club" style="font-size: 0.9rem; color: #aaa;">ناديك: 👑 <b>ريال مدريد</b></div>
         <div id="points" style="font-weight: bold; color: #ffd700;">🪙 عملة ZILO: 1,500</div>
     </div>
@@ -107,31 +107,34 @@
     </div>
 
     <!-- شريط الأزرار السفلي الثابت حقيقياً (Fixed) -->
-    <div class="bottom-nav" style="display: none;">
-        <button class="nav-item active" id="nav-home">
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="showPage('home')">
             <span class="icon">🏠</span>
             <span>الرئيسية</span>
         </button>
-        <button class="nav-item" id="nav-tasks">
+        <button class="nav-item" onclick="showPage('tasks')">
             <span class="icon">🛠️</span>
             <span>المهام</span>
         </button>
-        <button class="nav-item" id="nav-friends">
+        <button class="nav-item" onclick="showPage('friends')">
             <span class="icon">👥</span>
             <span>الأصدقاء</span>
         </button>
-        <button class="nav-item" id="nav-leaderboard">
+        <button class="nav-item" onclick="showPage('leaderboard')">
             <span class="icon">🏆</span>
             <span>الترتيب</span>
         </button>
-        <button class="nav-item" id="nav-wallet">
+        <button class="nav-item" onclick="showPage('wallet')">
             <span class="icon">👛</span>
             <span>المحفظة</span>
         </button>
     </div>
 
-    <!-- التعديل الأهم: ربط كود الـ JavaScript المطور الأساسي باستخدام نظام الموديولز -->
-    <script type="module" src="app.js"></script>
+    <!-- 1. استدعاء ملف البيانات أولاً لحل مشكلة الشاشة السوداء -->
+    <script src="data.js"></script>
+    
+    <!-- 2. ربط كود الـ JavaScript المطور الأساسي هنا -->
+    <script src="app.js"></script>
 
 </body>
 </html>
