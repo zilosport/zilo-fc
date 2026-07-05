@@ -24,21 +24,26 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 60px;
-            background: #121216;
-            border-bottom: 1px solid #22222a;
+            height: 65px;
+            background: rgba(18, 18, 22, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 15px;
+            padding: 0 20px;
             z-index: 1000;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
         }
 
         .content-container {
-            margin-top: 60px;
+            margin-top: 75px; 
             margin-bottom: 75px;
             padding: 15px;
-            min-height: calc(100vh - 135px);
+            min-height: calc(100vh - 150px);
             overflow-y: auto;
         }
 
@@ -87,8 +92,8 @@
 <body>
 
     <div class="top-bar">
-        <div id="club" style="font-size: 0.9rem; color: #aaa;">ناديك: 👑 <b>ريال مدريد</b></div>
-        <div id="points" style="font-weight: bold; color: #ffd700;">🪙 عملة ZILO: 1,500</div>
+        <div id="club" style="font-size: 0.9rem; color: #e0e0e0;">ناديك: 👑 <b style="color: #fff;">ريال مدريد</b></div>
+        <div id="points" style="font-weight: bold; color: #ffd700; background: rgba(255, 215, 0, 0.1); padding: 5px 10px; border-radius: 8px;">🪙 عملة ZILO: 1,500</div>
     </div>
 
     <div class="content-container" id="main-content"></div>
@@ -101,9 +106,6 @@
         <button class="nav-item" onclick="showPage('wallet')"><span class="icon">👛</span><span>المحفظة</span></button>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 1. استدعاء جميع ملفات الأندية مفعلة بالكامل -->
-    <!-- ========================================== -->
     <script src="argentina.js"></script>
     <script src="france.js"></script>
     <script src="brazil.js"></script>
@@ -153,10 +155,11 @@
     <script src="norway.js"></script>
     <script src="hungary.js"></script>
 
-    <!-- 2. ملف البيانات -->
     <script src="data.js"></script>
     
-    <!-- 3. ملف التطبيق -->
+    <script src="tasks.js"></script>
+    <script src="leaderboard.js"></script>
+
     <script src="app.js"></script>
 
 </body>
