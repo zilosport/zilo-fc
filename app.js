@@ -355,7 +355,7 @@ function renderLeaderboardPage(container) {
                 <span style="color: #fff; font-weight: bold;">${getClubName(club)}</span>
             </div>
             <div style="text-align: ${userState.lang === 'ar' ? 'left' : 'right'};">
-                <span style="color: #4caf50; font-weight: bold; font-family: monospace;">${club.points.toLocaleString()} ZILOFC</span>
+                <span style="color: #4caf50; font-weight: bold; font-family: monospace;">${club.points.toLocaleString()} ZELOFC</span>
                 <br><small style="color: #888; font-size: 0.75rem;">${t('clickToView')}</small>
             </div>
         </div>
