@@ -320,7 +320,7 @@ function showPage(pageId) {
 
     switch(pageId) {
         case 'home': renderHomePage(contentDiv); break;
-        case 'tasks': renderTasksPage(contentDiv); break;
+        case 'tasks': renderTasksPage(contentDiv); break; // تأكد أن renderTasksPage موجودة في tasks.js
         case 'friends': renderFriendsPage(contentDiv); break;
         case 'leaderboard': renderLeaderboardPage(contentDiv); break;
         case 'wallet': renderWalletPage(contentDiv); break;
@@ -454,5 +454,68 @@ function triggerDisconnect() {
                 showPage('wallet');
             });
         }
+    }
+}
+
+// 🏆 11. لوحة الصدارة (الترتيب)
+// دالة للرجوع من قائمة المشجعين إلى قائمة الأندية
+window.showClubsLeaderboard = function() {
+    document.getElementById('fans-list-container').style.display = 'none';
+    document.getElementById('back-to-clubs-btn').style.display = 'none';
+    
+    // إظهار الأندية وتغيير العنوان
+    document.getElementById('clubs-list-container').style.display = 'grid'; 
+    document.getElementById('leaderboard-title').innerText = t('navLeaderboard') || (userState.lang === 'ar' ? 'لوحة الصدارة' : 'Leaderboard');
+};
+
+function renderLeaderboardPage(container) {
+    // 1. بناء واجهة لوحة الصدارة الأساسية (حاوية الأندية + حاوية المشجعين + زر الرجوع)
+    container.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="leaderboard-title" style="margin: 0; color: #fff; font-size: 1.4rem;">
+                🏆 ${t('navLeaderboard') || (userState.lang === 'ar' ? 'لوحة الصدارة' : 'Leaderboard')}
+            </h3>
+            <button id="back-to-clubs-btn" onclick="showClubsLeaderboard()" style="display: none; background: #2b2b36; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                ${userState.lang === 'ar' ? '⬅ عودة للأندية' : 'Back to Clubs ➡'}
+            </button>
+        </div>
+        
+        <!-- المكان الذي ستظهر فيه الأندية -->
+        <div id="clubs-list-container" style="display: grid; gap: 12px;"></div>
+        
+        <!-- المكان الذي سيظهر فيه المشجعين (مخفي افتراضياً) -->
+        <div id="fans-list-container" style="display: none; flex-direction: column; gap: 10px;"></div>
+    `;
+
+    // 2. التحقق من وجود ملف leaderboard.js واستدعاء دالة الأندية منه
+    if (typeof LeaderboardManager !== 'undefined') {
+        LeaderboardManager.renderClubs(
+            clubsData, 
+            'clubs-list-container', 
+            'fans-list-container', 
+            (selectedClub) => {
+                // الكود الذي يتنفذ عند الضغط على أي نادي
+                
+                // إخفاء الأندية
+                document.getElementById('clubs-list-container').style.display = 'none';
+                
+                // إظهار المشجعين وزر الرجوع
+                document.getElementById('fans-list-container').style.display = 'flex';
+                document.getElementById('back-to-clubs-btn').style.display = 'block';
+                
+                // تغيير العنوان ليصبح باسم النادي
+                document.getElementById('leaderboard-title').innerHTML = `
+                    <img src="${selectedClub.logo}" style="width: 25px; height: 25px; vertical-align: middle; margin: 0 5px;">
+                    ${getClubName(selectedClub)}
+                `;
+            }
+        );
+    } else {
+        // رسالة تنبيه في حال نسيت ربط ملف leaderboard.js
+        container.innerHTML += `
+            <div style="text-align: center; color: #f44336; margin-top: 20px; background: rgba(244, 67, 54, 0.1); padding: 15px; border-radius: 10px;">
+                ⚠️ خطأ: ملف leaderboard.js غير موجود أو لم يتم ربطه في ملف HTML.
+            </div>
+        `;
     }
 }
