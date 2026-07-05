@@ -10,7 +10,7 @@ let userState = {
     userId: "",
     photoUrl: null,
     points: 0, 
-    selectedClub: null,
+    selectedClubs: [], // تم تحويلها لمصفوفة لدعم أكثر من نادي
     walletConnected: false,
     walletAddress: null,
     walletBalance: "0.00",
@@ -22,7 +22,6 @@ let userState = {
         { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zelo Sport on X", points: 500, completed: false, url: "https://x.com" },
         { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me" },
         { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com" },
-        // المهام الجديدة التي تم إضافتها
         { id: "tg_group_ar", textAr: "الانضمام للمجموعة العربية", textEn: "Join Arabic Group", points: 300, completed: false, url: "https://t.me/YourArabicGroupLink" },
         { id: "tg_group_en", textAr: "الانضمام للمجموعة الأجنبية", textEn: "Join Global Group", points: 300, completed: false, url: "https://t.me/YourEnglishGroupLink" }
     ]
@@ -124,7 +123,8 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("TON Connect Error: ", error);
     }
 
-    if (!userState.selectedClub) {
+    // التحقق من أن المستخدم اختار أندية أم لا
+    if (!userState.selectedClubs || userState.selectedClubs.length === 0) {
         renderLoginScreen();
     } else {
         userState.hasLoggedIn = true;
@@ -147,23 +147,30 @@ function injectLangButton() {
     }
 }
 
-// 📱 6. شاشة تسجيل الدخول (نظام اختيار الدولة ثم النادي)
+// 📱 6. شاشة تسجيل الدخول (نظام اختيار الدول والأندية المتعددة)
+window.tempSelectedClubs = window.tempSelectedClubs || []; // مصفوفة مؤقتة لحفظ الاختيارات قبل التأكيد
+
+function getFloatingButton() {
+    if (window.tempSelectedClubs.length === 0) return '';
+    return `
+        <div onclick="confirmLogin()" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #4caf50, #2e7d32); color: white; padding: 14px 30px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; gap: 10px; width: 80%; justify-content: center;">
+            ${userState.lang === 'ar' ? 'تأكيد الدخول' : 'Confirm Login'} (${window.tempSelectedClubs.length}/2) ✅
+        </div>
+    `;
+}
+
 function renderLoginScreen() {
     if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'none';
     if (document.querySelector('.bottom-nav')) document.querySelector('.bottom-nav').style.display = 'none';
 
     const mainContent = document.getElementById("main-content");
     
-    // تجميع الأندية حسب علم الدولة تلقائياً
     const clubsByCountry = {};
     clubsData.forEach(club => {
-        if(!clubsByCountry[club.countryFlag]) {
-            clubsByCountry[club.countryFlag] = [];
-        }
+        if(!clubsByCountry[club.countryFlag]) clubsByCountry[club.countryFlag] = [];
         clubsByCountry[club.countryFlag].push(club);
     });
 
-    // قاموس أسماء الدول الـ 48
     const countryNames = {
         "🏴󠁧󠁢󠁥󠁮󠁧󠁿": {ar: "إنجلترا", en: "England"}, "🇪🇸": {ar: "إسبانيا", en: "Spain"}, "🇩🇪": {ar: "ألمانيا", en: "Germany"},
         "🇮🇹": {ar: "إيطاليا", en: "Italy"}, "🇫🇷": {ar: "فرنسا", en: "France"}, "🇧🇷": {ar: "البرازيل", en: "Brazil"},
@@ -188,7 +195,6 @@ function renderLoginScreen() {
         return (userState.lang === 'ar' ? "دوري " : "League ") + flag;
     }
 
-    // بناء قائمة الدول
     let countriesHtml = Object.keys(clubsByCountry).map(flag => `
         <div onclick="showClubsForCountry('${flag}')" style="background: #1c1c22; border: 1px solid #25252d; padding: 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 10px; transition: 0.2s;">
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -202,31 +208,37 @@ function renderLoginScreen() {
     `).join('');
 
     mainContent.innerHTML = `
-        <div style="padding: 20px 10px; text-align: center; max-width: 500px; margin: 0 auto; padding-bottom: 40px;">
+        <div style="padding: 20px 10px; text-align: center; max-width: 500px; margin: 0 auto; padding-bottom: 100px;">
             <div style="font-size: 3.5rem; margin-bottom: 10px;">🌍</div>
             <h2 style="color: #fff; margin: 0 0 5px 0;">${t('welcomeTitle')}</h2>
-            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">${userState.lang === 'ar' ? 'اختر الدولة أولاً' : 'Select Country First'}</p>
+            <p style="color: #4caf50; font-size: 0.95rem; font-weight: bold; margin-bottom: 20px;">
+                ${userState.lang === 'ar' ? 'اختر فريقين كحد أقصى (محلي وعالمي)' : 'Select up to 2 clubs (Local & Global)'}
+            </p>
 
             <div style="display: flex; flex-direction: column; text-align: ${userState.lang === 'ar' ? 'right' : 'left'}; max-height: 65vh; overflow-y: auto; padding-right: 5px;">
                 ${countriesHtml}
             </div>
         </div>
+        ${getFloatingButton()}
     `;
 
-    // دالة فتح الأندية الخاصة بالدولة المختارة
     window.showClubsForCountry = function(flag) {
         let clubs = clubsByCountry[flag];
-        let clubsHtml = clubs.map(club => `
-            <div onclick="selectClubAndLogin('${club.id}')" style="background: #1c1c22; border: 1px solid #25252d; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s;">
+        let clubsHtml = clubs.map(club => {
+            let isSelected = window.tempSelectedClubs.includes(club.id);
+            let borderStyle = isSelected ? 'border: 2px solid #4caf50; background: rgba(76, 175, 80, 0.1);' : 'border: 1px solid #25252d; background: #1c1c22;';
+            return `
+            <div onclick="toggleClubSelection('${club.id}', '${flag}')" style="${borderStyle} padding: 12px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; position: relative;">
+                ${isSelected ? '<div style="position: absolute; top: 5px; right: 5px; background: #4caf50; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 14px; display: flex; align-items: center; justify-content: center; z-index: 10;">✓</div>' : ''}
                 <div style="position: relative;">
                     <img src="${club.logo}" alt="" onerror="this.style.display='none'" style="width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">
                 </div>
                 <h4 style="margin: 0; color: #fff; font-size: 0.85rem; text-align: center;">${getClubName(club)}</h4>
             </div>
-        `).join('');
+        `}).join('');
 
         mainContent.innerHTML = `
-            <div style="padding: 20px 10px; text-align: center; max-width: 500px; margin: 0 auto; padding-bottom: 40px;">
+            <div style="padding: 20px 10px; text-align: center; max-width: 500px; margin: 0 auto; padding-bottom: 100px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <button onclick="renderLoginScreen()" style="background: #2b2b36; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px;">
                         ${userState.lang === 'ar' ? '⬅ رجوع' : 'Back ➡'}
@@ -240,12 +252,34 @@ function renderLoginScreen() {
                     ${clubsHtml}
                 </div>
             </div>
+            ${getFloatingButton()}
         `;
     }
 }
 
-function selectClubAndLogin(clubId) {
-    userState.selectedClub = clubId;
+// دالة اختيار أو إلغاء اختيار النادي
+window.toggleClubSelection = function(clubId, flag) {
+    const index = window.tempSelectedClubs.indexOf(clubId);
+    
+    if (index > -1) {
+        window.tempSelectedClubs.splice(index, 1); // إزالة النادي إذا كان مختاراً مسبقاً
+    } else {
+        if (window.tempSelectedClubs.length >= 2) {
+            alert(userState.lang === 'ar' ? "يمكنك اختيار ناديين كحد أقصى!" : "You can only select up to 2 clubs!");
+            return;
+        }
+        window.tempSelectedClubs.push(clubId); // إضافة النادي
+    }
+    
+    // تحديث الشاشة لتظهر علامة الصح
+    if (flag) showClubsForCountry(flag); else renderLoginScreen();
+}
+
+// زر تأكيد الدخول
+window.confirmLogin = function() {
+    if (window.tempSelectedClubs.length === 0) return;
+    
+    userState.selectedClubs = [...window.tempSelectedClubs];
     userState.hasLoggedIn = true;
 
     if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'flex';
@@ -264,9 +298,14 @@ function updateTopBar() {
     
     if(pointsEl) pointsEl.innerText = `${t('coins')} ${userState.points.toLocaleString()}`;
     
-    if (clubEl && userState.selectedClub) {
-        const club = clubsData.find(c => c.id === userState.selectedClub);
-        if(club) clubEl.innerHTML = `${t('yourClub')} <img src="${club.logo}" onerror="this.style.display='none'" style="height: 18px; vertical-align: middle; margin: 0 4px; object-fit: contain;"> <b>${getClubName(club)}</b>`;
+    if (clubEl && userState.selectedClubs && userState.selectedClubs.length > 0) {
+        // جلب شعارات الأندية المختارة
+        let logos = userState.selectedClubs.map(id => {
+            const club = clubsData.find(c => c.id === id);
+            return club ? `<img src="${club.logo}" style="height: 20px; vertical-align: middle; margin: 0 4px; object-fit: contain;">` : '';
+        }).join('');
+        
+        clubEl.innerHTML = `<span style="color:#aaa;">${userState.lang === 'ar' ? 'أنديتك:' : 'Clubs:'}</span> ${logos}`;
     }
 }
 
@@ -289,18 +328,38 @@ function showPage(pageId) {
     }
 }
 
-// 🏠 7. الرئيسية (معالجة ذكية لصور المستخدمين والخلفيات الديناميكية)
+// 🏠 7. الرئيسية (تدعم عرض ناديين)
 function renderHomePage(container) {
-    const currentClub = clubsData.find(c => c.id === userState.selectedClub) || clubsData[0];
+    // جلب بيانات الأندية المختارة
+    let selectedClubsData = userState.selectedClubs.map(id => clubsData.find(c => c.id === id)).filter(Boolean);
+    if(selectedClubsData.length === 0) selectedClubsData = [clubsData[0]]; // احتياطي
+    
+    const primaryClub = selectedClubsData[0]; // النادي الأول للخلفية
     
     let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userState.username)}&background=1c1c22&color=0088cc&size=128&bold=true`;
     let avatarSrc = userState.photoUrl ? userState.photoUrl : fallbackAvatar;
 
-    // دمج شعار النادي كخلفية مع طبقة داكنة لضمان وضوح النص
-    const profileBgStyle = `background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('${currentClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${currentClub.color || '#25252d'};`;
+    const profileBgStyle = `background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('${primaryClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${primaryClub.color || '#25252d'};`;
+
+    // إنشاء بطاقة لكل نادي
+    let clubsCardsHtml = selectedClubsData.map(club => `
+        <div style="background: #1c1c22; border: 1px solid #25252d; border-radius: 16px; padding: 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="${club.logo}" onerror="this.style.display='none'" style="width: 50px; height: 50px; object-fit: contain;">
+                <div>
+                    <h3 style="margin: 0; color: #fff; font-size: 1.2rem;">${getClubName(club)} ${club.countryFlag}</h3>
+                </div>
+            </div>
+            <div>
+                <span style="background: rgba(255, 215, 0, 0.2); color: #ffd700; padding: 5px 10px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">
+                    ${club.points.toLocaleString()} 🏆
+                </span>
+            </div>
+        </div>
+    `).join('');
 
     container.innerHTML = `
-        <div class="profile-section" style="${profileBgStyle} padding: 25px 15px; border-radius: 16px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+        <div class="profile-section" style="${profileBgStyle} padding: 25px 15px; border-radius: 16px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
             <div class="avatar-container" style="position: relative; display: inline-block;">
                 <img id="user-avatar" src="${avatarSrc}" onerror="this.src='${fallbackAvatar}'" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; object-fit: cover; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
                 <span class="verified-badge" style="position: absolute; bottom: 0; ${userState.lang === 'ar' ? 'left: 0;' : 'right: 0;'} background: #0088cc; color: #fff; width: 22px; height: 22px; line-height: 22px; border-radius: 50%; font-size: 0.8rem; border: 2px solid #fff;">✓</span>
@@ -309,20 +368,8 @@ function renderHomePage(container) {
             <p id="profile-id" class="user-id" style="margin: 0; color: rgba(255,255,255,0.8); font-size: 0.85rem; font-family: monospace; text-shadow: 1px 1px 2px #000;">ID: ${userState.userId}</p>
         </div>
 
-        <div style="background: #1c1c22; border: 1px solid #25252d; border-radius: 16px; padding: 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <img src="${currentClub.logo}" onerror="this.style.display='none'" style="width: 50px; height: 50px; object-fit: contain;">
-                <div>
-                    <p style="margin: 0; font-size: 0.8rem; color: #aaa;">${t('supportText')}</p>
-                    <h3 style="margin: 0; color: #fff; font-size: 1.2rem;">${getClubName(currentClub)} ${currentClub.countryFlag}</h3>
-                </div>
-            </div>
-            <div>
-                <span style="background: rgba(255, 215, 0, 0.2); color: #ffd700; padding: 5px 10px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">
-                    ${currentClub.points.toLocaleString()} 🏆
-                </span>
-            </div>
-        </div>
+        <h4 style="color: #aaa; margin: 0 0 10px 0; font-size: 0.9rem;">${userState.lang === 'ar' ? 'أنديتك المفضلة:' : 'Your Supported Clubs:'}</h4>
+        ${clubsCardsHtml}
     `;
 }
 
