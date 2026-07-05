@@ -1,9 +1,11 @@
 // ==========================================
 // 🚀 تطبيق زيلو إف سي (Zelo Sport) - الكود الأساسي (app.js)
-// ملاحظة: يتم تحميل `i18n` و `clubsData` من ملف `data.js`
 // ==========================================
 
-// 2. إدارة بيانات المستخدم
+// 1. استدعاء البيانات من ملف index.js المجمع
+import { clubsData, i18n } from './index.js';
+
+// 2. إدارة بيانات المستخدم (خالية من أي بيانات وهمية للمشجعين والإحالات)
 let userState = {
     username: "Zelo Sport",
     userParam: "", 
@@ -16,7 +18,7 @@ let userState = {
     walletBalance: "0.00",
     hasLoggedIn: false,
     lang: "ar",
-    referrals: [], 
+    referrals: [], // يعتمد فقط على الإحالات الحقيقية
     dailyCheckInClaimed: false,
     tasks: [
         { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zilo FC on X", points: 500, completed: false, url: "https://x.com" },
@@ -61,15 +63,23 @@ function toggleLanguage() {
     updateTopBar();
     const activeNav = document.querySelector(".nav-item.active");
     if (activeNav) {
-        const pageId = activeNav.getAttribute("onclick").match(/'([^']+)'/)[1];
+        // تم التعديل للاعتماد على الـ ID بدلاً من onclick
+        const pageId = activeNav.id.replace('nav-', '');
         showPage(pageId);
     } else if (!userState.hasLoggedIn) {
         renderLoginScreen();
     }
 }
 
-// 5. تهيئة التطبيق (سحب بيانات تليجرام)
+// 5. تهيئة التطبيق (سحب بيانات تليجرام وإضافة مستمعي الأزرار)
 document.addEventListener("DOMContentLoaded", () => {
+    // ربط أزرار القائمة السفلية عبر الـ ID الخاص بها
+    document.getElementById('nav-home')?.addEventListener('click', () => showPage('home'));
+    document.getElementById('nav-tasks')?.addEventListener('click', () => showPage('tasks'));
+    document.getElementById('nav-friends')?.addEventListener('click', () => showPage('friends'));
+    document.getElementById('nav-leaderboard')?.addEventListener('click', () => showPage('leaderboard'));
+    document.getElementById('nav-wallet')?.addEventListener('click', () => showPage('wallet'));
+
     if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -113,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 userState.walletAddress = null;
                 userState.walletBalance = "0.00";
             }
-            if (userState.hasLoggedIn && document.querySelector(".nav-item[onclick*='wallet']").classList.contains("active")) {
+            if (userState.hasLoggedIn && document.querySelector("#nav-wallet")?.classList.contains("active")) {
                 renderWalletPage(document.getElementById("main-content"));
             }
         });
@@ -203,7 +213,9 @@ function updateTopBar() {
 function showPage(pageId) {
     if(!userState.hasLoggedIn) return; 
     document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
-    const activeNav = Array.from(document.querySelectorAll(".nav-item")).find(el => el.getAttribute("onclick").includes(pageId));
+    
+    // تم التعديل للاعتماد على الـ ID لإيجاد العنصر النشط
+    const activeNav = document.getElementById(`nav-${pageId}`);
     if (activeNav) activeNav.classList.add("active");
 
     const contentDiv = document.getElementById("main-content");
@@ -219,7 +231,7 @@ function showPage(pageId) {
     }
 }
 
-// 🏠 7. الرئيسية (معالجة ذكية لصور المستخدمين)
+// 🏠 7. الرئيسية
 function renderHomePage(container) {
     const currentClub = clubsData.find(c => c.id === userState.selectedClub) || clubsData[0];
     
@@ -454,3 +466,18 @@ function triggerDisconnect() {
         }
     }
 }
+
+// ==========================================
+// 🛠️ ربط الدوال بالكائن العام (Global Window Object) 
+// لكي تعمل مع الـ onclick في عناصر الـ HTML المولدة ديناميكياً
+// ==========================================
+window.selectClubAndLogin = selectClubAndLogin;
+window.showPage = showPage;
+window.executeTask = executeTask;
+window.claimDaily = claimDaily;
+window.copyToClipboard = copyToClipboard;
+window.shareOnTelegram = shareOnTelegram;
+window.openSpecificClubFans = openSpecificClubFans;
+window.triggerConnect = triggerConnect;
+window.triggerDisconnect = triggerDisconnect;
+window.toggleLanguage = toggleLanguage;
