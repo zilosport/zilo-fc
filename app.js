@@ -22,6 +22,8 @@ let userState = {
         { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zelo Sport on X", points: 500, completed: false, url: "https://x.com" },
         { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me" },
         { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com" }
+        { id: "tg_group_ar", textAr: "الانضمام للمجموعة العربية", textEn: "Join Arabic Group", points: 400, completed: false, url: "https://t.me/YourArabicGroup" },
+        { id: "tg_group_en", textAr: "الانضمام للمجموعة الإنجليزية", textEn: "Join English Group", points: 400, completed: false, url: "https://t.me/YourEnglishGroup" } 
     ]
 };
 
