@@ -1,0 +1,12 @@
+const spainClubs = [
+    { id: "real_madrid", nameAr: "ريال مدريد", nameEn: "Real Madrid", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8633.png", members: 0, points: 0, color: "linear-gradient(135deg, #1a237e, #0d47a1)" },
+    { id: "barcelona", nameAr: "برشلونة", nameEn: "Barcelona", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8634.png", members: 0, points: 0, color: "linear-gradient(135deg, #b71c1c, #0d47a1)" },
+    { id: "atletico", nameAr: "أتلتيكو مدريد", nameEn: "Atletico Madrid", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8302.png", members: 0, points: 0, color: "linear-gradient(135deg, #d50000, #ffffff)" },
+    { id: "athletic_bilbao", nameAr: "أتلتيك بيلباو", nameEn: "Athletic Bilbao", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8315.png", members: 0, points: 0, color: "linear-gradient(135deg, #ee2523, #ffffff)" },
+    { id: "sevilla", nameAr: "إشبيلية", nameEn: "Sevilla", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8371.png", members: 0, points: 0, color: "linear-gradient(135deg, #d50000, #ffffff)" },
+    { id: "valencia", nameAr: "فالنسيا", nameEn: "Valencia", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/10267.png", members: 0, points: 0, color: "linear-gradient(135deg, #ffffff, #000000)" },
+    { id: "villarreal", nameAr: "فيا ريال", nameEn: "Villarreal", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/10205.png", members: 0, points: 0, color: "linear-gradient(135deg, #fceb00, #00508f)" },
+    { id: "real_sociedad", nameAr: "ريال سوسيداد", nameEn: "Real Sociedad", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8560.png", members: 0, points: 0, color: "linear-gradient(135deg, #0067b1, #ffffff)" },
+    { id: "real_betis", nameAr: "ريال بيتيس", nameEn: "Real Betis", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8603.png", members: 0, points: 0, color: "linear-gradient(135deg, #0bb363, #ffffff)" },
+    { id: "girona", nameAr: "جيرونا", nameEn: "Girona", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/7732.png", members: 0, points: 0, color: "linear-gradient(135deg, #ed1c24, #ffffff)" }
+];
