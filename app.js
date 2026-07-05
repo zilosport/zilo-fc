@@ -1,11 +1,11 @@
 // ==========================================
-// 🚀 تطبيق زيلو إف سي (Zelo Sport) - الكود الأساسي (app.js)
+// 🚀 تطبيق زيلو إف سي (Zilo FC) - الكود الأساسي (app.js)
 // ملاحظة: يتم تحميل `i18n` و `clubsData` من ملف `data.js`
 // ==========================================
 
 // 2. إدارة بيانات المستخدم
 let userState = {
-    username: "Zelo Sport",
+    username: "Zilo Fan",
     userParam: "", 
     userId: "",
     photoUrl: null,
@@ -19,7 +19,7 @@ let userState = {
     referrals: [], 
     dailyCheckInClaimed: false,
     tasks: [
-        { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zilo FC on X", points: 500, completed: false, url: "https://x.com" },
+        { id: "x", textAr: "متابعة حساب Zilo FC على X", textEn: "Follow Zilo FC on X", points: 500, completed: false, url: "https://x.com" },
         { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me" },
         { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com" }
     ]
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
         tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://zelo-sport-fc.github.io/zelo-fc/tonconnect-manifest.json',
+            manifestUrl: 'https://zilosport.github.io/zilo-fc/tonconnect-manifest.json',
             buttonRootId: null
         });
 
@@ -259,7 +259,7 @@ function renderTasksPage(container) {
         <div class="task-card" style="display: flex; justify-content: space-between; align-items: center; background: #1c1c22; margin: 8px 0; padding: 14px; border-radius: 12px; border: 1px solid #25252d;">
             <div>
                 <h5 style="margin: 0 0 4px 0; color: #fff;">${getTaskName(task)}</h5>
-                <small style="color: #0088cc; font-weight: bold;">+ ${task.points} ZELOFC</small>
+                <small style="color: #0088cc; font-weight: bold;">+ ${task.points} ZILOFC</small>
             </div>
             <button onclick="executeTask('${task.id}', '${task.url}')" ${task.completed ? 'disabled style="background:#2b2b36; color:#666; border:none; padding:8px 16px; border-radius:8px;"' : 'style="background:#0088cc; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer;"'}>
                 ${task.completed ? t('btnDone') : t('btnGo')}
@@ -290,7 +290,7 @@ function executeTask(taskId, url) {
         if (task && !task.completed) {
             task.completed = true;
             userState.points += task.points;
-            alert(`${t('alertTaskDone')} ${task.points} ZELOFC.`);
+            alert(`${t('alertTaskDone')} ${task.points} ZILOFC.`);
             updateTopBar();
             showPage('tasks');
         }
@@ -309,11 +309,11 @@ function claimDaily() {
 
 // 👥 9. الأصدقاء
 function renderFriendsPage(container) {
-    const referralLink = `https://t.me/ZeloSport_Bot/app?startapp=ref_${userState.userParam}`;
+    const referralLink = `https://t.me/ZiloFC_Bot/app?startapp=ref_${userState.userParam}`;
     let friendsListHtml = userState.referrals.map(friend => `
         <div style="display: flex; justify-content: space-between; background: #1c1c22; padding: 12px; border-radius: 10px; margin: 6px 0; border: 1px solid #25252d;">
             <span style="color: #fff; font-weight: bold;">👤 ${friend.name}</span>
-            <span style="color: #0088cc; font-size: 0.85rem;">${t('invites')} ${friend.referralsCount} | +500 ZELOFC</span>
+            <span style="color: #0088cc; font-size: 0.85rem;">${t('invites')} ${friend.referralsCount} | +500 ZILOFC</span>
         </div>
     `).join('');
 
