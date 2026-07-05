@@ -1,461 +1,456 @@
-<<<<<<< HEAD
-// --- قراءة الإعدادات العالمية الممررة من المتصفح ---
-const CONFIG = window.APP_CONFIG || {
-    SUPABASE_URL: "", 
-    SUPABASE_KEY: "", 
-    BOT_USERNAME: "", 
-    MANIFEST_URL: "" 
+// ==========================================
+// 🚀 تطبيق زيلو إف سي (Zelo Sport) - الكود الأساسي (app.js)
+// ملاحظة: يتم تحميل `i18n` و `clubsData` من ملف `data.js`
+// ==========================================
+
+// 2. إدارة بيانات المستخدم
+let userState = {
+    username: "Zelo Sport",
+    userParam: "", 
+    userId: "",
+    photoUrl: null,
+    points: 0, 
+    selectedClub: null,
+    walletConnected: false,
+    walletAddress: null,
+    walletBalance: "0.00",
+    hasLoggedIn: false,
+    lang: "ar",
+    referrals: [], 
+    dailyCheckInClaimed: false,
+    tasks: [
+        { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zilo FC on X", points: 500, completed: false, url: "https://x.com" },
+        { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me" },
+        { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com" }
+    ]
 };
 
-// تهيئة الاتصال بـ Supabase مع حماية الكود من التوقف
-let supabase = null;
-try {
-    if (CONFIG.SUPABASE_URL && !CONFIG.SUPABASE_URL.includes("YOUR_PROJECT_ID")) {
-        supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-    }
-} catch (error) {
-    console.error("فشل تهيئة Supabase:", error);
+const clubFansLeaderboard = {};
+
+let tonConnectUI = null;
+const tg = window.Telegram?.WebApp;
+
+// 4. دوال مساعدة للترجمة
+function t(key) {
+    return i18n[userState.lang][key] || key;
 }
 
-// تهيئة Telegram WebApp
-const tg = window.Telegram.WebApp;
-if (tg) {
-    tg.expand();
-    tg.ready();
+function getClubName(club) {
+    return userState.lang === 'ar' ? club.nameAr : club.nameEn;
 }
 
-// جلب بيانات تيليجرام الحقيقية تلقائياً أو وضع بيانات تجريبية للمتصفح (الحاسوب)
-const telegramUser = tg?.initDataUnsafe?.user || {
-    id: 123456789, 
-    first_name: "مستخدم تجريبي",
-    username: "test_user",
-    photo_url: "https://via.placeholder.com/40"
-};
+function getTaskName(task) {
+    return userState.lang === 'ar' ? task.textAr : task.textEn;
+}
 
-const referrerId = tg?.initDataUnsafe?.start_param ? tg.initDataUnsafe.start_param.replace('ref_', '') : null;
-let currentUserData = { balance: 0, telegram_id: telegramUser.id }; 
-let syncTimeout = null; 
-let pendingTaps = 0; // متغير تخزين النقرات المعلقة التي لم تُرسل للسيرفر بعد
-
-// بدء تشغيل التطبيق وجلب البيانات
-async function initializeApp() {
-    if (!telegramUser) return;
-
-    // حقن الاسم والصورة في الواجهة فوراً
-    document.getElementById('user-name').innerText = telegramUser.first_name;
-    if (telegramUser.photo_url) {
-        document.getElementById('user-avatar').src = telegramUser.photo_url;
-    }
-
-    // جلب أو إنشاء المستخدم في قاعدة البيانات الحقيقية
-    if (supabase) {
-        try {
-            let { data: user, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('telegram_id', telegramUser.id)
-                .single();
-
-            // إذا كان المستخدم جديداً (غير مسجل)، نقوم بإنشائه في الجداول
-            if (error && error.code === 'PGRST116') {
-                const newUser = {
-                    telegram_id: telegramUser.id,
-                    first_name: telegramUser.first_name,
-                    username: telegramUser.username || null,
-                    photo_url: telegramUser.photo_url || null,
-                    balance: 0,
-                    referred_by: referrerId ? parseInt(referrerId) : null
-                };
-
-                const { data: createdUser } = await supabase.from('users').insert([newUser]).select().single();
-                user = createdUser;
-            }
-
-            if (user) currentUserData = user;
-        } catch (dbError) {
-            console.error("خطأ أثناء جلب البيانات من السيرفر:", dbError);
-        }
-    }
-
-    // تحديث رصيد البداية في الواجهة
-    document.getElementById('balance').innerText = currentUserData.balance.toLocaleString();
+// تغيير لغة التطبيق بالكامل
+function toggleLanguage() {
+    userState.lang = userState.lang === 'ar' ? 'en' : 'ar';
+    document.documentElement.dir = userState.lang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = userState.lang;
     
-    setupReferralSystem();
-    if (supabase) fetchRealReferrals();
-    setupRealWallet();
-}
-
-// التكبيس المحمي والآمن (Server-Side Anti-Cheat)
-function handleTap(event) {
-    if (!currentUserData) return;
-
-    // 1. زيادة الرصيد محلياً فوراً (لكي لا يشعر المستخدم بأي تأخير أو ثقل)
-    currentUserData.balance += 1;
-    pendingTaps += 1; // إضافة النقرة الحالية إلى عداد الانتظار
-    document.getElementById('balance').innerText = currentUserData.balance.toLocaleString();
-
-    // 2. اهتزاز الهاتف داخل تيليجرام
-    if (tg && tg.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred('medium');
+    const navItems = document.querySelectorAll('.nav-item span:not(.icon)');
+    if (navItems.length >= 5) {
+        navItems[0].innerText = t('navHome');
+        navItems[1].innerText = t('navTasks');
+        navItems[2].innerText = t('navFriends');
+        navItems[3].innerText = t('navLeaderboard');
+        navItems[4].innerText = t('navWallet');
     }
-
-    // 3. تأثير طائر الزرزور الطائر والمؤثر البصري للنقرة
-    const floatingText = document.createElement('div');
-    floatingText.classList.add('floating-tap');
-    floatingText.innerHTML = '🐦 +1';
     
-    floatingText.style.left = `${event.clientX}px`;
-    floatingText.style.top = `${event.clientY}px`;
-    document.body.appendChild(floatingText);
-
-    setTimeout(() => { floatingText.remove(); }, 800);
-
-    // 4. الإرسال الآمن للسيرفر بنظام التجميع الذكي (Debounce)
-    if (supabase) {
-        clearTimeout(syncTimeout);
-        syncTimeout = setTimeout(async () => {
-            const tapsToSend = pendingTaps;
-            if (tapsToSend === 0) return;
-            
-            pendingTaps = 0; 
-
-            try {
-                // استدعاء دالة RPC الآمنة من قاعدة البيانات
-                const { error } = await supabase.rpc('increment_balance', {
-                    user_tid: currentUserData.telegram_id,
-                    taps: tapsToSend
-                });
-
-                if (error) {
-                    console.error("فشل إرسال النقرات للسيرفر، سيتم المحاولة مجدداً:", error);
-                    pendingTaps += tapsToSend;
-                }
-            } catch (err) {
-                console.error("خطأ في الاتصال بالشبكة:", err);
-                pendingTaps += tapsToSend;
-            }
-        }, 1000); // تجميع كافة النقرات وإرسالها دفعة واحدة كل ثانية
+    updateTopBar();
+    const activeNav = document.querySelector(".nav-item.active");
+    if (activeNav) {
+        const pageId = activeNav.getAttribute("onclick").match(/'([^']+)'/)[1];
+        showPage(pageId);
+    } else if (!userState.hasLoggedIn) {
+        renderLoginScreen();
     }
 }
 
-// نظام المهام وتحديث رصيدها
-async function completeTask(button, reward, taskUrl) {
-    if (button.innerText === 'Done') return;
-    if (tg) tg.openLink(taskUrl);
-    
-    button.innerText = "Checking...";
-    button.style.background = "#1f293d";
-    
-    setTimeout(async () => {
-        currentUserData.balance += reward;
-        document.getElementById('balance').innerText = currentUserData.balance.toLocaleString();
-        button.innerText = "Done";
-        button.style.color = "#00ff9d";
+// 5. تهيئة التطبيق (سحب بيانات تليجرام)
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
         
-        if (supabase) {
-            await supabase
-                .from('users')
-                .update({ balance: currentUserData.balance })
-                .eq('telegram_id', currentUserData.telegram_id);
-        }
-    }, 3000);
-}
-
-// توليد رابط الإحالة الخاص بالمستخدم
-function setupReferralSystem() {
-    const fullRefLink = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${currentUserData.telegram_id}`;
-    document.getElementById('ref-link-input').value = fullRefLink;
-}
-
-// جلب قائمة الأصدقاء المسجلين من خلال المستخدم
-async function fetchRealReferrals() {
-    if (!supabase) return;
-    let { data: referrals, error } = await supabase
-        .from('users')
-        .select('first_name, username, balance')
-        .eq('referred_by', currentUserData.telegram_id);
-
-    if (!error && referrals) {
-        document.getElementById('quick-ref-count').innerText = referrals.length;
-        document.getElementById('friends-count-label').innerText = referrals.length;
-
-        const container = document.getElementById('friends-list-container');
-        if (referrals.length > 0) {
-            container.innerHTML = "";
-            referrals.forEach(friend => {
-                const nameDisplay = friend.username ? `@${friend.username}` : friend.first_name;
-                const commission = Math.floor(friend.balance * 0.1); // حساب الـ 10% أرباح المكافأة بصرياً
-                
-                container.innerHTML += `
-                    <div class="friend-card">
-                        <div class="friend-meta">
-                            <div class="friend-avatar-box">${friend.first_name.charAt(0).toUpperCase()}</div>
-                            <div class="friend-name">${nameDisplay}</div>
-                        </div>
-                        <div class="friend-profit">
-                            <p>10% Bonus</p>
-                            <span>+${commission} $STAR</span>
-                        </div>
-                    </div>
-                `;
-            });
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const tgUser = tg.initDataUnsafe.user;
+            userState.username = tgUser.username ? `@${tgUser.username}` : `${tgUser.first_name} ${tgUser.last_name || ''}`.trim();
+            userState.userId = tgUser.id;
+            userState.userParam = tgUser.username || tgUser.id;
+            
+            if (tgUser.photo_url) {
+                userState.photoUrl = tgUser.photo_url;
+            }
+            
+            if (tgUser.language_code && tgUser.language_code.startsWith('en')) {
+                userState.lang = 'en';
+            }
         } else {
-            container.innerHTML = `<p class="no-friends-msg">No friends invited yet.</p>`;
+            userState.username = "مستخدم تليجرام";
+            userState.userId = "غير معروف";
         }
     }
-}
 
-// نسخ رابط الإحالة
-function copyRefLink() {
-    const copyText = document.getElementById("ref-link-input");
-    copyText.select();
-    navigator.clipboard.writeText(copyText.value);
-    if (tg) tg.showAlert("Link copied! 🚀");
-}
+    document.documentElement.dir = userState.lang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = userState.lang;
 
-// مشاركة ودعوة الأصدقاء عبر رسائل تيليجرام
-function inviteFriend() {
-    const refLink = document.getElementById("ref-link-input").value;
-    const shareText = encodeURIComponent("Join Starling App! Tap the bird and mine $STAR tokens! 🐦🌟");
-    if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${refLink}&text=${shareText}`);
-}
-
-// إعداد وربط محفظة TON Connect الحقيقية بالخلفية وحفظ العنوان
-function setupRealWallet() {
-    if (typeof TON_CONNECT_UI === 'undefined') {
-        console.error("مكتبة TON Connect UI لم يتم تحميلها بشكل صحيح.");
-        return;
-    }
     try {
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: CONFIG.MANIFEST_URL,
-            buttonRootId: 'ton-connect-btn'
+        tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://zelo-sport-fc.github.io/zelo-fc/tonconnect-manifest.json',
+            buttonRootId: null
         });
 
-        tonConnectUI.onStatusChange(async (wallet) => {
-            if (wallet) {
-                const rawAddress = wallet.account.address;
-                document.getElementById('wallet-status').innerHTML = `<span style='color: #00ff9d; font-weight: bold;'>Connected: ${rawAddress.slice(0,4)}...${rawAddress.slice(-4)}</span>`;
-                
-                if (supabase) {
-                    await supabase
-                        .from('users')
-                        .update({ wallet_address: rawAddress })
-                        .eq('telegram_id', currentUserData.telegram_id);
-                }
+        tonConnectUI.onStatusChange((walletInfo) => {
+            if (walletInfo) {
+                userState.walletConnected = true;
+                userState.walletAddress = walletInfo.account.address;
+                userState.walletBalance = "0.00"; 
             } else {
-                document.getElementById('wallet-status').innerText = "Click above to connect securely";
+                userState.walletConnected = false;
+                userState.walletAddress = null;
+                userState.walletBalance = "0.00";
+            }
+            if (userState.hasLoggedIn && document.querySelector(".nav-item[onclick*='wallet']").classList.contains("active")) {
+                renderWalletPage(document.getElementById("main-content"));
             }
         });
-    } catch(e) {
-        console.error("حدث خطأ أثناء إعداد محفظة TON:", e);
+    } catch (error) {
+        console.error("TON Connect Error: ", error);
     }
-}
 
-// التنقل البرمجي السلس بين الصفحات والأزرار السفلية
-function switchPage(pageId, element) {
-    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-    
-    const targetPage = document.getElementById(`page-${pageId}`);
-    if(targetPage) {
-        targetPage.classList.add('active');
-    }
-    if(element) {
-        element.classList.add('active');
+    if (!userState.selectedClub) {
+        renderLoginScreen();
+    } else {
+        userState.hasLoggedIn = true;
+        updateTopBar();
+        showPage('home'); 
     }
     
-    if(pageId === 'friends' && currentUserData && supabase) fetchRealReferrals();
+    injectLangButton();
+});
+
+function injectLangButton() {
+    const topBar = document.querySelector('.top-bar');
+    if(topBar && !document.getElementById('lang-btn')) {
+        const langBtn = document.createElement('div');
+        langBtn.id = 'lang-btn';
+        langBtn.innerHTML = '🌐';
+        langBtn.style.cssText = 'position:fixed; top:15px; left:50%; transform:translateX(-50%); font-size:1.5rem; cursor:pointer; z-index:9999;';
+        langBtn.onclick = toggleLanguage;
+        document.body.appendChild(langBtn);
+    }
 }
 
-// تشغيل التطبيق بالكامل بمجرد تحميل المتصفح/تيليجرام للنافذة
-window.onload = initializeApp;
-=======
-// قراءة الروابط والمفاتيح الحساسة من النطاق العام للنافذة المحمية عبر ملف config.js
-const SUPABASE_URL = window.APP_CONFIG.SUPABASE_URL;
-const SUPABASE_KEY = window.APP_CONFIG.SUPABASE_KEY;
-const BOT_USERNAME = window.APP_CONFIG.BOT_USERNAME;
-const MANIFEST_URL = window.APP_CONFIG.MANIFEST_URL;
+// 📱 6. شاشة تسجيل الدخول
+function renderLoginScreen() {
+    if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'none';
+    if (document.querySelector('.bottom-nav')) document.querySelector('.bottom-nav').style.display = 'none';
 
-// تهيئة الاتصال الفعلي بـ Supabase
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// تهيئة Telegram WebApp SDK الحقيقي
-const tg = window.Telegram.WebApp;
-if (tg) {
-    tg.expand();
-    tg.ready();
-}
-
-// قراءة بيانات حساب المستخدم الحقيقية من خادم تيليجرام الآمن
-const telegramUser = tg.initDataUnsafe?.user || {
-    id: 123456789, // حساب تجريبي للاختبار محلياً في المتصفح فقط
-    first_name: "Hamis",
-    last_name: "",
-    username: "hamis_dev",
-    photo_url: ""
-};
-
-// قراءة معرّف الشخص الداعي من رابط التشغيل تلقائياً (start_param)
-const referrerId = tg.initDataUnsafe?.start_param ? tg.initDataUnsafe.start_param.replace('ref_', '') : null;
-
-let currentUserData = null;
-
-// دالة بدء تشغيل التطبيق وجلب الحساب الحقيقي من Supabase
-async function initializeApp() {
-    if (!telegramUser) return;
-
-    // حقن الاسم والصورة الحقيقية فوراً في واجهة المستخدم
-    document.getElementById('user-name').innerText = telegramUser.first_name + (telegramUser.last_name ? " " + telegramUser.last_name : "");
-    if (telegramUser.photo_url) {
-        document.getElementById('user-avatar').src = telegramUser.photo_url;
-    }
-
-    // محاولة جلب المستخدم الحالي من جدول قاعدة البيانات الحقيقي
-    let { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('telegram_id', telegramUser.id)
-        .single();
-
-    if (error && error.code === 'PGRST116') {
-        // إذا كان الزائر جديداً، نقوم بتسجيله فوراً وربطه بحساب الشخص الذي دعاه حقيقياً
-        const newUser = {
-            telegram_id: telegramUser.id,
-            first_name: telegramUser.first_name,
-            username: telegramUser.username || null,
-            photo_url: telegramUser.photo_url || null,
-            balance: 0,
-            referred_by: referrerId ? parseInt(referrerId) : null
-        };
-
-        const { data: createdUser, error: insertError } = await supabase
-            .from('users')
-            .insert([newUser])
-            .select()
-            .single();
-
-        if (!insertError) user = createdUser;
-    }
-
-    currentUserData = user;
+    const mainContent = document.getElementById("main-content");
     
-    // إظهار رصيده الحقيقي المسجل في السيرفر
-    document.getElementById('balance').innerText = currentUserData.balance.toLocaleString();
+    let optionsHtml = clubsData.map(club => `
+        <div onclick="selectClubAndLogin('${club.id}')" style="background: #1c1c22; border: 1px solid #25252d; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s;">
+            <div style="position: relative;">
+                <img src="${club.logo}" alt="" onerror="this.style.display='none'" style="width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">
+                <span style="position: absolute; bottom: -5px; right: -10px; font-size: 0.9rem; background: #121216; border-radius: 50%; padding: 2px;">${club.countryFlag}</span>
+            </div>
+            <h4 style="margin: 0; color: #fff; font-size: 0.85rem; text-align: center;">${getClubName(club)}</h4>
+        </div>
+    `).join('');
+
+    mainContent.innerHTML = `
+        <div style="padding: 20px 10px; text-align: center; max-width: 500px; margin: 0 auto;">
+            <div style="font-size: 3rem; margin-bottom: 10px;">⚽</div>
+            <h2 style="color: #fff; margin: 0 0 5px 0;">${t('welcomeTitle')}</h2>
+            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">${t('welcomeSub')}</p>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 60vh; overflow-y: auto; padding-right: 5px;">
+                ${optionsHtml}
+            </div>
+        </div>
+    `;
+}
+
+function selectClubAndLogin(clubId) {
+    userState.selectedClub = clubId;
+    userState.hasLoggedIn = true;
+
+    if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'flex';
+    if (document.querySelector('.bottom-nav')) document.querySelector('.bottom-nav').style.display = 'flex';
+
+    toggleLanguage(); 
+    toggleLanguage(); 
+
+    updateTopBar();
+    showPage('home');
+}
+
+function updateTopBar() {
+    const pointsEl = document.getElementById("points");
+    const clubEl = document.getElementById("club");
     
-    // تشغيل الأنظمة الفرعية الحقيقية
-    setupReferralSystem();
-    fetchRealReferrals();
-    setupRealWallet();
-}
-
-// 1. نظام التكبيس الفعلي وحفظ البيانات الفوري في Supabase
-async function handleTap() {
-    if (!currentUserData) return;
-
-    currentUserData.balance += 1;
-    document.getElementById('balance').innerText = currentUserData.balance.toLocaleString();
-
-    if (tg && tg.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred('medium');
+    if(pointsEl) pointsEl.innerText = `${t('coins')} ${userState.points.toLocaleString()}`;
+    
+    if (clubEl && userState.selectedClub) {
+        const club = clubsData.find(c => c.id === userState.selectedClub);
+        if(club) clubEl.innerHTML = `${t('yourClub')} <img src="${club.logo}" onerror="this.style.display='none'" style="height: 18px; vertical-align: middle; margin: 0 4px; object-fit: contain;"> <b>${getClubName(club)}</b>`;
     }
-
-    // حفظ الرصيد الجديد مباشرة في السيرفر
-    await supabase
-        .from('users')
-        .update({ balance: currentUserData.balance })
-        .eq('telegram_id', currentUserData.telegram_id);
 }
 
-// 2. معالجة وإنتاج روابط الإحالة الحقيقية
-function setupReferralSystem() {
-    const fullRefLink = `https://t.me/${BOT_USERNAME}?start=ref_${currentUserData.telegram_id}`;
-    document.getElementById('ref-link-input').value = fullRefLink;
+function showPage(pageId) {
+    if(!userState.hasLoggedIn) return; 
+    document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+    const activeNav = Array.from(document.querySelectorAll(".nav-item")).find(el => el.getAttribute("onclick").includes(pageId));
+    if (activeNav) activeNav.classList.add("active");
+
+    const contentDiv = document.getElementById("main-content");
+    if (!contentDiv) return;
+    contentDiv.innerHTML = ""; 
+
+    switch(pageId) {
+        case 'home': renderHomePage(contentDiv); break;
+        case 'tasks': renderTasksPage(contentDiv); break;
+        case 'friends': renderFriendsPage(contentDiv); break;
+        case 'leaderboard': renderLeaderboardPage(contentDiv); break;
+        case 'wallet': renderWalletPage(contentDiv); break;
+    }
 }
 
-// جلب وعرض قائمة الأصدقاء الحقيقيين المحالين من قاعدة البيانات
-async function fetchRealReferrals() {
-    let { data: referrals, error } = await supabase
-        .from('users')
-        .select('first_name, username, balance')
-        .eq('referred_by', currentUserData.telegram_id);
+// 🏠 7. الرئيسية (معالجة ذكية لصور المستخدمين)
+function renderHomePage(container) {
+    const currentClub = clubsData.find(c => c.id === userState.selectedClub) || clubsData[0];
+    
+    let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userState.username)}&background=1c1c22&color=0088cc&size=128&bold=true`;
+    let avatarSrc = userState.photoUrl ? userState.photoUrl : fallbackAvatar;
 
-    if (!error && referrals) {
-        document.getElementById('quick-ref-count').innerText = referrals.length;
-        document.getElementById('friends-count-label').innerText = referrals.length;
+    container.innerHTML = `
+        <div class="profile-section" style="background: ${currentClub.color}; padding: 25px 15px; border-radius: 16px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            <div class="avatar-container" style="position: relative; display: inline-block;">
+                <img id="user-avatar" src="${avatarSrc}" onerror="this.src='${fallbackAvatar}'" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; object-fit: cover;">
+                <span class="verified-badge" style="position: absolute; bottom: 0; ${userState.lang === 'ar' ? 'left: 0;' : 'right: 0;'} background: #0088cc; color: #fff; width: 22px; height: 22px; line-height: 22px; border-radius: 50%; font-size: 0.8rem; border: 2px solid #fff;">✓</span>
+            </div>
+            <h3 id="profile-name" class="user-title" style="margin: 10px 0 2px 0; color: #fff; font-size: 1.3rem;">${userState.username}</h3>
+            <p id="profile-id" class="user-id" style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.85rem; font-family: monospace;">ID: ${userState.userId}</p>
+        </div>
 
-        const container = document.getElementById('friends-list-container');
-        if (referrals.length > 0) {
-            container.innerHTML = "";
-            referrals.forEach(friend => {
-                const nameDisplay = friend.username ? `@${friend.username}` : friend.first_name;
-                const commission = Math.floor(friend.balance * 0.1); // بونص 10% حقيقي من إنتاج نقرات الصديق
-                
-                container.innerHTML += `
-                    <div class="friend-card">
-                        <div class="friend-meta">
-                            <div class="friend-avatar-box">${friend.first_name.charAt(0).toUpperCase()}</div>
-                            <div class="friend-name">${nameDisplay}</div>
-                        </div>
-                        <div class="friend-profit">
-                            <p>10% Commission</p>
-                            <span>+${commission} $STAR</span>
-                        </div>
-                    </div>
-                `;
+        <div style="background: #1c1c22; border: 1px solid #25252d; border-radius: 16px; padding: 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="${currentClub.logo}" onerror="this.style.display='none'" style="width: 50px; height: 50px; object-fit: contain;">
+                <div>
+                    <p style="margin: 0; font-size: 0.8rem; color: #aaa;">${t('supportText')}</p>
+                    <h3 style="margin: 0; color: #fff; font-size: 1.2rem;">${getClubName(currentClub)} ${currentClub.countryFlag}</h3>
+                </div>
+            </div>
+            <div>
+                <span style="background: rgba(255, 215, 0, 0.2); color: #ffd700; padding: 5px 10px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">
+                    ${currentClub.points.toLocaleString()} 🏆
+                </span>
+            </div>
+        </div>
+    `;
+}
+
+// 🛠️ 8. المهام
+function renderTasksPage(container) {
+    let tasksHtml = userState.tasks.map(task => `
+        <div class="task-card" style="display: flex; justify-content: space-between; align-items: center; background: #1c1c22; margin: 8px 0; padding: 14px; border-radius: 12px; border: 1px solid #25252d;">
+            <div>
+                <h5 style="margin: 0 0 4px 0; color: #fff;">${getTaskName(task)}</h5>
+                <small style="color: #0088cc; font-weight: bold;">+ ${task.points} ZELOFC</small>
+            </div>
+            <button onclick="executeTask('${task.id}', '${task.url}')" ${task.completed ? 'disabled style="background:#2b2b36; color:#666; border:none; padding:8px 16px; border-radius:8px;"' : 'style="background:#0088cc; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer;"'}>
+                ${task.completed ? t('btnDone') : t('btnGo')}
+            </button>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="daily-reward-card" style="background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 15px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <div>
+                <h4 style="margin: 0; color: #fff;">${t('dailyCheckin')}</h4>
+                <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #e0e0e0;">${t('dailyCheckinSub')}</p>
+            </div>
+            <button onclick="claimDaily()" ${userState.dailyCheckInClaimed ? 'disabled style="background:#555;"' : 'style="background:#4caf50; color:white; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer;"'}>
+                ${userState.dailyCheckInClaimed ? t('btnClaimed') : t('btnClaim')}
+            </button>
+        </div>
+
+        <h3 style="color:#fff; font-size:1.1rem; margin-bottom:10px;">${t('currentTasks')}</h3>
+        <div class="tasks-container">${tasksHtml}</div>
+    `;
+}
+
+function executeTask(taskId, url) {
+    if (tg && tg.openLink) tg.openLink(url); else window.open(url, '_blank');
+    setTimeout(() => {
+        const task = userState.tasks.find(t => t.id === taskId);
+        if (task && !task.completed) {
+            task.completed = true;
+            userState.points += task.points;
+            alert(`${t('alertTaskDone')} ${task.points} ZELOFC.`);
+            updateTopBar();
+            showPage('tasks');
+        }
+    }, 4000);
+}
+
+function claimDaily() {
+    if(!userState.dailyCheckInClaimed) {
+        userState.dailyCheckInClaimed = true;
+        userState.points += 200;
+        alert(t('alertDailyDone'));
+        updateTopBar();
+        showPage('tasks');
+    }
+}
+
+// 👥 9. الأصدقاء
+function renderFriendsPage(container) {
+    const referralLink = `https://t.me/ZeloSport_Bot/app?startapp=ref_${userState.userParam}`;
+    let friendsListHtml = userState.referrals.map(friend => `
+        <div style="display: flex; justify-content: space-between; background: #1c1c22; padding: 12px; border-radius: 10px; margin: 6px 0; border: 1px solid #25252d;">
+            <span style="color: #fff; font-weight: bold;">👤 ${friend.name}</span>
+            <span style="color: #0088cc; font-size: 0.85rem;">${t('invites')} ${friend.referralsCount} | +500 ZELOFC</span>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <h3>${t('referralTitle')}</h3>
+        <p style="color: #aaa; font-size: 0.85rem;">${t('referralSub')}</p>
+        
+        <div style="background: #16161a; border: 1px dashed #334; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+            <p style="color:#0088cc; font-family:monospace; font-size:0.8rem; word-break:break-all; margin:0 0 12px 0;">${referralLink}</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="copyToClipboard('${referralLink}')" style="flex:1; padding:10px; border-radius:8px; border:none; background:#4caf50; color:white; font-weight:bold; cursor:pointer;">${t('btnCopy')}</button>
+                <button onclick="shareOnTelegram('${referralLink}')" style="flex:1; padding:10px; border-radius:8px; border:none; background:#0088cc; color:white; font-weight:bold; cursor:pointer;">${t('btnShare')}</button>
+            </div>
+        </div>
+
+        <h4 style="color:#fff;">${t('friendsList')} (${userState.referrals.length})</h4>
+        <div>${friendsListHtml}</div>
+    `;
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => alert(t('alertCopied')));
+}
+
+function shareOnTelegram(link) {
+    const text = encodeURIComponent(t('shareText'));
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`;
+    if (tg && tg.openTelegramLink) tg.openTelegramLink(shareUrl); else window.open(shareUrl, '_blank');
+}
+
+// 🏆 10. الترتيب
+function renderLeaderboardPage(container) {
+    let sortedClubs = [...clubsData].sort((a, b) => b.points - a.points);
+    let leaderboardHtml = sortedClubs.map((club, index) => `
+        <div class="leaderboard-club-row" onclick="openSpecificClubFans('${club.id}')" style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1c1c22, #16161a); margin: 8px 0; padding: 14px 16px; border-radius: 12px; border: 1px solid #25252d; border-${userState.lang === 'ar' ? 'right' : 'left'}: 5px solid ${index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : '#cd7f32'}; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <b style="font-size: 1.1rem; width: 25px; color:#fff;">#${index + 1}</b>
+                <img src="${club.logo}" onerror="this.style.display='none'" style="width: 25px; height: 25px; object-fit: contain;">
+                <span style="color: #fff; font-weight: bold;">${getClubName(club)}</span>
+            </div>
+            <div style="text-align: ${userState.lang === 'ar' ? 'left' : 'right'};">
+                <span style="color: #4caf50; font-weight: bold; font-family: monospace;">${club.points.toLocaleString()} ZILOFC</span>
+                <br><small style="color: #888; font-size: 0.75rem;">${t('clickToView')}</small>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <h3 style="color: #fff; margin-bottom: 5px;">${t('leaderTitle')}</h3>
+        <p style="color: #888; font-size: 0.85rem; margin-bottom: 15px;">${t('leaderSub')}</p>
+        <div class="leaderboard-list">${leaderboardHtml}</div>
+    `;
+}
+
+function openSpecificClubFans(clubId) {
+    const club = clubsData.find(c => c.id === clubId);
+    const contentDiv = document.getElementById("main-content");
+    let fansList = clubFansLeaderboard[clubId] || [
+        { name: userState.username + " (أنت)", points: userState.points, referrals: userState.referrals.length }
+    ];
+    fansList.sort((a, b) => b.points - a.points);
+
+    let fansTableRows = fansList.map((fan, idx) => `
+        <tr style="border-bottom: 1px solid #1c1c22; text-align: center;">
+            <td style="padding: 12px; color: ${idx < 3 ? '#ff9800' : '#fff'}; font-weight: bold;">#${idx + 1}</td>
+            <td style="padding: 12px; color: #fff;">👤 ${fan.name}</td>
+            <td style="padding: 12px; color: #4caf50; font-family: monospace;">${fan.points.toLocaleString()}</td>
+            <td style="padding: 12px; color: #aaa;">${fan.referrals} ${t('referralWord')}</td>
+        </tr>
+    `).join('');
+
+    contentDiv.innerHTML = `
+        <button onclick="showPage('leaderboard')" style="background: #2b2b36; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-bottom: 15px; font-weight: bold;">${t('btnBack')}</button>
+        <h3 style="margin-top:0; color: #fff; display: flex; align-items: center; gap: 8px;">
+            <img src="${club.logo}" onerror="this.style.display='none'" style="width: 24px; height: 24px; object-fit: contain;"> ${t('topFansOf')} [ ${getClubName(club)} ]
+        </h3>
+        <p style="color:#aaa; font-size:0.8rem; margin-bottom:15px;">${t('topFansSub')}</p>
+        <table style="width: 100%; border-collapse: collapse; background: #121215; border-radius: 12px; overflow: hidden;">
+            <thead style="background: #1c1c22;">
+                <tr>
+                    <th style="padding: 12px; color: #aaa;">${t('colRank')}</th>
+                    <th style="padding: 12px; color: #aaa;">${t('colFan')}</th>
+                    <th style="padding: 12px; color: #aaa;">${t('colPoints')}</th>
+                    <th style="padding: 12px; color: #aaa;">${t('colActivity')}</th>
+                </tr>
+            </thead>
+            <tbody>${fansTableRows}</tbody>
+        </table>
+    `;
+}
+
+// 👛 11. المحفظة
+function renderWalletPage(container) {
+    if (userState.walletConnected) {
+        const shortAddress = `${userState.walletAddress.slice(0, 6)}...${userState.walletAddress.slice(-6)}`;
+        container.innerHTML = `
+            <div style="background: linear-gradient(145deg, #16161a, #1c1c22); border: 1px solid rgba(76, 175, 80, 0.4); border-radius: 20px; padding: 30px 20px; text-align: center;">
+                <div style="font-size: 3.5rem;">💎</div>
+                <h3 style="color: #4caf50; margin: 10px 0;">${t('walletConnected')}</h3>
+                <div style="background: #0d0d11; padding: 12px; border-radius: 10px; border: 1px solid #22222a; margin: 20px 0;">
+                    <span style="font-family: monospace; font-size: 0.9rem; color: #0088cc; font-weight: bold;">${shortAddress}</span>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.02); padding: 15px; border-radius: 12px; margin-bottom: 25px;">
+                    <span style="font-size: 0.8rem; color: #777788; display: block; margin-bottom: 5px;">${t('walletBalance')}</span>
+                    <h2 style="margin: 0; font-size: 2.2rem; color: #fff; font-weight: bold;">${userState.walletBalance} TON</h2>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button onclick="copyToClipboard('${userState.walletAddress}')" style="flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: bold; background: #2b2b36; color: #fff; cursor: pointer;">${t('btnCopyAddress')}</button>
+                    <button onclick="triggerDisconnect()" style="flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: bold; background: rgba(244, 67, 54, 0.15); color: #f44336; border: 1px solid rgba(244, 67, 54, 0.3); cursor: pointer;">${t('btnDisconnect')}</button>
+                </div>
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div style="background: linear-gradient(145deg, #16161a, #1c1c22); border: 1px solid #25252d; border-radius: 20px; padding: 30px 20px; text-align: center;">
+                <div style="font-size: 4rem; margin-bottom: 15px;">👛</div>
+                <h3 style="color: #fff;">${t('walletConnectTitle')}</h3>
+                <p style="color: #aaa; font-size: 0.9rem; line-height: 1.5; margin-bottom: 30px;">${t('walletConnectSub')}</p>
+                <button onclick="triggerConnect()" style="background: linear-gradient(135deg, #0088cc, #005580); color: white; border: none; padding: 14px 28px; border-radius: 25px; font-size: 1rem; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0, 136, 204, 0.4);">
+                    ${t('btnConnect')}
+                </button>
+            </div>
+        `;
+    }
+}
+
+function triggerConnect() {
+    if (tonConnectUI) tonConnectUI.openModal().catch(err => console.error("Error", err));
+}
+
+function triggerDisconnect() {
+    if (tonConnectUI && tonConnectUI.connected) {
+        if(confirm(t('alertDisconnect'))) {
+            tonConnectUI.disconnect().then(() => {
+                alert(t('alertDisconnected'));
+                showPage('wallet');
             });
-        } else {
-            container.innerHTML = `<p class="no-friends-msg">No friends invited yet. Start inviting to earn 10% bonus!</p>`;
         }
     }
 }
-
-// 3. ربط محفظة التلجرام TON الفعلي عبر بروتوكول TON Connect الرسمي
-function setupRealWallet() {
-    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-        manifestUrl: MANIFEST_URL,
-        buttonRootId: 'ton-connect-btn'
-    });
-
-    // مراقبة نجاح الاتصال وتخزين عنوان المحفظة الحقيقي في Supabase للمستخدم
-    tonConnectUI.onStatusChange(async (wallet) => {
-        if (wallet) {
-            const rawAddress = wallet.account.address;
-            document.getElementById('wallet-status').innerHTML = `<span style='color: #00ff9d; font-weight: bold;'>Connected!</span>`;
-            
-            await supabase
-                .from('users')
-                .update({ wallet_address: rawAddress })
-                .eq('telegram_id', currentUserData.telegram_id);
-        } else {
-            document.getElementById('wallet-status').innerText = "Wallet not connected";
-        }
-    });
-}
-
-// نسخ ومشاركة روابط الدعوة
-function copyRefLink() {
-    const copyText = document.getElementById("ref-link-input");
-    copyText.select();
-    navigator.clipboard.writeText(copyText.value);
-    if (tg) tg.showAlert("Real referral link copied! 🚀");
-}
-
-function inviteFriend() {
-    const refLink = document.getElementById("ref-link-input").value;
-    const shareText = encodeURIComponent("Join Starling App! Tap the core, connect your wallet and mine real $STAR tokens! ⚡🌟");
-    if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${refLink}&text=${shareText}`);
-}
-
-function switchPage(pageId, element) {
-    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-    document.getElementById(`page-${pageId}`).classList.add('active');
-    element.classList.add('active');
-}
-
-// تشغيل النظام بالكامل عند تحميل الصفحة واكتمال بيئة الويب
-window.onload = () => {
-    initializeApp();
-};
->>>>>>> 443c322294bcbd4b3738f51ab66bbee48194b646

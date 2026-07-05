@@ -1,0 +1,246 @@
+/* ==========================================
+   1. الإعدادات الأساسية والتنقل (الهاتف الذكي الثابت)
+   ========================================== */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0b0b0e;
+    color: #fff;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* البار العلوي الثابت */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #121216;
+    border-bottom: 1px solid #22222a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    z-index: 1000;
+}
+
+/* حاوية المحتوى (تتحرك بحرية بين البار العلوي والسفلي الثابتين) */
+.content-container {
+    margin-top: 60px;    /* مسافة مخصصة للبار العلوي الثابت */
+    margin-bottom: 85px; /* مسافة مخصصة لحماية المحتوى من الاختفاء خلف أزرار التطبيق الثابتة */
+    padding: 15px;
+    min-height: calc(100vh - 145px);
+    overflow-y: auto;
+}
+
+/* شريط أزرار التطبيق السفلي (ثابت تماماً مثل تيك توك وإنستغرام) */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65px;
+    background: rgba(18, 18, 22, 0.95);
+    backdrop-filter: blur(10px); /* تأثير ضبابي زجاجي فخم */
+    border-top: 1px solid #22222a;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom); /* دعم الهواتف ذات الحواف */
+}
+
+/* أزرار التنقل الفردية داخل الشريط الثابت */
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #888899;
+    font-size: 0.75rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    flex: 1;
+    height: 100%;
+    transition: color 0.2s ease;
+}
+
+.nav-item .icon {
+    font-size: 1.4rem;
+    margin-bottom: 2px;
+}
+
+.nav-item.active {
+    color: #0088cc; /* لون زيلو وتليجرام الأزرق */
+    font-weight: bold;
+}
+
+
+/* ==========================================
+   2. كود واجهة المحفظة الاحترافي الخاص بك
+   ========================================== */
+
+/* حاوية كارت المحفظة الرئيسي */
+.wallet-card {
+    background: linear-gradient(145deg, #16161a, #1c1c22);
+    border: 1px solid #25252d;
+    border-radius: 20px;
+    padding: 30px 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    margin: 10px auto;
+    max-width: 500px; /* لضمان مظهر متناسق على الشاشات الأعرض قليلًا */
+}
+
+.text-center { text-align: center; }
+.text-success { color: #4caf50; }
+.border-success { border-color: rgba(76, 175, 80, 0.4) !important; }
+
+/* تأثير الإضاءة حول إيموجي المحفظة */
+.wallet-icon-glow {
+    font-size: 4rem;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 15px rgba(0, 136, 204, 0.4));
+    animation: pulseGlow 2s infinite alternate;
+    display: inline-block; /* لضمان عمل تأثير الأنميشن بشكل سليم */
+}
+
+@keyframes pulseGlow {
+    from { transform: scale(1); filter: drop-shadow(0 0 10px rgba(0, 136, 204, 0.3)); }
+    to { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(0, 136, 204, 0.6)); }
+}
+
+.wallet-description {
+    color: #aaa;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 30px;
+}
+
+/* زر الاتصال بـ TON المضيء */
+.btn-connect-wallet {
+    background: linear-gradient(135deg, #0088cc, #005580);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 20px rgba(0, 136, 204, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-connect-wallet:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 10px rgba(0, 136, 204, 0.3);
+}
+
+.wallet-security-note {
+    margin-top: 25px;
+    font-size: 0.75rem;
+    color: #555566;
+    line-height: 1.4;
+}
+
+/* واجهة المحفظة المتصلة */
+.success-badge-icon {
+    font-size: 3.5rem;
+    filter: drop-shadow(0 0 12px rgba(76, 175, 80, 0.4));
+    display: inline-block;
+}
+
+.address-box-wrapper {
+    background: #0d0d11;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #22222a;
+    margin: 20px 0;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+/* شريط التمرير الصغير لعنوان المحفظة الطويل */
+.address-box-wrapper::-webkit-scrollbar {
+    height: 4px;
+}
+.address-box-wrapper::-webkit-scrollbar-thumb {
+    background: #22222a;
+    border-radius: 10px;
+}
+
+.wallet-address-monospace {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    color: #0088cc;
+    letter-spacing: 0.5px;
+}
+
+/* رصيد المحفظة المتصلة */
+.balance-container {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+}
+
+.balance-label {
+    font-size: 0.8rem;
+    color: #777788;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.balance-amount {
+    margin: 0;
+    font-size: 2.2rem;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* أزرار التحكم الخاصة بالمحفظة (نسخ / قطع اتصال) */
+.wallet-actions-flex {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 10px; /* مسافة أمان إضافية */
+}
+
+.btn-wallet-util {
+    flex: 1;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-wallet-util:active {
+    transform: scale(0.98);
+}
+
+.btn-copy-address {
+    background: #2b2b36;
+    color: #fff;
+}
+
+.btn-copy-address:hover { background: #3a3a4a; }
+
+.btn-disconnect-wallet {
+    background: rgba(244, 67, 54, 0.15);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.btn-disconnect-wallet:hover {
+    background: #f44336;
+    color: white;
+}

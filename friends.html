@@ -1,0 +1,37 @@
+<!-- صندوق معلومات نظام الإحالات -->
+<div class="referral-bonus-card">
+    <div class="bonus-icon">📢</div>
+    <div class="bonus-details">
+        <h3>استدعِ حلفاءك لدعم فريقك!</h3>
+        <p>لكل صديق ينضم عبر رابطك، تحصل أنت وناديك المفضل على <span class="highlight-text">+500 عملة زيلو</span> فوراً.</p>
+    </div>
+</div>
+
+<!-- صندوق رابط الإحالة الذكي وأزرار التفاعل -->
+<div class="share-box-container">
+    <p class="share-title">رابط إحالتك الفريد والخاص:</p>
+    <div class="referral-link-display">
+        <span id="ref-link-text" class="link-text">https://t.me/XiloSportBot/start?startapp=ref_user</span>
+    </div>
+    
+    <div class="share-actions-group">
+        <button class="btn-action btn-copy" onclick="copyToClipboard(document.getElementById('ref-link-text').innerText)">
+            📋 نسخ الرابط
+        </button>
+        <button class="btn-action btn-share-tg" onclick="shareOnTelegram(document.getElementById('ref-link-text').innerText)">
+            ✈️ مشاركة في تليجرام
+        </button>
+    </div>
+</div>
+
+<!-- قائمة الأصدقاء الذين سجلوا بالفعل -->
+<div class="friends-list-section">
+    <div class="list-header">
+        <h4>👥 قائمة أصدقائك الحالية (<span id="friends-count">0</span>)</h4>
+        <span class="list-subtitle">المشجعون الذين انضموا إلى كتيبتك</span>
+    </div>
+
+    <div id="friends-list-container" class="friends-list-wrapper">
+        <!-- يتم تعبئة قائمة الأصدقاء هنا تلقائياً بواسطة الجافاسكريبت -->
+    </div>
+</div>

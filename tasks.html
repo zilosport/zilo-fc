@@ -1,0 +1,33 @@
+<!-- صندوق التحفيز للمهام -->
+<div class="tasks-welcome-card">
+    <div class="tasks-icon">🚀</div>
+    <div class="tasks-headline">
+        <h3>ضاعف أرباحك ودعم ناديك</h3>
+        <p>كل مهمة تكملها تمنحك عملات رقمية فورية وتدفع بناديك المفضل نحو صدارة الكأس الأوروبي لـ زيلو سبورت!</p>
+    </div>
+</div>
+
+<!-- تبويب قائمة المهام -->
+<div class="tasks-tabs-container">
+    <div class="tab-item active">المهام العامة</div>
+</div>
+
+<!-- حاوية عرض كروت المهام التفاعلية -->
+<div class="tasks-wrapper">
+    <!-- مهمة تسجيل الدخول اليومي السريعة -->
+    <div class="daily-checkin-box">
+        <div class="checkin-info">
+            <span class="checkin-emoji">📆</span>
+            <div>
+                <h4>المكافأة اليومية التلقائية</h4>
+                <p>+200 عملة زيلو كل 24 ساعة</p>
+            </div>
+        </div>
+        <button id="btn-daily-tasks" class="btn-task-claim" onclick="claimDaily()">استلام</button>
+    </div>
+
+    <h4 class="sub-section-title">🔥 المهام المتاحة حالياً</h4>
+    <div id="tasks-list-root" class="tasks-list-container">
+        <!-- يتم ملء المهام (منصة إكس، تليجرام، يوتيوب، المجموعات) ديناميكياً بواسطة الجافاسكريبت المدمج في app.js -->
+    </div>
+</div>
