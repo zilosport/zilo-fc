@@ -2,8 +2,8 @@
 // 🚀 تطبيق زيلو إف سي (Zelo Sport) - الكود الأساسي (app.js)
 // ==========================================
 
-// 1. استدعاء البيانات من ملف index.js المجمع
-import { clubsData, i18n } from './index.js';
+// 1. استدعاء البيانات والبطولات من ملف index.js المجمع
+import { clubsData, leagues, i18n } from './index.js';
 
 // 2. إدارة بيانات المستخدم (خالية من أي بيانات وهمية للمشجعين والإحالات)
 let userState = {
@@ -63,7 +63,6 @@ function toggleLanguage() {
     updateTopBar();
     const activeNav = document.querySelector(".nav-item.active");
     if (activeNav) {
-        // تم التعديل للاعتماد على الـ ID بدلاً من onclick
         const pageId = activeNav.id.replace('nav-', '');
         showPage(pageId);
     } else if (!userState.hasLoggedIn) {
@@ -73,7 +72,6 @@ function toggleLanguage() {
 
 // 5. تهيئة التطبيق (سحب بيانات تليجرام وإضافة مستمعي الأزرار)
 document.addEventListener("DOMContentLoaded", () => {
-    // ربط أزرار القائمة السفلية عبر الـ ID الخاص بها
     document.getElementById('nav-home')?.addEventListener('click', () => showPage('home'));
     document.getElementById('nav-tasks')?.addEventListener('click', () => showPage('tasks'));
     document.getElementById('nav-friends')?.addEventListener('click', () => showPage('friends'));
@@ -154,31 +152,69 @@ function injectLangButton() {
     }
 }
 
-// 📱 6. شاشة تسجيل الدخول
+// 📱 6. شاشة تسجيل الدخول (تعرض البطولات أولاً)
 function renderLoginScreen() {
     if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'none';
     if (document.querySelector('.bottom-nav')) document.querySelector('.bottom-nav').style.display = 'none';
 
     const mainContent = document.getElementById("main-content");
     
-    let optionsHtml = clubsData.map(club => `
-        <div onclick="selectClubAndLogin('${club.id}')" style="background: #1c1c22; border: 1px solid #25252d; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s;">
-            <div style="position: relative;">
-                <img src="${club.logo}" alt="" onerror="this.style.display='none'" style="width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">
-                <span style="position: absolute; bottom: -5px; right: -10px; font-size: 0.9rem; background: #121216; border-radius: 50%; padding: 2px;">${club.countryFlag}</span>
+    // رسم كروت البطولات
+    let leaguesHtml = leagues.map(league => `
+        <div onclick="renderLeagueTeams('${league.id}')" style="background: linear-gradient(135deg, #1c1c22, #25252d); border: 1px solid #333; padding: 20px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; gap: 15px; cursor: pointer; margin-bottom: 12px; transition: 0.2s;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 2.5rem;">${league.icon}</div>
+                <div style="text-align: ${userState.lang === 'ar' ? 'right' : 'left'};">
+                    <h3 style="margin: 0; color: #fff; font-size: 1.1rem;">${userState.lang === 'ar' ? league.nameAr : league.nameEn}</h3>
+                    <p style="margin: 5px 0 0 0; color: #aaa; font-size: 0.85rem;">اختر فريقك من هنا</p>
+                </div>
             </div>
-            <h4 style="margin: 0; color: #fff; font-size: 0.85rem; text-align: center;">${getClubName(club)}</h4>
+            <div style="color: #0088cc; font-size: 1.5rem;">
+                ${userState.lang === 'ar' ? '⬅️' : '➡️'}
+            </div>
         </div>
     `).join('');
 
     mainContent.innerHTML = `
-        <div style="padding: 20px 10px; text-align: center; max-width: 500px; margin: 0 auto;">
-            <div style="font-size: 3rem; margin-bottom: 10px;">⚽</div>
-            <h2 style="color: #fff; margin: 0 0 5px 0;">${t('welcomeTitle')}</h2>
-            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">${t('welcomeSub')}</p>
+        <div style="padding: 20px 10px; max-width: 500px; margin: 0 auto;">
+            <div style="text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">⚽</div>
+                <h2 style="color: #fff; margin: 0 0 5px 0;">${t('welcomeTitle')}</h2>
+                <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 30px;">اختر البطولة أولاً</p>
+            </div>
+            <div style="max-height: 65vh; overflow-y: auto; padding-right: 5px;">
+                ${leaguesHtml}
+            </div>
+        </div>
+    `;
+}
 
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 60vh; overflow-y: auto; padding-right: 5px;">
-                ${optionsHtml}
+// 📱 دالة جديدة: عرض الأندية داخل البطولة المحددة
+function renderLeagueTeams(leagueId) {
+    const mainContent = document.getElementById("main-content");
+    const selectedLeague = leagues.find(l => l.id === leagueId);
+    
+    if (!selectedLeague) return;
+
+    let teamsHtml = selectedLeague.teams.map(club => `
+        <div onclick="selectClubAndLogin('${club.id}')" style="background: #1c1c22; border: 1px solid #25252d; padding: 15px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: 0.2s;">
+            <img src="${club.logo}" alt="" onerror="this.style.display='none'" style="width: 55px; height: 55px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">
+            <h4 style="margin: 0; color: #fff; font-size: 0.9rem; text-align: center;">${getClubName(club)}</h4>
+        </div>
+    `).join('');
+
+    mainContent.innerHTML = `
+        <div style="padding: 20px 10px; max-width: 500px; margin: 0 auto;">
+            <button onclick="renderLoginScreen()" style="background: #2b2b36; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; font-weight: bold; width: 100%; text-align: ${userState.lang === 'ar' ? 'right' : 'left'};">
+                ${userState.lang === 'ar' ? '⬅️ عودة للبطولات' : '➡️ Back to Leagues'}
+            </button>
+            
+            <h3 style="color: #fff; text-align: center; margin-bottom: 20px;">
+                ${selectedLeague.icon} ${userState.lang === 'ar' ? selectedLeague.nameAr : selectedLeague.nameEn}
+            </h3>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-height: 60vh; overflow-y: auto; padding-right: 5px;">
+                ${teamsHtml}
             </div>
         </div>
     `;
@@ -214,7 +250,6 @@ function showPage(pageId) {
     if(!userState.hasLoggedIn) return; 
     document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
     
-    // تم التعديل للاعتماد على الـ ID لإيجاد العنصر النشط
     const activeNav = document.getElementById(`nav-${pageId}`);
     if (activeNav) activeNav.classList.add("active");
 
@@ -471,6 +506,8 @@ function triggerDisconnect() {
 // 🛠️ ربط الدوال بالكائن العام (Global Window Object) 
 // لكي تعمل مع الـ onclick في عناصر الـ HTML المولدة ديناميكياً
 // ==========================================
+window.renderLoginScreen = renderLoginScreen;
+window.renderLeagueTeams = renderLeagueTeams;
 window.selectClubAndLogin = selectClubAndLogin;
 window.showPage = showPage;
 window.executeTask = executeTask;
