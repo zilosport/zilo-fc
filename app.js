@@ -1,5 +1,5 @@
 // ==========================================
-// 🚀 تطبيق زيلو إف سي (Zilo FC) - الكود الأساسي (app.js)
+// 🚀 تطبيق زيلو إف سي (Zelo Sport) - الكود الأساسي (app.js)
 // ملاحظة: يتم تحميل `i18n` و `clubsData` من ملف `data.js`
 // ==========================================
 
@@ -19,7 +19,7 @@ let userState = {
     referrals: [], 
     dailyCheckInClaimed: false,
     tasks: [
-        { id: "x", textAr: "متابعة حساب Zilo FC على X", textEn: "Follow Zilo FC on X", points: 500, completed: false, url: "https://x.com" },
+        { id: "x", textAr: "متابعة حساب Zilo FC على X", textEn: "Follow Zelo Sport on X", points: 500, completed: false, url: "https://x.com" },
         { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me" },
         { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com" }
     ]
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
         tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://zilosport.github.io/zilo-fc/tonconnect-manifest.json',
+            manifestUrl: 'https://zelo-sport-fc.github.io/zelo-fc/tonconnect-manifest.json',
             buttonRootId: null
         });
 
