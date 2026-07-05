@@ -5,14 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zelo FC App</title>
     
-    <!-- تضمين مكتبة تليجرام الأساسية لكي يعمل التطبيق ويسحب بيانات المستخدم -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <!-- تضمين مكتبة TON Connect الرسمية الحقيقية -->
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     
     <style>
-        /* إعدادات الشاشة الأساسية لمنع التمدد الخاطئ */
         body {
             margin: 0;
             padding: 0;
@@ -23,7 +19,6 @@
             overflow-x: hidden;
         }
 
-        /* 1. البار العلوي الثابت */
         .top-bar {
             position: fixed;
             top: 0;
@@ -39,16 +34,14 @@
             z-index: 1000;
         }
 
-        /* 2. منطقة المحتوى (تتحرك بحرية دون التأثير على الأزرار) */
         .content-container {
-            margin-top: 60px;    /* مسافة مخصصة للبار العلوي الثابت */
-            margin-bottom: 75px; /* مسافة مخصصة للبار السفلي لكي لا يختفي المحتوى خلفه */
+            margin-top: 60px;
+            margin-bottom: 75px;
             padding: 15px;
             min-height: calc(100vh - 135px);
             overflow-y: auto;
         }
 
-        /* 3. شريط الأزرار السفلي (ثابت تماماً مثل تيك توك وانستغرام) */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -56,16 +49,15 @@
             right: 0;
             height: 65px;
             background: rgba(18, 18, 22, 0.95);
-            backdrop-filter: blur(10px); /* تأثير زجاجي احترافي */
+            backdrop-filter: blur(10px);
             border-top: 1px solid #22222a;
             display: flex;
             justify-content: space-around;
             align-items: center;
             z-index: 1000;
-            padding-bottom: env(safe-area-inset-bottom); /* دعم هواتف الآيفون الحديثة ذات الحواف */
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* تصميم الزر المفرد داخل شريط التنقل */
         .nav-item {
             display: flex;
             flex-direction: column;
@@ -86,54 +78,85 @@
             margin-bottom: 2px;
         }
 
-        /* حالة الزر النشط المستهدف حالياً */
         .nav-item.active {
-            color: #0088cc; /* اللون الأزرق الرسمي للتليجرام وزيلو */
+            color: #0088cc;
             font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <!-- البار العلوي -->
     <div class="top-bar">
         <div id="club" style="font-size: 0.9rem; color: #aaa;">ناديك: 👑 <b>ريال مدريد</b></div>
         <div id="points" style="font-weight: bold; color: #ffd700;">🪙 عملة ZILO: 1,500</div>
     </div>
 
-    <!-- منطقة المحتوى الديناميكي المتحرك -->
-    <div class="content-container" id="main-content">
-        <!-- يتم رندرة الصفحات هنا بواسطة الجافا سكريبت -->
-    </div>
+    <div class="content-container" id="main-content"></div>
 
-    <!-- شريط الأزرار السفلي الثابت حقيقياً (Fixed) -->
     <div class="bottom-nav">
-        <button class="nav-item active" onclick="showPage('home')">
-            <span class="icon">🏠</span>
-            <span>الرئيسية</span>
-        </button>
-        <button class="nav-item" onclick="showPage('tasks')">
-            <span class="icon">🛠️</span>
-            <span>المهام</span>
-        </button>
-        <button class="nav-item" onclick="showPage('friends')">
-            <span class="icon">👥</span>
-            <span>الأصدقاء</span>
-        </button>
-        <button class="nav-item" onclick="showPage('leaderboard')">
-            <span class="icon">🏆</span>
-            <span>الترتيب</span>
-        </button>
-        <button class="nav-item" onclick="showPage('wallet')">
-            <span class="icon">👛</span>
-            <span>المحفظة</span>
-        </button>
+        <button class="nav-item active" onclick="showPage('home')"><span class="icon">🏠</span><span>الرئيسية</span></button>
+        <button class="nav-item" onclick="showPage('tasks')"><span class="icon">🛠️</span><span>المهام</span></button>
+        <button class="nav-item" onclick="showPage('friends')"><span class="icon">👥</span><span>الأصدقاء</span></button>
+        <button class="nav-item" onclick="showPage('leaderboard')"><span class="icon">🏆</span><span>الترتيب</span></button>
+        <button class="nav-item" onclick="showPage('wallet')"><span class="icon">👛</span><span>المحفظة</span></button>
     </div>
 
-    <!-- 1. استدعاء ملف البيانات أولاً لحل مشكلة الشاشة السوداء -->
+    <!-- ========================================== -->
+    <!-- 1. استدعاء جميع ملفات الأندية مفعلة بالكامل -->
+    <!-- ========================================== -->
+    <script src="argentina.js"></script>
+    <script src="france.js"></script>
+    <script src="brazil.js"></script>
+    <script src="england.js"></script>
+    <script src="germany.js"></script>
+    <script src="spain.js"></script>
+    <script src="italy.js"></script>
+    <script src="portugal.js"></script>
+    <script src="netherlands.js"></script>
+    <script src="belgium.js"></script>
+    <script src="uruguay.js"></script>
+    <script src="colombia.js"></script>
+    <script src="mexico.js"></script>
+    <script src="usa.js"></script>
+    <script src="canada.js"></script>
+    <script src="japan.js"></script>
+    <script src="south-korea.js"></script>
+    <script src="saudi-arabia.js"></script>
+    <script src="uae.js"></script>
+    <script src="syria.js"></script>
+    <script src="qatar.js"></script>
+    <script src="morocco.js"></script>
+    <script src="egypt.js"></script>
+    <script src="tunisia.js"></script>
+    <script src="algeria.js"></script>
+    <script src="iran.js"></script>
+    <script src="iraq.js"></script>
+    <script src="australia.js"></script>
+    <script src="croatia.js"></script>
+    <script src="switzerland.js"></script>
+    <script src="denmark.js"></script>
+    <script src="poland.js"></script>
+    <script src="serbia.js"></script>
+    <script src="austria.js"></script>
+    <script src="turkey.js"></script>
+    <script src="ecuador.js"></script>
+    <script src="chile.js"></script>
+    <script src="paraguay.js"></script>
+    <script src="peru.js"></script>
+    <script src="nigeria.js"></script>
+    <script src="ghana.js"></script>
+    <script src="senegal.js"></script>
+    <script src="cameroon.js"></script>
+    <script src="ivory-coast.js"></script>
+    <script src="greece.js"></script>
+    <script src="sweden.js"></script>
+    <script src="norway.js"></script>
+    <script src="hungary.js"></script>
+
+    <!-- 2. ملف البيانات -->
     <script src="data.js"></script>
     
-    <!-- 2. ربط كود الـ JavaScript المطور الأساسي هنا -->
+    <!-- 3. ملف التطبيق -->
     <script src="app.js"></script>
 
 </body>
