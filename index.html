@@ -110,39 +110,32 @@
     <div class="bottom-nav">
         <button class="nav-item active" onclick="showPage('home')">
             <span class="icon">🏠</span>
-            <span>الرئيسية</span>
+            <span class="nav-text">الرئيسية</span>
         </button>
         <button class="nav-item" onclick="showPage('tasks')">
             <span class="icon">🛠️</span>
-            <span>المهام</span>
+            <span class="nav-text">المهام</span>
         </button>
         <button class="nav-item" onclick="showPage('friends')">
             <span class="icon">👥</span>
-            <span>الأصدقاء</span>
+            <span class="nav-text">الأصدقاء</span>
         </button>
         <button class="nav-item" onclick="showPage('leaderboard')">
             <span class="icon">🏆</span>
-            <span>الترتيب</span>
+            <span class="nav-text">الترتيب</span>
         </button>
         <button class="nav-item" onclick="showPage('wallet')">
             <span class="icon">👛</span>
-            <span>المحفظة</span>
+            <span class="nav-text">المحفظة</span>
         </button>
     </div>
 
-    <!-- 0. استدعاء ملفات الأندية المنفصلة (الجديد) -->
-    <script src="england.js"></script>
-    <script src="spain.js"></script>
-    <script src="germany.js"></script>
-    <script src="italy.js"></script>
-    <script src="france.js"></script>
-    <script src="europe.js"></script>
-
-    <!-- 1. استدعاء ملف البيانات أولاً لحل مشكلة الشاشة السوداء -->
-    <script src="data.js"></script>
-    
-    <!-- 2. ربط كود الـ JavaScript المطور الأساسي هنا -->
-    <script src="app.js"></script>
+    <!-- 
+      🚀 التعديل الأهم هنا: 
+      استدعاء ملف app.js كـ module فقط. 
+      هذا الملف سيقوم تلقائياً بجلب data.js والذي بدوره سيجلب بقية الملفات!
+    -->
+    <script type="module" src="app.js"></script>
 
 </body>
 </html>
