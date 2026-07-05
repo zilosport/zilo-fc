@@ -1,7 +1,6 @@
 // ==========================================
 // 🚀 تطبيق زيلو إف سي (Zelo Sport) - الكود الأساسي (app.js)
 // ملاحظة: يتم تحميل `i18n` و `clubsData` من ملف `data.js`
-// ملاحظة: تم نقل المهام إلى tasks.js والترتيب إلى leaderboard.js
 // ==========================================
 
 // 2. إدارة بيانات المستخدم
@@ -11,7 +10,7 @@ let userState = {
     userId: "",
     photoUrl: null,
     points: 0, 
-    selectedClubs: [], 
+    selectedClubs: [], // تم تحويلها لمصفوفة لدعم أكثر من نادي
     walletConnected: false,
     walletAddress: null,
     walletBalance: "0.00",
@@ -263,15 +262,16 @@ window.toggleClubSelection = function(clubId, flag) {
     const index = window.tempSelectedClubs.indexOf(clubId);
     
     if (index > -1) {
-        window.tempSelectedClubs.splice(index, 1); 
+        window.tempSelectedClubs.splice(index, 1); // إزالة النادي إذا كان مختاراً مسبقاً
     } else {
         if (window.tempSelectedClubs.length >= 2) {
             alert(userState.lang === 'ar' ? "يمكنك اختيار ناديين كحد أقصى!" : "You can only select up to 2 clubs!");
             return;
         }
-        window.tempSelectedClubs.push(clubId); 
+        window.tempSelectedClubs.push(clubId); // إضافة النادي
     }
     
+    // تحديث الشاشة لتظهر علامة الصح
     if (flag) showClubsForCountry(flag); else renderLoginScreen();
 }
 
@@ -299,6 +299,7 @@ function updateTopBar() {
     if(pointsEl) pointsEl.innerText = `${t('coins')} ${userState.points.toLocaleString()}`;
     
     if (clubEl && userState.selectedClubs && userState.selectedClubs.length > 0) {
+        // جلب شعارات الأندية المختارة
         let logos = userState.selectedClubs.map(id => {
             const club = clubsData.find(c => c.id === id);
             return club ? `<img src="${club.logo}" style="height: 20px; vertical-align: middle; margin: 0 4px; object-fit: contain;">` : '';
@@ -320,7 +321,7 @@ function showPage(pageId) {
 
     switch(pageId) {
         case 'home': renderHomePage(contentDiv); break;
-        case 'tasks': renderTasksPage(contentDiv); break; // تأكد أن renderTasksPage موجودة في tasks.js
+        case 'tasks': renderTasksPage(contentDiv); break;
         case 'friends': renderFriendsPage(contentDiv); break;
         case 'leaderboard': renderLeaderboardPage(contentDiv); break;
         case 'wallet': renderWalletPage(contentDiv); break;
@@ -329,16 +330,18 @@ function showPage(pageId) {
 
 // 🏠 7. الرئيسية (تدعم عرض ناديين)
 function renderHomePage(container) {
+    // جلب بيانات الأندية المختارة
     let selectedClubsData = userState.selectedClubs.map(id => clubsData.find(c => c.id === id)).filter(Boolean);
-    if(selectedClubsData.length === 0) selectedClubsData = [clubsData[0]]; 
+    if(selectedClubsData.length === 0) selectedClubsData = [clubsData[0]]; // احتياطي
     
-    const primaryClub = selectedClubsData[0]; 
+    const primaryClub = selectedClubsData[0]; // النادي الأول للخلفية
     
     let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userState.username)}&background=1c1c22&color=0088cc&size=128&bold=true`;
     let avatarSrc = userState.photoUrl ? userState.photoUrl : fallbackAvatar;
 
     const profileBgStyle = `background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('${primaryClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${primaryClub.color || '#25252d'};`;
 
+    // إنشاء بطاقة لكل نادي
     let clubsCardsHtml = selectedClubsData.map(club => `
         <div style="background: #1c1c22; border: 1px solid #25252d; border-radius: 16px; padding: 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
             <div style="display: flex; align-items: center; gap: 15px;">
@@ -368,6 +371,60 @@ function renderHomePage(container) {
         <h4 style="color: #aaa; margin: 0 0 10px 0; font-size: 0.9rem;">${userState.lang === 'ar' ? 'أنديتك المفضلة:' : 'Your Supported Clubs:'}</h4>
         ${clubsCardsHtml}
     `;
+}
+
+// 🛠️ 8. المهام
+function renderTasksPage(container) {
+    let tasksHtml = userState.tasks.map(task => `
+        <div class="task-card" style="display: flex; justify-content: space-between; align-items: center; background: #1c1c22; margin: 8px 0; padding: 14px; border-radius: 12px; border: 1px solid #25252d;">
+            <div>
+                <h5 style="margin: 0 0 4px 0; color: #fff;">${getTaskName(task)}</h5>
+                <small style="color: #0088cc; font-weight: bold;">+ ${task.points} ZELOFC</small>
+            </div>
+            <button onclick="executeTask('${task.id}', '${task.url}')" ${task.completed ? 'disabled style="background:#2b2b36; color:#666; border:none; padding:8px 16px; border-radius:8px;"' : 'style="background:#0088cc; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer;"'}>
+                ${task.completed ? t('btnDone') : t('btnGo')}
+            </button>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="daily-reward-card" style="background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 15px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <div>
+                <h4 style="margin: 0; color: #fff;">${t('dailyCheckin')}</h4>
+                <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #e0e0e0;">${t('dailyCheckinSub')}</p>
+            </div>
+            <button onclick="claimDaily()" ${userState.dailyCheckInClaimed ? 'disabled style="background:#555;"' : 'style="background:#4caf50; color:white; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer;"'}>
+                ${userState.dailyCheckInClaimed ? t('btnClaimed') : t('btnClaim')}
+            </button>
+        </div>
+
+        <h3 style="color:#fff; font-size:1.1rem; margin-bottom:10px;">${t('currentTasks')}</h3>
+        <div class="tasks-container">${tasksHtml}</div>
+    `;
+}
+
+function executeTask(taskId, url) {
+    if (tg && tg.openLink) tg.openLink(url); else window.open(url, '_blank');
+    setTimeout(() => {
+        const task = userState.tasks.find(t => t.id === taskId);
+        if (task && !task.completed) {
+            task.completed = true;
+            userState.points += task.points;
+            alert(`${t('alertTaskDone')} ${task.points} ZILOFC.`);
+            updateTopBar();
+            showPage('tasks');
+        }
+    }, 4000);
+}
+
+function claimDaily() {
+    if(!userState.dailyCheckInClaimed) {
+        userState.dailyCheckInClaimed = true;
+        userState.points += 200;
+        alert(t('alertDailyDone'));
+        updateTopBar();
+        showPage('tasks');
+    }
 }
 
 // 👥 9. الأصدقاء
@@ -407,7 +464,68 @@ function shareOnTelegram(link) {
     if (tg && tg.openTelegramLink) tg.openTelegramLink(shareUrl); else window.open(shareUrl, '_blank');
 }
 
-// 👛 10. المحفظة
+// 🏆 10. الترتيب
+function renderLeaderboardPage(container) {
+    let sortedClubs = [...clubsData].sort((a, b) => b.points - a.points);
+    let leaderboardHtml = sortedClubs.map((club, index) => `
+        <div class="leaderboard-club-row" onclick="openSpecificClubFans('${club.id}')" style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1c1c22, #16161a); margin: 8px 0; padding: 14px 16px; border-radius: 12px; border: 1px solid #25252d; border-${userState.lang === 'ar' ? 'right' : 'left'}: 5px solid ${index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : '#cd7f32'}; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <b style="font-size: 1.1rem; width: 25px; color:#fff;">#${index + 1}</b>
+                <img src="${club.logo}" onerror="this.style.display='none'" style="width: 25px; height: 25px; object-fit: contain;">
+                <span style="color: #fff; font-weight: bold;">${getClubName(club)}</span>
+            </div>
+            <div style="text-align: ${userState.lang === 'ar' ? 'left' : 'right'};">
+                <span style="color: #4caf50; font-weight: bold; font-family: monospace;">${club.points.toLocaleString()} ZELOFC</span>
+                <br><small style="color: #888; font-size: 0.75rem;">${t('clickToView')}</small>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <h3 style="color: #fff; margin-bottom: 5px;">${t('leaderTitle')}</h3>
+        <p style="color: #888; font-size: 0.85rem; margin-bottom: 15px;">${t('leaderSub')}</p>
+        <div class="leaderboard-list">${leaderboardHtml}</div>
+    `;
+}
+
+function openSpecificClubFans(clubId) {
+    const club = clubsData.find(c => c.id === clubId);
+    const contentDiv = document.getElementById("main-content");
+    let fansList = clubFansLeaderboard[clubId] || [
+        { name: userState.username + " (أنت)", points: userState.points, referrals: userState.referrals.length }
+    ];
+    fansList.sort((a, b) => b.points - a.points);
+
+    let fansTableRows = fansList.map((fan, idx) => `
+        <tr style="border-bottom: 1px solid #1c1c22; text-align: center;">
+            <td style="padding: 12px; color: ${idx < 3 ? '#ff9800' : '#fff'}; font-weight: bold;">#${idx + 1}</td>
+            <td style="padding: 12px; color: #fff;">👤 ${fan.name}</td>
+            <td style="padding: 12px; color: #4caf50; font-family: monospace;">${fan.points.toLocaleString()}</td>
+            <td style="padding: 12px; color: #aaa;">${fan.referrals} ${t('referralWord')}</td>
+        </tr>
+    `).join('');
+
+    contentDiv.innerHTML = `
+        <button onclick="showPage('leaderboard')" style="background: #2b2b36; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-bottom: 15px; font-weight: bold;">${t('btnBack')}</button>
+        <h3 style="margin-top:0; color: #fff; display: flex; align-items: center; gap: 8px;">
+            <img src="${club.logo}" onerror="this.style.display='none'" style="width: 24px; height: 24px; object-fit: contain;"> ${t('topFansOf')} [ ${getClubName(club)} ]
+        </h3>
+        <p style="color:#aaa; font-size:0.8rem; margin-bottom:15px;">${t('topFansSub')}</p>
+        <table style="width: 100%; border-collapse: collapse; background: #121215; border-radius: 12px; overflow: hidden;">
+            <thead style="background: #1c1c22;">
+                <tr>
+                    <th style="padding: 12px; color: #aaa;">${t('colRank')}</th>
+                    <th style="padding: 12px; color: #aaa;">${t('colFan')}</th>
+                    <th style="padding: 12px; color: #aaa;">${t('colPoints')}</th>
+                    <th style="padding: 12px; color: #aaa;">${t('colActivity')}</th>
+                </tr>
+            </thead>
+            <tbody>${fansTableRows}</tbody>
+        </table>
+    `;
+}
+
+// 👛 11. المحفظة
 function renderWalletPage(container) {
     if (userState.walletConnected) {
         const shortAddress = `${userState.walletAddress.slice(0, 6)}...${userState.walletAddress.slice(-6)}`;
@@ -454,68 +572,5 @@ function triggerDisconnect() {
                 showPage('wallet');
             });
         }
-    }
-}
-
-// 🏆 11. لوحة الصدارة (الترتيب)
-// دالة للرجوع من قائمة المشجعين إلى قائمة الأندية
-window.showClubsLeaderboard = function() {
-    document.getElementById('fans-list-container').style.display = 'none';
-    document.getElementById('back-to-clubs-btn').style.display = 'none';
-    
-    // إظهار الأندية وتغيير العنوان
-    document.getElementById('clubs-list-container').style.display = 'grid'; 
-    document.getElementById('leaderboard-title').innerText = t('navLeaderboard') || (userState.lang === 'ar' ? 'لوحة الصدارة' : 'Leaderboard');
-};
-
-function renderLeaderboardPage(container) {
-    // 1. بناء واجهة لوحة الصدارة الأساسية (حاوية الأندية + حاوية المشجعين + زر الرجوع)
-    container.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 id="leaderboard-title" style="margin: 0; color: #fff; font-size: 1.4rem;">
-                🏆 ${t('navLeaderboard') || (userState.lang === 'ar' ? 'لوحة الصدارة' : 'Leaderboard')}
-            </h3>
-            <button id="back-to-clubs-btn" onclick="showClubsLeaderboard()" style="display: none; background: #2b2b36; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
-                ${userState.lang === 'ar' ? '⬅ عودة للأندية' : 'Back to Clubs ➡'}
-            </button>
-        </div>
-        
-        <!-- المكان الذي ستظهر فيه الأندية -->
-        <div id="clubs-list-container" style="display: grid; gap: 12px;"></div>
-        
-        <!-- المكان الذي سيظهر فيه المشجعين (مخفي افتراضياً) -->
-        <div id="fans-list-container" style="display: none; flex-direction: column; gap: 10px;"></div>
-    `;
-
-    // 2. التحقق من وجود ملف leaderboard.js واستدعاء دالة الأندية منه
-    if (typeof LeaderboardManager !== 'undefined') {
-        LeaderboardManager.renderClubs(
-            clubsData, 
-            'clubs-list-container', 
-            'fans-list-container', 
-            (selectedClub) => {
-                // الكود الذي يتنفذ عند الضغط على أي نادي
-                
-                // إخفاء الأندية
-                document.getElementById('clubs-list-container').style.display = 'none';
-                
-                // إظهار المشجعين وزر الرجوع
-                document.getElementById('fans-list-container').style.display = 'flex';
-                document.getElementById('back-to-clubs-btn').style.display = 'block';
-                
-                // تغيير العنوان ليصبح باسم النادي
-                document.getElementById('leaderboard-title').innerHTML = `
-                    <img src="${selectedClub.logo}" style="width: 25px; height: 25px; vertical-align: middle; margin: 0 5px;">
-                    ${getClubName(selectedClub)}
-                `;
-            }
-        );
-    } else {
-        // رسالة تنبيه في حال نسيت ربط ملف leaderboard.js
-        container.innerHTML += `
-            <div style="text-align: center; color: #f44336; margin-top: 20px; background: rgba(244, 67, 54, 0.1); padding: 15px; border-radius: 10px;">
-                ⚠️ خطأ: ملف leaderboard.js غير موجود أو لم يتم ربطه في ملف HTML.
-            </div>
-        `;
     }
 }
