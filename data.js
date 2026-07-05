@@ -1,4 +1,20 @@
-const i18n = {
+// ==========================================
+// 📂 ملف البيانات المجمعة (data.js)
+// ==========================================
+
+// 1. استيراد بيانات الأندية والمنتخبات من ملفاتها المستقلة
+// (تأكد من أن أسماء المتغيرات داخل ملفات الدول تطابق هذه الأسماء)
+import { englandClubs } from './england.js';
+import { spainClubs } from './spain.js';
+import { germanyClubs } from './germany.js';
+import { italyClubs } from './italy.js';
+import { franceClubs } from './france.js';
+import { europeClubs } from './europe.js'; 
+// يمكنك إضافة المزيد من الاستيرادات هنا لاحقاً مثل:
+// import { worldCupTeams } from './world-cup.js';
+
+// 2. تصدير نصوص الترجمة (i18n) لاستخدامها في التطبيق
+export const i18n = {
     ar: {
         welcomeTitle: "مرحباً بك في Zelo Sport",
         welcomeSub: "اختر ناديك المفضل للبدء في حصد النقاط",
@@ -107,8 +123,8 @@ const i18n = {
     }
 };
 
-// تجميع كل الأندية في مصفوفة واحدة كما كانت لكي لا يتعطل التطبيق
-const clubsData = [
+// 3. تصدير وتجميع كل الأندية في مصفوفة واحدة كما كانت لكي لا يتعطل التطبيق
+export const clubsData = [
     ...englandClubs,
     ...spainClubs,
     ...germanyClubs,
