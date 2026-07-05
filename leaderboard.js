@@ -1,129 +1,109 @@
-// استيراد البيانات (في حال كانت في ملف منفصل) أو استخدام المتغير الخاص بك مباشرة
-// const clubsData = [...]; 
+/**
+ * ملف leaderboard.js
+ * مسؤول عن ترتيب وعرض الأندية والمشجعين (أفضل 100 فقط)
+ */
 
-// نفترض أن لديك متغير يحدد لغة التطبيق الحالية (مأخوذ من app.js)
-let currentLang = 'ar'; // أو 'en'
+const LeaderboardManager = {
+    /**
+     * 1. دالة عرض ترتيب الأندية (أفضل 100 نادي)
+     * @param {Array} clubsData - مصفوفة الأندية
+     * @param {String} clubsContainerId - ID الحاوية التي ستعرض فيها الأندية
+     * @param {String} fansContainerId - ID الحاوية التي ستعرض فيها المشجعين عند النقر
+     * @param {Function} onClubClickCallback - دالة اختيارية تنفذ عند النقر (مثلاً لإخفاء قسم الأندية وإظهار قسم المشجعين)
+     */
+    renderClubs: function(clubsData, clubsContainerId, fansContainerId, onClubClickCallback) {
+        const container = document.getElementById(clubsContainerId);
+        if (!container) return;
+        
+        container.innerHTML = ''; // تنظيف اللوحة قبل إضافة البيانات
 
-const LeaderboardApp = {
-    // 1. دالة لترتيب وعرض الأندية
-    renderClubsLeaderboard: function() {
-        const container = document.getElementById('clubs-leaderboard-container');
-        container.innerHTML = ''; // تفريغ الحاوية
+        // ترتيب الأندية تنازلياً بالنقاط وأخذ أفضل 100 نادي فقط
+        const top100Clubs = [...clubsData]
+            .sort((a, b) => b.points - a.points)
+            .slice(0, 100);
 
-        // ترتيب الأندية تنازلياً حسب النقاط
-        const sortedClubs = [...clubsData].sort((a, b) => b.points - a.points);
-
-        sortedClubs.forEach((club, index) => {
-            const clubName = currentLang === 'ar' ? club.nameAr : club.nameEn;
+        top100Clubs.forEach((club, index) => {
             const rank = index + 1;
+            const clubDiv = document.createElement('div');
             
-            // تصميم كرت النادي (يمكنك تعديل الكلاسات حسب ملف CSS الخاص بك)
-            const clubCard = document.createElement('div');
-            clubCard.className = 'leaderboard-item club-item';
-            clubCard.innerHTML = `
+            // الكلاسات الخاصة بتصميمك لكروت الأندية
+            clubDiv.className = 'leaderboard-item club-item'; 
+            
+            // شكل النادي في اللوحة (يمكنك تعديل الـ HTML ليتطابق مع تصميمك)
+            clubDiv.innerHTML = `
                 <div class="rank">${rank}</div>
-                <img src="${club.logo}" alt="${clubName}" class="club-logo">
+                <img src="${club.logo}" alt="${club.nameAr}" class="club-logo">
                 <div class="info">
-                    <h3 class="name">${clubName}</h3>
-                    <span class="fans-count">👥 ${club.fans.length} ${currentLang === 'ar' ? 'مشجع' : 'Fans'}</span>
+                    <h3 class="name">${club.nameAr}</h3>
                 </div>
                 <div class="points">
                     <span>⭐ ${club.points.toLocaleString()}</span>
                 </div>
             `;
-            
-            // عند الضغط على النادي، يعرض ترتيب مشجعيه
-            clubCard.addEventListener('click', () => this.renderFansLeaderboard(club.id));
-            container.appendChild(clubCard);
+
+            // عند الضغط على النادي
+            clubDiv.onclick = () => {
+                // استدعاء دالة عرض أفضل 100 شخص داخل هذا النادي
+                this.renderClubFans(club, fansContainerId);
+                
+                // تنفيذ الدالة الإضافية (مثل تبديل الشاشات في تطبيقك)
+                if (typeof onClubClickCallback === 'function') {
+                    onClubClickCallback(club);
+                }
+            };
+
+            container.appendChild(clubDiv);
         });
     },
 
-    // 2. دالة لترتيب وعرض المشجعين لنادي معين
-    renderFansLeaderboard: function(clubId) {
-        const container = document.getElementById('fans-leaderboard-container');
-        container.innerHTML = ''; 
+    /**
+     * 2. دالة عرض ترتيب المشجعين داخل النادي (أفضل 100 مستخدم)
+     * @param {Object} club - كائن النادي المختار
+     * @param {String} containerId - ID الحاوية التي ستعرض فيها المشجعين
+     */
+    renderClubFans: function(club, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        container.innerHTML = ''; // تنظيف اللوحة
 
-        // البحث عن النادي المطلوب
-        const club = clubsData.find(c => c.id === clubId);
-        if (!club) return;
+        // ترتيب المستخدمين (بالنقاط أولاً، ثم الإحالات) وأخذ أفضل 100 فقط
+        const top100Fans = [...club.fans]
+            .sort((a, b) => {
+                if (b.points !== a.points) {
+                    return b.points - a.points; // الترتيب بالنقاط تنازلياً
+                }
+                return b.referrals - a.referrals; // في حال التعادل، الترتيب بالإحالات تنازلياً
+            })
+            .slice(0, 100);
 
-        // ترتيب المشجعين تنازلياً حسب النقاط (ونأخذ أول 100 فقط لتجنب ثقل الصفحة)
-        const sortedFans = [...club.fans].sort((a, b) => b.points - a.points).slice(0, 100);
-
-        // إضافة عنوان يوضح اسم النادي
-        const clubName = currentLang === 'ar' ? club.nameAr : club.nameEn;
-        const header = document.createElement('h2');
-        header.innerText = currentLang === 'ar' ? `ترتيب مشجعي ${clubName}` : `${clubName} Fans Leaderboard`;
-        container.appendChild(header);
-
-        sortedFans.forEach((fan, index) => {
+        top100Fans.forEach((fan, index) => {
             const rank = index + 1;
             
-            const fanCard = document.createElement('div');
-            fanCard.className = 'leaderboard-item fan-item';
-            fanCard.innerHTML = `
-                <div class="rank">${rank}</div>
+            // تمييز أصحاب المراكز الثلاثة الأولى
+            let rankDisplay = rank;
+            if (rank === 1) rankDisplay = '🥇';
+            if (rank === 2) rankDisplay = '🥈';
+            if (rank === 3) rankDisplay = '🥉';
+
+            const fanDiv = document.createElement('div');
+            
+            // الكلاسات الخاصة بتصميمك لكروت المشجعين
+            fanDiv.className = 'leaderboard-item fan-item'; 
+            
+            // شكل المستخدم في اللوحة (يمكنك تعديل الـ HTML ليتطابق مع تصميمك)
+            fanDiv.innerHTML = `
+                <div class="rank">${rankDisplay}</div>
                 <div class="info">
                     <h4 class="name">${fan.name}</h4>
-                    <span class="referrals">🔗 ${fan.referrals} ${currentLang === 'ar' ? 'إحالة' : 'Referrals'}</span>
+                    <span class="referrals">🔗 ${fan.referrals} إحالة</span>
                 </div>
                 <div class="points">
                     <span>⭐ ${fan.points.toLocaleString()}</span>
                 </div>
             `;
             
-            container.appendChild(fanCard);
+            container.appendChild(fanDiv);
         });
-    },
-
-    // 3. دالة لجلب أفضل المشجعين على مستوى التطبيق (Global Ranking)
-    renderGlobalFansLeaderboard: function() {
-        const container = document.getElementById('global-fans-container');
-        container.innerHTML = '';
-
-        // تجميع كل المشجعين من كل الأندية في مصفوفة واحدة
-        let allFans = [];
-        clubsData.forEach(club => {
-            // إضافة اسم النادي لكل مشجع لمعرفة فريقه في الترتيب العام
-            const fansWithClubInfo = club.fans.map(fan => ({
-                ...fan, 
-                clubLogo: club.logo,
-                clubName: currentLang === 'ar' ? club.nameAr : club.nameEn
-            }));
-            allFans = allFans.concat(fansWithClubInfo);
-        });
-
-        // ترتيب الجميع وأخذ أفضل 100
-        const topGlobalFans = allFans.sort((a, b) => b.points - a.points).slice(0, 100);
-
-        topGlobalFans.forEach((fan, index) => {
-            const rank = index + 1;
-            const fanCard = document.createElement('div');
-            fanCard.className = 'leaderboard-item global-fan-item';
-            fanCard.innerHTML = `
-                <div class="rank">${rank}</div>
-                <img src="${fan.clubLogo}" alt="${fan.clubName}" class="small-club-logo">
-                <div class="info">
-                    <h4 class="name">${fan.name}</h4>
-                    <span class="club-name">${fan.clubName}</span>
-                </div>
-                <div class="points">
-                    <span>⭐ ${fan.points.toLocaleString()}</span>
-                </div>
-            `;
-            container.appendChild(fanCard);
-        });
-    },
-
-    // دالة التهيئة (التشغيل)
-    init: function() {
-        // بناءً على التصميم الخاص بك، تقوم باستدعاء الدوال المناسبة
-        // مثلاً: نعرض ترتيب الأندية بشكل افتراضي
-        this.renderClubsLeaderboard();
     }
 };
-
-// تشغيل السكريبت عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', () => {
-    LeaderboardApp.init();
-});
