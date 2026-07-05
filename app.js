@@ -21,7 +21,10 @@ let userState = {
     tasks: [
         { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zelo Sport on X", points: 500, completed: false, url: "https://x.com" },
         { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me" },
-        { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com" }
+        { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com" },
+        // المهام الجديدة التي تم إضافتها
+        { id: "tg_group_ar", textAr: "الانضمام للمجموعة العربية", textEn: "Join Arabic Group", points: 300, completed: false, url: "https://t.me/YourArabicGroupLink" },
+        { id: "tg_group_en", textAr: "الانضمام للمجموعة الأجنبية", textEn: "Join Global Group", points: 300, completed: false, url: "https://t.me/YourEnglishGroupLink" }
     ]
 };
 
@@ -219,21 +222,24 @@ function showPage(pageId) {
     }
 }
 
-// 🏠 7. الرئيسية (معالجة ذكية لصور المستخدمين)
+// 🏠 7. الرئيسية (معالجة ذكية لصور المستخدمين والخلفيات الديناميكية)
 function renderHomePage(container) {
     const currentClub = clubsData.find(c => c.id === userState.selectedClub) || clubsData[0];
     
     let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userState.username)}&background=1c1c22&color=0088cc&size=128&bold=true`;
     let avatarSrc = userState.photoUrl ? userState.photoUrl : fallbackAvatar;
 
+    // دمج شعار النادي كخلفية مع طبقة داكنة لضمان وضوح النص
+    const profileBgStyle = `background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('${currentClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${currentClub.color || '#25252d'};`;
+
     container.innerHTML = `
-        <div class="profile-section" style="background: ${currentClub.color}; padding: 25px 15px; border-radius: 16px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+        <div class="profile-section" style="${profileBgStyle} padding: 25px 15px; border-radius: 16px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
             <div class="avatar-container" style="position: relative; display: inline-block;">
-                <img id="user-avatar" src="${avatarSrc}" onerror="this.src='${fallbackAvatar}'" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; object-fit: cover;">
+                <img id="user-avatar" src="${avatarSrc}" onerror="this.src='${fallbackAvatar}'" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; object-fit: cover; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
                 <span class="verified-badge" style="position: absolute; bottom: 0; ${userState.lang === 'ar' ? 'left: 0;' : 'right: 0;'} background: #0088cc; color: #fff; width: 22px; height: 22px; line-height: 22px; border-radius: 50%; font-size: 0.8rem; border: 2px solid #fff;">✓</span>
             </div>
-            <h3 id="profile-name" class="user-title" style="margin: 10px 0 2px 0; color: #fff; font-size: 1.3rem;">${userState.username}</h3>
-            <p id="profile-id" class="user-id" style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.85rem; font-family: monospace;">ID: ${userState.userId}</p>
+            <h3 id="profile-name" class="user-title" style="margin: 10px 0 2px 0; color: #fff; font-size: 1.3rem; text-shadow: 1px 1px 3px #000;">${userState.username}</h3>
+            <p id="profile-id" class="user-id" style="margin: 0; color: rgba(255,255,255,0.8); font-size: 0.85rem; font-family: monospace; text-shadow: 1px 1px 2px #000;">ID: ${userState.userId}</p>
         </div>
 
         <div style="background: #1c1c22; border: 1px solid #25252d; border-radius: 16px; padding: 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
