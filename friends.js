@@ -4,18 +4,15 @@
 
 // دالة لتوليد رابط إحالة حقيقي ومخصص لكل مستخدم
 function generateReferralLink() {
-    // نعتمد على ID المستخدم كخيار أول لأنه لا يتغير، وإذا لم يوجد نأخذ اسم المستخدم
     let uniqueIdentifier = userState.userId || userState.username || "user";
-    
-    // تنظيف المعرف من أي مسافات أو علامة @ ليكون الرابط برمجياً صحيحاً (URL Safe)
     let cleanIdentifier = String(uniqueIdentifier).replace(/[@\s]/g, '');
     
-    // دمج المعرف مع رابط البوت الخاص بك لإنتاج رابط الدعوة
-    return `https://t.me/ZeloSport_Bot/app?startapp=ref_${cleanIdentifier}`;
+    // ⚠️ تنبيه: قم بتغيير 'ZeloSport_Bot' إلى يوزرنيم البوت الحقيقي الخاص بك
+    // ⚠️ تنبيه: قم بتغيير 'app' إلى الـ Short Name الخاص بتطبيقك في BotFather
+    return `https://t.me/Zelo_Sport_bot/app?startapp=ref_${cleanIdentifier}`;
 }
 
 function renderFriendsPage(container) {
-    // استدعاء دالة توليد الرابط
     const referralLink = generateReferralLink();
     
     let friendsListHtml = userState.referrals.map(friend => `
