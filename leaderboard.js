@@ -1,11 +1,13 @@
 // ==========================================
-// 🏆 ملف قسم الترتيب (Leaderboard)
+// 🏆 ملف قسم الترتيب (Leaderboard) - (أفضل 100 فقط)
 // ==========================================
 
 const clubFansLeaderboard = {};
 
 function renderLeaderboardPage(container) {
-    let sortedClubs = [...clubsData].sort((a, b) => b.points - a.points);
+    // ترتيب الأندية ثم أخذ أول 100 نادي فقط
+    let sortedClubs = [...clubsData].sort((a, b) => b.points - a.points).slice(0, 100);
+    
     let leaderboardHtml = sortedClubs.map((club, index) => `
         <div class="leaderboard-club-row" onclick="openSpecificClubFans('${club.id}')" style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1c1c22, #16161a); margin: 8px 0; padding: 14px 16px; border-radius: 12px; border: 1px solid #25252d; border-${userState.lang === 'ar' ? 'right' : 'left'}: 5px solid ${index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : '#cd7f32'}; cursor: pointer;">
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -33,7 +35,12 @@ function openSpecificClubFans(clubId) {
     let fansList = clubFansLeaderboard[clubId] || [
         { name: userState.username + " (أنت)", points: userState.points, referrals: userState.referrals.length }
     ];
+    
+    // ترتيب المشجعين تنازلياً حسب النقاط
     fansList.sort((a, b) => b.points - a.points);
+    
+    // أخذ أفضل 100 مشجع فقط بعد الترتيب
+    fansList = fansList.slice(0, 100);
 
     let fansTableRows = fansList.map((fan, idx) => `
         <tr style="border-bottom: 1px solid #1c1c22; text-align: center;">
