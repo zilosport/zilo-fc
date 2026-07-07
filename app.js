@@ -149,8 +149,18 @@ function updateTopBar() {
     
     if (clubEl && userState.selectedClubs && userState.selectedClubs.length > 0) {
         let logos = userState.selectedClubs.map(id => {
-            const club = typeof clubsData !== 'undefined' ? clubsData.find(c => c.id === id) : null;
-            return club ? `<img src="${club.logo}" style="height: 20px; vertical-align: middle; margin: 0 4px; object-fit: contain;">` : '';
+            // التعديل هنا: البحث في allWorldCupCountriesClubs بدلاً من مصفوفة مسطحة
+            let foundClub = null;
+            if (typeof allWorldCupCountriesClubs !== 'undefined') {
+                for (const country in allWorldCupCountriesClubs) {
+                    const club = allWorldCupCountriesClubs[country].find(c => c.id === id);
+                    if (club) {
+                        foundClub = club;
+                        break;
+                    }
+                }
+            }
+            return foundClub ? `<img src="${foundClub.logo}" style="height: 20px; vertical-align: middle; margin: 0 4px; object-fit: contain;">` : '';
         }).join('');
         
         clubEl.innerHTML = `<span style="color:#aaa;">${userState.lang === 'ar' ? 'أنديتك:' : 'Clubs:'}</span> ${logos}`;
