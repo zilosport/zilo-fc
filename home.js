@@ -1,5 +1,5 @@
 // ==========================================
-// 🏠 الصفحة الرئيسية (home.js) - مُحدث
+// 🏠 الصفحة الرئيسية (home.js)
 // ==========================================
 
 function renderHomePage(container) {
@@ -20,7 +20,7 @@ function renderHomePage(container) {
                 <div>
                     <h3 style="margin: 0; color: #fff; font-size: 1.2rem;">${getClubName(club)} ${club.countryFlag}</h3>
                     <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem;">
-                        👥 ${club.membersCount ? club.membersCount.toLocaleString() : '0'} ${userState.lang === 'ar' ? 'عضواً' : 'members'}
+                        👥 ${club.members ? club.members.toLocaleString() : '0'} ${userState.lang === 'ar' ? 'عضواً' : 'members'}
                     </p>
                 </div>
             </div>
