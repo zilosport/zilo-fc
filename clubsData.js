@@ -22,7 +22,9 @@ const allWorldCupCountriesClubs = {
         { id: "real_sociedad", nameAr: "ريال سوسيداد", nameEn: "Real Sociedad", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8560.png", members: 0, points: 0, color: "linear-gradient(135deg, #0000ff, #ffffff)" },
         { id: "villarreal", nameAr: "فاريال", nameEn: "Villarreal", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/10205.png", members: 0, points: 0, color: "linear-gradient(135deg, #ffe600, #005187)" },
         { id: "real_betis", nameAr: "ريال بيتيس", nameEn: "Real Betis", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8603.png", members: 0, points: 0, color: "linear-gradient(135deg, #00933b, #ffffff)" },
-        { id: "athletic_bilbao", nameAr: "أتلتيك بيلباو", nameEn: "Athletic Bilbao", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8315.png", members: 0, points: 0, color: "linear-gradient(135deg, #ee2524, #ffffff)" }
+        { id: "athletic_bilbao", nameAr: "أتلتيك بيلباو", nameEn: "Athletic Bilbao", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8315.png", members: 0, points: 0, color: "linear-gradient(135deg, #ee2524, #ffffff)" },
+        { id: "valencia", nameAr: "فالنسيا", nameEn: "Valencia", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8370.png", members: 0, points: 0, color: "linear-gradient(135deg, #ffffff, #ff6600)" },
+        { id: "girona", nameAr: "جيرونا", nameEn: "Girona", countryFlag: "🇪🇸", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/242571.png", members: 0, points: 0, color: "linear-gradient(135deg, #e30613, #ffffff)" }
     ],
 
     germany: [
@@ -31,7 +33,9 @@ const allWorldCupCountriesClubs = {
         { id: "bayer_leverkusen", nameAr: "باير ليفركوزن", nameEn: "Bayer Leverkusen", countryFlag: "🇩🇪", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8178.png", members: 0, points: 0, color: "linear-gradient(135deg, #e32221, #000000)" },
         { id: "leipzig", nameAr: "لايبزيغ", nameEn: "RB Leipzig", countryFlag: "🇩🇪", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/178475.png", members: 0, points: 0, color: "linear-gradient(135deg, #0c2340, #dd013f)" },
         { id: "frankfurt", nameAr: "آينتراخت فرانكفورت", nameEn: "Eintracht Frankfurt", countryFlag: "🇩🇪", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9810.png", members: 0, points: 0, color: "linear-gradient(135deg, #e10012, #ffffff)" },
-        { id: "stuttgart", nameAr: "شتوتغارت", nameEn: "VfB Stuttgart", countryFlag: "🇩🇪", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9777.png", members: 0, points: 0, color: "linear-gradient(135deg, #ffffff, #e32221)" }
+        { id: "stuttgart", nameAr: "شتوتغارت", nameEn: "VfB Stuttgart", countryFlag: "🇩🇪", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9777.png", members: 0, points: 0, color: "linear-gradient(135deg, #ffffff, #e32221)" },
+        { id: "gladbach", nameAr: "بوروسيا مونشنغلادباخ", nameEn: "Monchengladbach", countryFlag: "🇩🇪", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9788.png", members: 0, points: 0, color: "linear-gradient(135deg, #ffffff, #008000)" },
+        { id: "wolfsburg", nameAr: "فولفسبورغ", nameEn: "VfL Wolfsburg", countryFlag: "🇩🇪", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8721.png", members: 0, points: 0, color: "linear-gradient(135deg, #60b32e, #ffffff)" }
     ],
 
     france: [
@@ -86,30 +90,43 @@ const allWorldCupCountriesClubs = {
     italy: [
         { id: "inter_milan", nameAr: "إنتر ميلان", nameEn: "Inter Milan", countryFlag: "🇮🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8636.png", members: 0, points: 0, color: "linear-gradient(135deg, #001489, #000000)" },
         { id: "ac_milan", nameAr: "إي سي ميلان", nameEn: "AC Milan", countryFlag: "🇮🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8564.png", members: 0, points: 0, color: "linear-gradient(135deg, #ff0000, #000000)" },
-        { id: "juventus", nameAr: "يوفنتوس", nameEn: "Juventus", countryFlag: "🇮🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9885.png", members: 0, points: 0, color: "linear-gradient(135deg, #000000, #ffffff)" }
+        { id: "juventus", nameAr: "يوفنتوس", nameEn: "Juventus", countryFlag: "🇮🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9885.png", members: 0, points: 0, color: "linear-gradient(135deg, #000000, #ffffff)" },
+        { id: "as_roma", nameAr: "روما", nameEn: "AS Roma", countryFlag: "🇮🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8686.png", members: 0, points: 0, color: "linear-gradient(135deg, #8e1f2f, #f0bc42)" },
+        { id: "napoli", nameAr: "نابولي", nameEn: "Napoli", countryFlag: "🇮🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8524.png", members: 0, points: 0, color: "linear-gradient(135deg, #12a0d7, #ffffff)" },
+        { id: "lazio", nameAr: "لاتسيو", nameEn: "Lazio", countryFlag: "🇮🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8543.png", members: 0, points: 0, color: "linear-gradient(135deg, #87d8f7, #ffffff)" }
     ],
 
     portugal: [
         { id: "benfica", nameAr: "بنفيكا", nameEn: "Benfica", countryFlag: "🇵🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9772.png", members: 0, points: 0, color: "linear-gradient(135deg, #e30613, #ffffff)" },
         { id: "fc_porto", nameAr: "بورتو", nameEn: "FC Porto", countryFlag: "🇵🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9773.png", members: 0, points: 0, color: "linear-gradient(135deg, #005ca9, #ffffff)" },
-        { id: "sporting_lisbon", nameAr: "سبورتينغ لشبونة", nameEn: "Sporting CP", countryFlag: "🇵🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9768.png", members: 0, points: 0, color: "linear-gradient(135deg, #008057, #ffffff)" }
+        { id: "sporting_lisbon", nameAr: "سبورتينغ لشبونة", nameEn: "Sporting CP", countryFlag: "🇵🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9768.png", members: 0, points: 0, color: "linear-gradient(135deg, #008057, #ffffff)" },
+        { id: "braga", nameAr: "سبورتينغ براغا", nameEn: "SC Braga", countryFlag: "🇵🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/10264.png", members: 0, points: 0, color: "linear-gradient(135deg, #e30613, #ffffff)" },
+        { id: "vitoria_guimaraes", nameAr: "فيتوريا غيمارايش", nameEn: "Vitória SC", countryFlag: "🇵🇹", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/7841.png", members: 0, points: 0, color: "linear-gradient(135deg, #ffffff, #000000)" }
     ],
 
     netherlands: [
         { id: "ajax", nameAr: "أياكس أمستردام", nameEn: "Ajax", countryFlag: "🇳🇱", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8593.png", members: 0, points: 0, color: "linear-gradient(135deg, #da291c, #ffffff)" },
         { id: "psv", nameAr: "آيندهوفن", nameEn: "PSV Eindhoven", countryFlag: "🇳🇱", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8640.png", members: 0, points: 0, color: "linear-gradient(135deg, #ff0000, #ffffff)" },
-        { id: "feyenoord", nameAr: "فينورد", nameEn: "Feyenoord", countryFlag: "🇳🇱", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9920.png", members: 0, points: 0, color: "linear-gradient(135deg, #ff0000, #000000)" }
+        { id: "feyenoord", nameAr: "فينورد", nameEn: "Feyenoord", countryFlag: "🇳🇱", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9920.png", members: 0, points: 0, color: "linear-gradient(135deg, #ff0000, #000000)" },
+        { id: "az_alkmaar", nameAr: "إي زد ألكمار", nameEn: "AZ Alkmaar", countryFlag: "🇳🇱", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8262.png", members: 0, points: 0, color: "linear-gradient(135deg, #e00000, #ffffff)" },
+        { id: "twente", nameAr: "تفينتي", nameEn: "FC Twente", countryFlag: "🇳🇱", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8611.png", members: 0, points: 0, color: "linear-gradient(135deg, #ff0000, #ffffff)" }
     ],
 
     brazil: [
         { id: "flamengo", nameAr: "فلامينغو", nameEn: "Flamengo", countryFlag: "🇧🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/5976.png", members: 0, points: 0, color: "linear-gradient(135deg, #c4122d, #000000)" },
         { id: "palmeiras", nameAr: "بالميراس", nameEn: "Palmeiras", countryFlag: "🇧🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/3103.png", members: 0, points: 0, color: "linear-gradient(135deg, #006437, #ffffff)" },
-        { id: "sao_paulo", nameAr: "ساو باولو", nameEn: "Sao Paulo", countryFlag: "🇧🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/5977.png", members: 0, points: 0, color: "linear-gradient(135deg, #ff0000, #ffffff)" }
+        { id: "sao_paulo", nameAr: "ساو باولو", nameEn: "Sao Paulo", countryFlag: "🇧🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/5977.png", members: 0, points: 0, color: "linear-gradient(135deg, #ff0000, #ffffff)" },
+        { id: "corinthians", nameAr: "كورينثيانز", nameEn: "Corinthians", countryFlag: "🇧🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/5974.png", members: 0, points: 0, color: "linear-gradient(135deg, #000000, #ffffff)" },
+        { id: "santos", nameAr: "سانتوس", nameEn: "Santos FC", countryFlag: "🇧🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/5973.png", members: 0, points: 0, color: "linear-gradient(135deg, #ffffff, #000000)" },
+        { id: "fluminense", nameAr: "فلومينينسي", nameEn: "Fluminense", countryFlag: "🇧🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/5981.png", members: 0, points: 0, color: "linear-gradient(135deg, #7c1a2d, #00563e)" }
     ],
 
     argentina: [
         { id: "boca_juniors", nameAr: "بوكا جونيورز", nameEn: "Boca Juniors", countryFlag: "🇦🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9741.png", members: 0, points: 0, color: "linear-gradient(135deg, #003b46, #f3db00)" },
-        { id: "river_plate", nameAr: "ريفر بليت", nameEn: "River Plate", countryFlag: "🇦🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9742.png", members: 0, points: 0, color: "linear-gradient(135deg, #ffffff, #ff0000)" }
+        { id: "river_plate", nameAr: "ريفر بليت", nameEn: "River Plate", countryFlag: "🇦🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9742.png", members: 0, points: 0, color: "linear-gradient(135deg, #ffffff, #ff0000)" },
+        { id: "racing_club", nameAr: "راسينغ كلوب", nameEn: "Racing Club", countryFlag: "🇦🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/10078.png", members: 0, points: 0, color: "linear-gradient(135deg, #75b2dd, #ffffff)" },
+        { id: "independiente", nameAr: "إنديبندينتي", nameEn: "Independiente", countryFlag: "🇦🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/10084.png", members: 0, points: 0, color: "linear-gradient(135deg, #e30613, #ffffff)" },
+        { id: "san_lorenzo", nameAr: "سان لورينزو", nameEn: "San Lorenzo", countryFlag: "🇦🇷", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/10077.png", members: 0, points: 0, color: "linear-gradient(135deg, #000033, #cc0000)" }
     ],
 
     uae: [
@@ -279,8 +296,8 @@ const allWorldCupCountriesClubs = {
     ],
 
     syria: [
-        { id: "al_jaish", nameAr: "الجيش", nameEn: "Al-Jaish SC", countryFlag: "🇸🇾", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9601.png", members: 0, points: 0, color: "linear-gradient(135deg, #ff0000, #ffffff)" },
-        { id: "al_ittihad_sy", nameAr: "أهلي حلب", nameEn: "Al-Ittihad Aleppo", countryFlag: "🇸🇾", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9602.png", members: 0, points: 0, color: "linear-gradient(135deg, #ff0000, #000000)" }
+        { id: "al_jaish", nameAr: "الجيش", nameEn: "Al-Jaish SC", countryFlag: "<img src='https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Flag_of_Syria_%281932%E2%80%931958%3B_1961%E2%80%931963%29.svg/320px-Flag_of_Syria_%281932%E2%80%931958%3B_1961%E2%80%931963%29.svg.png' style='width: 22px; height: 14px; border-radius: 2px; object-fit: cover; vertical-align: middle; margin: 0 4px;'>", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9601.png", members: 0, points: 0, color: "linear-gradient(135deg, #ff0000, #ffffff)" },
+        { id: "al_ittihad_sy", nameAr: "أهلي حلب", nameEn: "Al-Ittihad Aleppo", countryFlag: "<img src='https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Flag_of_Syria_%281932%E2%80%931958%3B_1961%E2%80%931963%29.svg/320px-Flag_of_Syria_%281932%E2%80%931958%3B_1961%E2%80%931963%29.svg.png' style='width: 22px; height: 14px; border-radius: 2px; object-fit: cover; vertical-align: middle; margin: 0 4px;'>", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9602.png", members: 0, points: 0, color: "linear-gradient(135deg, #ff0000, #000000)" }
     ],
 
     oman: [
