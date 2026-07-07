@@ -1,9 +1,23 @@
 // ==========================================
-// 👥 ملف قسم الأصدقاء والإحالات (Friends)
+// 👥 ملف قسم الأصدقاء (Friends)
 // ==========================================
 
+// دالة لتوليد رابط إحالة حقيقي ومخصص لكل مستخدم
+function generateReferralLink() {
+    // نعتمد على ID المستخدم كخيار أول لأنه لا يتغير، وإذا لم يوجد نأخذ اسم المستخدم
+    let uniqueIdentifier = userState.userId || userState.username || "user";
+    
+    // تنظيف المعرف من أي مسافات أو علامة @ ليكون الرابط برمجياً صحيحاً (URL Safe)
+    let cleanIdentifier = String(uniqueIdentifier).replace(/[@\s]/g, '');
+    
+    // دمج المعرف مع رابط البوت الخاص بك لإنتاج رابط الدعوة
+    return `https://t.me/ZeloSport_Bot/app?startapp=ref_${cleanIdentifier}`;
+}
+
 function renderFriendsPage(container) {
-    const referralLink = `https://t.me/ZeloSport_Bot/app?startapp=ref_${userState.userParam}`;
+    // استدعاء دالة توليد الرابط
+    const referralLink = generateReferralLink();
+    
     let friendsListHtml = userState.referrals.map(friend => `
         <div style="display: flex; justify-content: space-between; background: #1c1c22; padding: 12px; border-radius: 10px; margin: 6px 0; border: 1px solid #25252d;">
             <span style="color: #fff; font-weight: bold;">👤 ${friend.name}</span>
@@ -28,14 +42,16 @@ function renderFriendsPage(container) {
     `;
 }
 
-// دالة نسخ النصوص (تُستخدم هنا وفي المحفظة أيضاً)
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => alert(t('alertCopied')));
 }
 
-// دالة المشاركة عبر تليجرام
 function shareOnTelegram(link) {
     const text = encodeURIComponent(t('shareText'));
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`;
-    if (typeof tg !== "undefined" && tg && tg.openTelegramLink) tg.openTelegramLink(shareUrl); else window.open(shareUrl, '_blank');
+    if (typeof tg !== "undefined" && tg && tg.openTelegramLink) {
+        tg.openTelegramLink(shareUrl); 
+    } else {
+        window.open(shareUrl, '_blank');
+    }
 }
