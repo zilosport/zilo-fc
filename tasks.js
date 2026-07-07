@@ -1,7 +1,17 @@
 // ==========================================
-// 🛠️ ملف قسم المهام (Tasks)
+// 🛠️ ملف قسم المهام (Tasks) - (البيانات والوظائف)
 // ==========================================
 
+// 1. قائمة المهام (يمكنك تعديلها وإضافة مهام جديدة من هنا فقط)
+const defaultTasksData = [
+    { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zelo Sport on X", points: 500, completed: false, url: "https://x.com" },
+    { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me" },
+    { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com" },
+    { id: "tg_group_ar", textAr: "الانضمام للمجموعة العربية", textEn: "Join Arabic Group", points: 300, completed: false, url: "https://t.me/YourArabicGroupLink" },
+    { id: "tg_group_en", textAr: "الانضمام للمجموعة الأجنبية", textEn: "Join Global Group", points: 300, completed: false, url: "https://t.me/YourEnglishGroupLink" }
+];
+
+// 2. دوال واجهة المهام
 function renderTasksPage(container) {
     let tasksHtml = userState.tasks.map(task => `
         <div class="task-card" style="display: flex; justify-content: space-between; align-items: center; background: #1c1c22; margin: 8px 0; padding: 14px; border-radius: 12px; border: 1px solid #25252d;">
