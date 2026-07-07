@@ -1,12 +1,20 @@
 // ==========================================
-// 🏆 ملف قسم الترتيب (Leaderboard) - (أفضل 100 فقط)
+// 🏆 ملف قسم الترتيب (Leaderboard) - (مُحدث)
 // ==========================================
 
 const clubFansLeaderboard = {};
 
 function renderLeaderboardPage(container) {
+    // 🔄 التعديل الأول: تجميع كل الأندية من الكائن الجديد في مصفوفة واحدة لترتيبها
+    let allClubsFlat = [];
+    if (typeof allWorldCupCountriesClubs !== 'undefined') {
+        for (const country in allWorldCupCountriesClubs) {
+            allClubsFlat = allClubsFlat.concat(allWorldCupCountriesClubs[country]);
+        }
+    }
+
     // ترتيب الأندية ثم أخذ أول 100 نادي فقط
-    let sortedClubs = [...clubsData].sort((a, b) => b.points - a.points).slice(0, 100);
+    let sortedClubs = allClubsFlat.sort((a, b) => (b.points || 0) - (a.points || 0)).slice(0, 100);
     
     let leaderboardHtml = sortedClubs.map((club, index) => `
         <div class="leaderboard-club-row" onclick="openSpecificClubFans('${club.id}')" style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1c1c22, #16161a); margin: 8px 0; padding: 14px 16px; border-radius: 12px; border: 1px solid #25252d; border-${userState.lang === 'ar' ? 'right' : 'left'}: 5px solid ${index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : '#cd7f32'}; cursor: pointer;">
@@ -16,7 +24,7 @@ function renderLeaderboardPage(container) {
                 <span style="color: #fff; font-weight: bold;">${getClubName(club)}</span>
             </div>
             <div style="text-align: ${userState.lang === 'ar' ? 'left' : 'right'};">
-                <span style="color: #4caf50; font-weight: bold; font-family: monospace;">${club.points.toLocaleString()} ZELOFC</span>
+                <span style="color: #4caf50; font-weight: bold; font-family: monospace;">${(club.points || 0).toLocaleString()} ZELOFC</span>
                 <br><small style="color: #888; font-size: 0.75rem;">${t('clickToView')}</small>
             </div>
         </div>
@@ -30,7 +38,17 @@ function renderLeaderboardPage(container) {
 }
 
 function openSpecificClubFans(clubId) {
-    const club = clubsData.find(c => c.id === clubId);
+    // 🔄 التعديل الثاني: البحث عن النادي داخل الكائن الجديد المقسم بالدول
+    let club = null;
+    if (typeof allWorldCupCountriesClubs !== 'undefined') {
+        for (const country in allWorldCupCountriesClubs) {
+            club = allWorldCupCountriesClubs[country].find(c => c.id === clubId);
+            if (club) break;
+        }
+    }
+
+    if (!club) return; // حماية في حال لم يتم العثور على النادي
+
     const contentDiv = document.getElementById("main-content");
     let fansList = clubFansLeaderboard[clubId] || [
         { name: userState.username + " (أنت)", points: userState.points, referrals: userState.referrals.length }
