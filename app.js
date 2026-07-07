@@ -17,7 +17,6 @@ let userState = {
     lang: "ar",
     referrals: [], 
     dailyCheckInClaimed: false,
-    // استدعاء قائمة المهام من ملف tasks.js
     tasks: typeof defaultTasksData !== "undefined" ? defaultTasksData.map(task => ({...task})) : [] 
 };
 
@@ -62,7 +61,7 @@ function toggleLanguage() {
     }
 }
 
-// 5. تهيئة التطبيق (سحب بيانات تليجرام وإعداد المحفظة)
+// 5. تهيئة التطبيق
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
@@ -116,7 +115,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("TON Connect Error: ", error);
     }
 
-    // التحقق من أن المستخدم اختار أندية أم لا
     if (!userState.selectedClubs || userState.selectedClubs.length === 0) {
         renderLoginScreen();
     } else {
@@ -152,6 +150,7 @@ function getFloatingButton() {
     `;
 }
 
+// 👈 هنا قمنا بتنظيف دالة تسجيل الدخول لتعتمد على ملف countries.js
 function renderLoginScreen() {
     if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'none';
     if (document.querySelector('.bottom-nav')) document.querySelector('.bottom-nav').style.display = 'none';
@@ -163,30 +162,6 @@ function renderLoginScreen() {
         if(!clubsByCountry[club.countryFlag]) clubsByCountry[club.countryFlag] = [];
         clubsByCountry[club.countryFlag].push(club);
     });
-
-    const countryNames = {
-        "🏴󠁧󠁢󠁥󠁮󠁧󠁿": {ar: "إنجلترا", en: "England"}, "🇪🇸": {ar: "إسبانيا", en: "Spain"}, "🇩🇪": {ar: "ألمانيا", en: "Germany"},
-        "🇮🇹": {ar: "إيطاليا", en: "Italy"}, "🇫🇷": {ar: "فرنسا", en: "France"}, "🇧🇷": {ar: "البرازيل", en: "Brazil"},
-        "🇦🇷": {ar: "الأرجنتين", en: "Argentina"}, "🇵🇹": {ar: "البرتغال", en: "Portugal"}, "🇳🇱": {ar: "هولندا", en: "Netherlands"},
-        "🇧🇪": {ar: "بلجيكا", en: "Belgium"}, "🇺🇾": {ar: "الأوروغواي", en: "Uruguay"}, "🇨🇴": {ar: "كولومبيا", en: "Colombia"},
-        "🇲🇽": {ar: "المكسيك", en: "Mexico"}, "🇺🇸": {ar: "أمريكا", en: "USA"}, "🇨🇦": {ar: "كندا", en: "Canada"},
-        "🇯🇵": {ar: "اليابان", en: "Japan"}, "🇰🇷": {ar: "كوريا الجنوبية", en: "South Korea"}, "🇸🇦": {ar: "السعودية", en: "Saudi Arabia"},
-        "🇦🇪": {ar: "الإمارات", en: "UAE"}, "🇸🇾": {ar: "سوريا", en: "Syria"}, "🇶🇦": {ar: "قطر", en: "Qatar"},
-        "🇲🇦": {ar: "المغرب", en: "Morocco"}, "🇪🇬": {ar: "مصر", en: "Egypt"}, "🇹🇳": {ar: "تونس", en: "Tunisia"},
-        "🇩🇿": {ar: "الجزائر", en: "Algeria"}, "🇮🇷": {ar: "إيران", en: "Iran"}, "🇮🇶": {ar: "العراق", en: "Iraq"},
-        "🇦🇺": {ar: "أستراليا", en: "Australia"}, "🇭🇷": {ar: "كرواتيا", en: "Croatia"}, "🇨🇭": {ar: "سويسرا", en: "Switzerland"},
-        "🇩🇰": {ar: "الدنمارك", en: "Denmark"}, "🇵🇱": {ar: "بولندا", en: "Poland"}, "🇷🇸": {ar: "صربيا", en: "Serbia"},
-        "🇦🇹": {ar: "النمسا", en: "Austria"}, "🇹🇷": {ar: "تركيا", en: "Turkey"}, "🇬🇷": {ar: "اليونان", en: "Greece"},
-        "🇸🇪": {ar: "السويد", en: "Sweden"}, "🇳🇴": {ar: "النرويج", en: "Norway"}, "🇭🇺": {ar: "المجر", en: "Hungary"},
-        "🇪🇨": {ar: "الإكوادور", en: "Ecuador"}, "🇨🇱": {ar: "تشيلي", en: "Chile"}, "🇵🇾": {ar: "باراغواي", en: "Paraguay"},
-        "🇵🇪": {ar: "بيرو", en: "Peru"}, "🇳🇬": {ar: "نيجيريا", en: "Nigeria"}, "🇬🇭": {ar: "غانا", en: "Ghana"},
-        "🇸🇳": {ar: "السنغال", en: "Senegal"}, "🇨🇲": {ar: "الكاميرون", en: "Cameroon"}, "🇨🇮": {ar: "ساحل العاج", en: "Ivory Coast"}
-    };
-
-    function getCountryName(flag) {
-        if(countryNames[flag]) return userState.lang === 'ar' ? countryNames[flag].ar : countryNames[flag].en;
-        return (userState.lang === 'ar' ? "دوري " : "League ") + flag;
-    }
 
     let countriesHtml = Object.keys(clubsByCountry).map(flag => `
         <div onclick="showClubsForCountry('${flag}')" style="background: #1c1c22; border: 1px solid #25252d; padding: 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 10px; transition: 0.2s;">
@@ -255,16 +230,15 @@ window.toggleClubSelection = function(clubId, flag) {
     const index = window.tempSelectedClubs.indexOf(clubId);
     
     if (index > -1) {
-        window.tempSelectedClubs.splice(index, 1); // إزالة النادي إذا كان مختاراً مسبقاً
+        window.tempSelectedClubs.splice(index, 1); 
     } else {
         if (window.tempSelectedClubs.length >= 2) {
             alert(userState.lang === 'ar' ? "يمكنك اختيار ناديين كحد أقصى!" : "You can only select up to 2 clubs!");
             return;
         }
-        window.tempSelectedClubs.push(clubId); // إضافة النادي
+        window.tempSelectedClubs.push(clubId); 
     }
     
-    // تحديث الشاشة لتظهر علامة الصح
     if (flag) showClubsForCountry(flag); else renderLoginScreen();
 }
 
@@ -292,7 +266,6 @@ function updateTopBar() {
     if(pointsEl) pointsEl.innerText = `${t('coins')} ${userState.points.toLocaleString()}`;
     
     if (clubEl && userState.selectedClubs && userState.selectedClubs.length > 0) {
-        // جلب شعارات الأندية المختارة
         let logos = userState.selectedClubs.map(id => {
             const club = clubsData.find(c => c.id === id);
             return club ? `<img src="${club.logo}" style="height: 20px; vertical-align: middle; margin: 0 4px; object-fit: contain;">` : '';
@@ -329,20 +302,18 @@ function showPage(pageId) {
     }
 }
 
-// 🏠 7. الرئيسية (تدعم عرض ناديين)
+// 🏠 7. الرئيسية
 function renderHomePage(container) {
-    // جلب بيانات الأندية المختارة
     let selectedClubsData = userState.selectedClubs.map(id => clubsData.find(c => c.id === id)).filter(Boolean);
-    if(selectedClubsData.length === 0) selectedClubsData = [clubsData[0]]; // احتياطي
+    if(selectedClubsData.length === 0) selectedClubsData = [clubsData[0]];
     
-    const primaryClub = selectedClubsData[0]; // النادي الأول للخلفية
+    const primaryClub = selectedClubsData[0];
     
     let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userState.username)}&background=1c1c22&color=0088cc&size=128&bold=true`;
     let avatarSrc = userState.photoUrl ? userState.photoUrl : fallbackAvatar;
 
     const profileBgStyle = `background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('${primaryClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${primaryClub.color || '#25252d'};`;
 
-    // إنشاء بطاقة لكل نادي
     let clubsCardsHtml = selectedClubsData.map(club => `
         <div style="background: #1c1c22; border: 1px solid #25252d; border-radius: 16px; padding: 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
             <div style="display: flex; align-items: center; gap: 15px;">
