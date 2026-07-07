@@ -25,7 +25,7 @@ const tg = window.Telegram?.WebApp;
 
 // 4. دوال مساعدة للترجمة
 function t(key) {
-    return i18n[userState.lang][key] || key;
+    return typeof i18n !== 'undefined' && i18n[userState.lang] && i18n[userState.lang][key] ? i18n[userState.lang][key] : key;
 }
 
 function getClubName(club) {
@@ -56,8 +56,20 @@ function toggleLanguage() {
     if (activeNav) {
         const pageId = activeNav.getAttribute("onclick").match(/'([^']+)'/)[1];
         showPage(pageId);
-    } else if (!userState.hasLoggedIn) {
+    } else if (!userState.hasLoggedIn && typeof renderLoginScreen === 'function') {
         renderLoginScreen();
+    }
+}
+
+function injectLangButton() {
+    const topBar = document.querySelector('.top-bar');
+    if(topBar && !document.getElementById('lang-btn')) {
+        const langBtn = document.createElement('div');
+        langBtn.id = 'lang-btn';
+        langBtn.innerHTML = '🌐';
+        langBtn.style.cssText = 'position:fixed; top:15px; left:50%; transform:translateX(-50%); font-size:1.5rem; cursor:pointer; z-index:9999;';
+        langBtn.onclick = toggleLanguage;
+        document.body.appendChild(langBtn);
     }
 }
 
@@ -92,31 +104,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // إعداد TON Connect
     try {
-        tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://zelo-sport-fc.github.io/zelo-fc/tonconnect-manifest.json',
-            buttonRootId: null
-        });
+        if (typeof TON_CONNECT_UI !== 'undefined') {
+            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                manifestUrl: 'https://zelo-sport-fc.github.io/zelo-fc/tonconnect-manifest.json',
+                buttonRootId: null
+            });
 
-        tonConnectUI.onStatusChange((walletInfo) => {
-            if (walletInfo) {
-                userState.walletConnected = true;
-                userState.walletAddress = walletInfo.account.address;
-                userState.walletBalance = "0.00"; 
-            } else {
-                userState.walletConnected = false;
-                userState.walletAddress = null;
-                userState.walletBalance = "0.00";
-            }
-            if (userState.hasLoggedIn && document.querySelector(".nav-item[onclick*='wallet']").classList.contains("active")) {
-                if(typeof renderWalletPage === "function") renderWalletPage(document.getElementById("main-content"));
-            }
-        });
+            tonConnectUI.onStatusChange((walletInfo) => {
+                if (walletInfo) {
+                    userState.walletConnected = true;
+                    userState.walletAddress = walletInfo.account.address;
+                    userState.walletBalance = "0.00"; 
+                } else {
+                    userState.walletConnected = false;
+                    userState.walletAddress = null;
+                    userState.walletBalance = "0.00";
+                }
+                if (userState.hasLoggedIn && document.querySelector(".nav-item[onclick*='wallet']")?.classList.contains("active")) {
+                    if(typeof renderWalletPage === "function") renderWalletPage(document.getElementById("main-content"));
+                }
+            });
+        }
     } catch (error) {
         console.error("TON Connect Error: ", error);
     }
 
     if (!userState.selectedClubs || userState.selectedClubs.length === 0) {
-        renderLoginScreen();
+        if(typeof renderLoginScreen === 'function') renderLoginScreen();
     } else {
         userState.hasLoggedIn = true;
         updateTopBar();
@@ -126,139 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
     injectLangButton();
 });
 
-function injectLangButton() {
-    const topBar = document.querySelector('.top-bar');
-    if(topBar && !document.getElementById('lang-btn')) {
-        const langBtn = document.createElement('div');
-        langBtn.id = 'lang-btn';
-        langBtn.innerHTML = '🌐';
-        langBtn.style.cssText = 'position:fixed; top:15px; left:50%; transform:translateX(-50%); font-size:1.5rem; cursor:pointer; z-index:9999;';
-        langBtn.onclick = toggleLanguage;
-        document.body.appendChild(langBtn);
-    }
-}
-
-// 📱 6. شاشة تسجيل الدخول
-window.tempSelectedClubs = window.tempSelectedClubs || []; 
-
-function getFloatingButton() {
-    if (window.tempSelectedClubs.length === 0) return '';
-    return `
-        <div onclick="confirmLogin()" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #4caf50, #2e7d32); color: white; padding: 14px 30px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; gap: 10px; width: 80%; justify-content: center;">
-            ${userState.lang === 'ar' ? 'تأكيد الدخول' : 'Confirm Login'} (${window.tempSelectedClubs.length}/2) ✅
-        </div>
-    `;
-}
-
-// 👈 هنا قمنا بتنظيف دالة تسجيل الدخول لتعتمد على ملف countries.js
-function renderLoginScreen() {
-    if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'none';
-    if (document.querySelector('.bottom-nav')) document.querySelector('.bottom-nav').style.display = 'none';
-
-    const mainContent = document.getElementById("main-content");
-    
-    const clubsByCountry = {};
-    clubsData.forEach(club => {
-        if(!clubsByCountry[club.countryFlag]) clubsByCountry[club.countryFlag] = [];
-        clubsByCountry[club.countryFlag].push(club);
-    });
-
-    let countriesHtml = Object.keys(clubsByCountry).map(flag => `
-        <div onclick="showClubsForCountry('${flag}')" style="background: #1c1c22; border: 1px solid #25252d; padding: 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 10px; transition: 0.2s;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 1.8rem;">${flag}</span>
-                <h4 style="margin: 0; color: #fff; font-size: 1.1rem;">${getCountryName(flag)}</h4>
-            </div>
-            <span style="background: #2b2b36; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; color: #0088cc; font-weight: bold;">
-                ${clubsByCountry[flag].length} ⚽
-            </span>
-        </div>
-    `).join('');
-
-    mainContent.innerHTML = `
-        <div style="padding: 20px 10px; text-align: center; max-width: 500px; margin: 0 auto; padding-bottom: 100px;">
-            <div style="font-size: 3.5rem; margin-bottom: 10px;">🌍</div>
-            <h2 style="color: #fff; margin: 0 0 5px 0;">${t('welcomeTitle')}</h2>
-            <p style="color: #4caf50; font-size: 0.95rem; font-weight: bold; margin-bottom: 20px;">
-                ${userState.lang === 'ar' ? 'اختر فريقين كحد أقصى (محلي وعالمي)' : 'Select up to 2 clubs (Local & Global)'}
-            </p>
-
-            <div style="display: flex; flex-direction: column; text-align: ${userState.lang === 'ar' ? 'right' : 'left'}; max-height: 65vh; overflow-y: auto; padding-right: 5px;">
-                ${countriesHtml}
-            </div>
-        </div>
-        ${getFloatingButton()}
-    `;
-
-    window.showClubsForCountry = function(flag) {
-        let clubs = clubsByCountry[flag];
-        let clubsHtml = clubs.map(club => {
-            let isSelected = window.tempSelectedClubs.includes(club.id);
-            let borderStyle = isSelected ? 'border: 2px solid #4caf50; background: rgba(76, 175, 80, 0.1);' : 'border: 1px solid #25252d; background: #1c1c22;';
-            return `
-            <div onclick="toggleClubSelection('${club.id}', '${flag}')" style="${borderStyle} padding: 12px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; position: relative;">
-                ${isSelected ? '<div style="position: absolute; top: 5px; right: 5px; background: #4caf50; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 14px; display: flex; align-items: center; justify-content: center; z-index: 10;">✓</div>' : ''}
-                <div style="position: relative;">
-                    <img src="${club.logo}" alt="" onerror="this.style.display='none'" style="width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">
-                </div>
-                <h4 style="margin: 0; color: #fff; font-size: 0.85rem; text-align: center;">${getClubName(club)}</h4>
-            </div>
-        `}).join('');
-
-        mainContent.innerHTML = `
-            <div style="padding: 20px 10px; text-align: center; max-width: 500px; margin: 0 auto; padding-bottom: 100px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <button onclick="renderLoginScreen()" style="background: #2b2b36; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px;">
-                        ${userState.lang === 'ar' ? '⬅ رجوع' : 'Back ➡'}
-                    </button>
-                    <h3 style="color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
-                        ${flag} ${getCountryName(flag)}
-                    </h3>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 65vh; overflow-y: auto; padding-right: 5px;">
-                    ${clubsHtml}
-                </div>
-            </div>
-            ${getFloatingButton()}
-        `;
-    }
-}
-
-// دالة اختيار أو إلغاء اختيار النادي
-window.toggleClubSelection = function(clubId, flag) {
-    const index = window.tempSelectedClubs.indexOf(clubId);
-    
-    if (index > -1) {
-        window.tempSelectedClubs.splice(index, 1); 
-    } else {
-        if (window.tempSelectedClubs.length >= 2) {
-            alert(userState.lang === 'ar' ? "يمكنك اختيار ناديين كحد أقصى!" : "You can only select up to 2 clubs!");
-            return;
-        }
-        window.tempSelectedClubs.push(clubId); 
-    }
-    
-    if (flag) showClubsForCountry(flag); else renderLoginScreen();
-}
-
-// زر تأكيد الدخول
-window.confirmLogin = function() {
-    if (window.tempSelectedClubs.length === 0) return;
-    
-    userState.selectedClubs = [...window.tempSelectedClubs];
-    userState.hasLoggedIn = true;
-
-    if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'flex';
-    if (document.querySelector('.bottom-nav')) document.querySelector('.bottom-nav').style.display = 'flex';
-
-    toggleLanguage(); 
-    toggleLanguage(); 
-
-    updateTopBar();
-    showPage('home');
-}
-
+// 🔄 التوجيه وتحديث الواجهة الأساسية (Routing & UI Updates)
 function updateTopBar() {
     const pointsEl = document.getElementById("points");
     const clubEl = document.getElementById("club");
@@ -267,7 +149,7 @@ function updateTopBar() {
     
     if (clubEl && userState.selectedClubs && userState.selectedClubs.length > 0) {
         let logos = userState.selectedClubs.map(id => {
-            const club = clubsData.find(c => c.id === id);
+            const club = typeof clubsData !== 'undefined' ? clubsData.find(c => c.id === id) : null;
             return club ? `<img src="${club.logo}" style="height: 20px; vertical-align: middle; margin: 0 4px; object-fit: contain;">` : '';
         }).join('');
         
@@ -278,7 +160,7 @@ function updateTopBar() {
 function showPage(pageId) {
     if(!userState.hasLoggedIn) return; 
     document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
-    const activeNav = Array.from(document.querySelectorAll(".nav-item")).find(el => el.getAttribute("onclick").includes(pageId));
+    const activeNav = Array.from(document.querySelectorAll(".nav-item")).find(el => el.getAttribute("onclick")?.includes(pageId));
     if (activeNav) activeNav.classList.add("active");
 
     const contentDiv = document.getElementById("main-content");
@@ -286,7 +168,9 @@ function showPage(pageId) {
     contentDiv.innerHTML = ""; 
 
     switch(pageId) {
-        case 'home': renderHomePage(contentDiv); break;
+        case 'home': 
+            if(typeof renderHomePage === "function") renderHomePage(contentDiv); 
+            break;
         case 'tasks': 
             if(typeof renderTasksPage === "function") renderTasksPage(contentDiv); 
             break;
@@ -302,17 +186,17 @@ function showPage(pageId) {
     }
 }
 
-// 🏠 7. الرئيسية
+// 🏠 7. الرئيسية (مؤقتاً هنا حتى تقوم بفصلها لاحقاً في home.js)
 function renderHomePage(container) {
-    let selectedClubsData = userState.selectedClubs.map(id => clubsData.find(c => c.id === id)).filter(Boolean);
-    if(selectedClubsData.length === 0) selectedClubsData = [clubsData[0]];
+    let selectedClubsData = userState.selectedClubs.map(id => typeof clubsData !== 'undefined' ? clubsData.find(c => c.id === id) : null).filter(Boolean);
+    if(selectedClubsData.length === 0 && typeof clubsData !== 'undefined') selectedClubsData = [clubsData[0]];
     
     const primaryClub = selectedClubsData[0];
     
     let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userState.username)}&background=1c1c22&color=0088cc&size=128&bold=true`;
     let avatarSrc = userState.photoUrl ? userState.photoUrl : fallbackAvatar;
 
-    const profileBgStyle = `background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('${primaryClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${primaryClub.color || '#25252d'};`;
+    const profileBgStyle = primaryClub ? `background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('${primaryClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${primaryClub.color || '#25252d'};` : 'background: #1c1c22;';
 
     let clubsCardsHtml = selectedClubsData.map(club => `
         <div style="background: #1c1c22; border: 1px solid #25252d; border-radius: 16px; padding: 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
@@ -324,7 +208,7 @@ function renderHomePage(container) {
             </div>
             <div>
                 <span style="background: rgba(255, 215, 0, 0.2); color: #ffd700; padding: 5px 10px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">
-                    ${club.points.toLocaleString()} 🏆
+                    ${club.points ? club.points.toLocaleString() : '0'} 🏆
                 </span>
             </div>
         </div>
