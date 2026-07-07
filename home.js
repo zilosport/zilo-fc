@@ -1,16 +1,33 @@
 // ==========================================
-// 🏠 الصفحة الرئيسية (home.js)
+// 🏠 الصفحة الرئيسية (home.js) - (مُحدث)
 // ==========================================
 
 function renderHomePage(container) {
-    let selectedClubsData = userState.selectedClubs.map(id => typeof clubsData !== 'undefined' ? clubsData.find(c => c.id === id) : null).filter(Boolean);
-    if(selectedClubsData.length === 0 && typeof clubsData !== 'undefined') selectedClubsData = [clubsData[0]];
+    // 🔄 التعديل الأول: البحث عن الأندية داخل الهيكلة الجديدة (allWorldCupCountriesClubs)
+    let selectedClubsData = userState.selectedClubs.map(id => {
+        if (typeof allWorldCupCountriesClubs !== 'undefined') {
+            for (const country in allWorldCupCountriesClubs) {
+                const foundClub = allWorldCupCountriesClubs[country].find(c => c.id === id);
+                if (foundClub) return foundClub;
+            }
+        }
+        return null;
+    }).filter(Boolean);
+    
+    // 🔄 التعديل الثاني: تأمين حالة افتراضية إذا لم يتم العثور على النادي
+    if(selectedClubsData.length === 0 && typeof allWorldCupCountriesClubs !== 'undefined') {
+        const firstCountry = Object.keys(allWorldCupCountriesClubs)[0];
+        if (firstCountry && allWorldCupCountriesClubs[firstCountry].length > 0) {
+             selectedClubsData = [allWorldCupCountriesClubs[firstCountry][0]];
+        }
+    }
     
     const primaryClub = selectedClubsData[0];
     
     let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userState.username)}&background=1c1c22&color=0088cc&size=128&bold=true`;
     let avatarSrc = userState.photoUrl ? userState.photoUrl : fallbackAvatar;
 
+    // التصميم الخاص بك للخلفية المتدرجة باستخدام شعار ولون النادي الأول
     const profileBgStyle = primaryClub ? `background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('${primaryClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${primaryClub.color || '#25252d'};` : 'background: #1c1c22;';
 
     let clubsCardsHtml = selectedClubsData.map(club => `
