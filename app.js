@@ -1,6 +1,5 @@
 // ==========================================
 // 🚀 تطبيق زيلو إف سي (Zelo Sport) - الكود الأساسي (app.js)
-// ملاحظة: يتم تحميل `i18n` و `clubsData` من ملف `data.js`
 // ==========================================
 
 // 2. إدارة بيانات المستخدم
@@ -10,7 +9,7 @@ let userState = {
     userId: "",
     photoUrl: null,
     points: 0, 
-    selectedClubs: [], // تم تحويلها لمصفوفة لدعم أكثر من نادي
+    selectedClubs: [], 
     walletConnected: false,
     walletAddress: null,
     walletBalance: "0.00",
@@ -18,13 +17,8 @@ let userState = {
     lang: "ar",
     referrals: [], 
     dailyCheckInClaimed: false,
-    tasks: [
-        { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zelo Sport on X", points: 500, completed: false, url: "https://x.com" },
-        { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me" },
-        { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com" },
-        { id: "tg_group_ar", textAr: "الانضمام للمجموعة العربية", textEn: "Join Arabic Group", points: 300, completed: false, url: "https://t.me/YourArabicGroupLink" },
-        { id: "tg_group_en", textAr: "الانضمام للمجموعة الأجنبية", textEn: "Join Global Group", points: 300, completed: false, url: "https://t.me/YourEnglishGroupLink" }
-    ]
+    // 👈 هنا قمنا باستدعاء قائمة المهام من ملف tasks.js
+    tasks: defaultTasksData.map(task => ({...task})) 
 };
 
 let tonConnectUI = null;
@@ -145,8 +139,8 @@ function injectLangButton() {
     }
 }
 
-// 📱 6. شاشة تسجيل الدخول (نظام اختيار الدول والأندية المتعددة)
-window.tempSelectedClubs = window.tempSelectedClubs || []; // مصفوفة مؤقتة لحفظ الاختيارات قبل التأكيد
+// 📱 6. شاشة تسجيل الدخول
+window.tempSelectedClubs = window.tempSelectedClubs || []; 
 
 function getFloatingButton() {
     if (window.tempSelectedClubs.length === 0) return '';
