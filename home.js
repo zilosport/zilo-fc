@@ -1,5 +1,5 @@
 // ==========================================
-// 🏠 الصفحة الرئيسية (home.js)
+// 🏠 الصفحة الرئيسية (home.js) - مُحدث
 // ==========================================
 
 function renderHomePage(container) {
@@ -19,6 +19,9 @@ function renderHomePage(container) {
                 <img src="${club.logo}" onerror="this.style.display='none'" style="width: 50px; height: 50px; object-fit: contain;">
                 <div>
                     <h3 style="margin: 0; color: #fff; font-size: 1.2rem;">${getClubName(club)} ${club.countryFlag}</h3>
+                    <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem;">
+                        👥 ${club.membersCount ? club.membersCount.toLocaleString() : '0'} ${userState.lang === 'ar' ? 'عضواً' : 'members'}
+                    </p>
                 </div>
             </div>
             <div>
