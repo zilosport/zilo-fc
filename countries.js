@@ -9,7 +9,7 @@ const countryNames = {
     "🇧🇪": {ar: "بلجيكا", en: "Belgium"}, "🇺🇾": {ar: "الأوروغواي", en: "Uruguay"}, "🇨🇴": {ar: "كولومبيا", en: "Colombia"},
     "🇲🇽": {ar: "المكسيك", en: "Mexico"}, "🇺🇸": {ar: "أمريكا", en: "USA"}, "🇨🇦": {ar: "كندا", en: "Canada"},
     "🇯🇵": {ar: "اليابان", en: "Japan"}, "🇰🇷": {ar: "كوريا الجنوبية", en: "South Korea"}, "🇸🇦": {ar: "السعودية", en: "Saudi Arabia"},
-    "🇦🇪": {ar: "الإمارات", en: "UAE"}, "🇸🇾": {ar: "سوريا", en: "Syria"}, "🇶🇦": {ar: "قطر", en: "Qatar"},
+    "🇦🇪": {ar: "الإمارات", en: "UAE"}, "🇶🇦": {ar: "قطر", en: "Qatar"},
     "🇲🇦": {ar: "المغرب", en: "Morocco"}, "🇪🇬": {ar: "مصر", en: "Egypt"}, "🇹🇳": {ar: "تونس", en: "Tunisia"},
     "🇩🇿": {ar: "الجزائر", en: "Algeria"}, "🇮🇷": {ar: "إيران", en: "Iran"}, "🇮🇶": {ar: "العراق", en: "Iraq"},
     "🇦🇺": {ar: "أستراليا", en: "Australia"}, "🇭🇷": {ar: "كرواتيا", en: "Croatia"}, "🇨🇭": {ar: "سويسرا", en: "Switzerland"},
@@ -18,7 +18,19 @@ const countryNames = {
     "🇸🇪": {ar: "السويد", en: "Sweden"}, "🇳🇴": {ar: "النرويج", en: "Norway"}, "🇭🇺": {ar: "المجر", en: "Hungary"},
     "🇪🇨": {ar: "الإكوادور", en: "Ecuador"}, "🇨🇱": {ar: "تشيلي", en: "Chile"}, "🇵🇾": {ar: "باراغواي", en: "Paraguay"},
     "🇵🇪": {ar: "بيرو", en: "Peru"}, "🇳🇬": {ar: "نيجيريا", en: "Nigeria"}, "🇬🇭": {ar: "غانا", en: "Ghana"},
-    "🇸🇳": {ar: "السنغال", en: "Senegal"}, "🇨🇲": {ar: "الكاميرون", en: "Cameroon"}, "🇨🇮": {ar: "ساحل العاج", en: "Ivory Coast"}
+    "🇸🇳": {ar: "السنغال", en: "Senegal"}, "🇨🇲": {ar: "الكاميرون", en: "Cameroon"}, "🇨🇮": {ar: "ساحل العاج", en: "Ivory Coast"},
+    
+    // ------------------------------------------
+    // التعديلات الجديدة والإضافات:
+    // ------------------------------------------
+    
+    // 1. مفتاح سوريا تم تعديله ليكون كود HTML المطابق لبيانات الأندية
+    "<img src='https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Flag_of_Syria_%281932%E2%80%931958%3B_1961%E2%80%931963%29.svg/320px-Flag_of_Syria_%281932%E2%80%931958%3B_1961%E2%80%931963%29.svg.png' style='width: 22px; height: 14px; border-radius: 2px; object-fit: cover; vertical-align: middle; margin: 0 4px;'>": {ar: "سوريا", en: "Syria"},
+    
+    // 2. إضافة الدول غير المدرجة
+    "🇴🇲": {ar: "عُمان", en: "Oman"},
+    "🇱🇾": {ar: "ليبيا", en: "Libya"},
+    "🇯🇴": {ar: "الأردن", en: "Jordan"}
 };
 
 // دالة مساعدة لجلب اسم الدولة حسب اللغة
