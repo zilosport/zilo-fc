@@ -1,6 +1,11 @@
 // ==========================================
-// 🚀 تطبيق زيلو إف سي (Zelo Sport) - الكود الأساسي (app.js)
+// 🚀 تطبيق زيلو إف سي (Zelo FC) - الكود الأساسي (app.js)
 // ==========================================
+
+// 1. إعداد الاتصال بقاعدة بيانات Supabase
+const supabaseUrl = 'رابط_URL_الخاص_بمشروعك'; 
+const supabaseKey = 'مفتاح_anon_key_الخاص_بمشروعك'; 
+const supabase = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
 
 // 2. إدارة بيانات المستخدم
 let userState = {
@@ -73,8 +78,8 @@ function injectLangButton() {
     }
 }
 
-// 5. تهيئة التطبيق
-document.addEventListener("DOMContentLoaded", () => {
+// 5. تهيئة التطبيق (مُحدثة لتدعم Supabase)
+document.addEventListener("DOMContentLoaded", async () => {
     if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -110,16 +115,26 @@ document.addEventListener("DOMContentLoaded", () => {
                 buttonRootId: null
             });
 
-            tonConnectUI.onStatusChange((walletInfo) => {
+            // تحديث المحفظة في الواجهة وقاعدة البيانات
+            tonConnectUI.onStatusChange(async (walletInfo) => {
                 if (walletInfo) {
                     userState.walletConnected = true;
                     userState.walletAddress = walletInfo.account.address;
                     userState.walletBalance = "0.00"; 
+                    
+                    if (supabase && userState.hasLoggedIn) {
+                        await supabase.from('users').update({ wallet_address: userState.walletAddress }).eq('telegram_id', userState.userId);
+                    }
                 } else {
                     userState.walletConnected = false;
                     userState.walletAddress = null;
                     userState.walletBalance = "0.00";
+
+                    if (supabase && userState.hasLoggedIn) {
+                        await supabase.from('users').update({ wallet_address: null }).eq('telegram_id', userState.userId);
+                    }
                 }
+                
                 if (userState.hasLoggedIn && document.querySelector(".nav-item[onclick*='wallet']")?.classList.contains("active")) {
                     if(typeof renderWalletPage === "function") renderWalletPage(document.getElementById("main-content"));
                 }
@@ -129,7 +144,33 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("TON Connect Error: ", error);
     }
 
-    if (!userState.selectedClubs || userState.selectedClubs.length === 0) {
+    // 🔄 جلب بيانات المستخدم الحقيقية من قاعدة البيانات
+    if (supabase && userState.userId !== "غير معروف") {
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('telegram_id', userState.userId)
+                .single();
+
+            if (data) {
+                userState.points = data.points || 0;
+                userState.selectedClubs = data.selected_clubs || [];
+                userState.lang = data.lang || userState.lang;
+                userState.hasLoggedIn = true;
+                
+                if (data.wallet_address) {
+                    userState.walletAddress = data.wallet_address;
+                    userState.walletConnected = true;
+                }
+            }
+        } catch (error) {
+            console.error("خطأ في جلب بيانات المستخدم:", error);
+        }
+    }
+
+    // التوجيه: إما لشاشة تسجيل الدخول أو الشاشة الرئيسية
+    if (!userState.hasLoggedIn || !userState.selectedClubs || userState.selectedClubs.length === 0) {
         if(typeof renderLoginScreen === 'function') renderLoginScreen();
     } else {
         userState.hasLoggedIn = true;
@@ -149,7 +190,6 @@ function updateTopBar() {
     
     if (clubEl && userState.selectedClubs && userState.selectedClubs.length > 0) {
         let logos = userState.selectedClubs.map(id => {
-            // التعديل هنا: البحث في allWorldCupCountriesClubs بدلاً من مصفوفة مسطحة
             let foundClub = null;
             if (typeof allWorldCupCountriesClubs !== 'undefined') {
                 for (const country in allWorldCupCountriesClubs) {
