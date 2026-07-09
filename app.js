@@ -61,8 +61,8 @@ function toggleLanguage() {
     if (activeNav) {
         const pageId = activeNav.getAttribute("onclick").match(/'([^']+)'/)[1];
         showPage(pageId);
-    } else if (!userState.hasLoggedIn && typeof renderLoginScreen === 'function') {
-        renderLoginScreen();
+    } else if (!userState.hasLoggedIn) {
+        triggerLoginScreen();
     }
 }
 
@@ -79,11 +79,11 @@ function injectLangButton() {
 }
 
 // ==========================================
-// 🚀 4. تهيئة التطبيق (مُحدثة لمعالجة الواجهة والبيانات بشكل سليم)
+// 🚀 4. تهيئة التطبيق
 // ==========================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. استخراج بيانات تليجرام فوراً (عملية سريعة)
+    // 1. استخراج بيانات تليجرام فوراً
     if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -108,21 +108,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 2. ضبط اللغة والاتجاه لتهيئة الواجهة
+    // 2. ضبط اللغة
     document.documentElement.dir = userState.lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = userState.lang;
 
-    // 3. تهيئة TON Connect في الخلفية
+    // 3. تهيئة المحفظة وزر اللغة وجلب البيانات
     initTonConnect();
-
-    // 4. تفعيل زر اللغة
     injectLangButton();
-
-    // 5. جلب البيانات من Supabase والتوجيه
     fetchDataAndRoute();
 });
 
-// 🔄 دالة منفصلة لتهيئة المحفظة (تعمل في الخلفية)
+// 🔄 دالة منفصلة لتهيئة المحفظة
 function initTonConnect() {
     try {
         if (typeof TON_CONNECT_UI !== 'undefined') {
@@ -131,7 +127,6 @@ function initTonConnect() {
                 buttonRootId: null
             });
 
-            // تحديث المحفظة في الواجهة وقاعدة البيانات
             tonConnectUI.onStatusChange(async (walletInfo) => {
                 if (walletInfo) {
                     userState.walletConnected = true;
@@ -163,24 +158,27 @@ function initTonConnect() {
 
 // 🔄 دالة جلب البيانات والتوجيه
 async function fetchDataAndRoute() {
-    // التحقق المبدئي من توفر اتصال وقابلية قراءة المستخدم
+    console.log("🔄 [1] بدء جلب البيانات...");
+
     if (!supabase || userState.userId === "غير معروف") {
+        console.warn("⚠️ [2] لا يوجد اتصال أو المستخدم مجهول.");
         userState.hasLoggedIn = false;
-        if(typeof renderLoginScreen === 'function') renderLoginScreen();
+        triggerLoginScreen();
         return;
     }
 
     try {
-        // جلب بيانات المستخدم الحقيقية من قاعدة البيانات باستخدام maybeSingle
+        console.log(`🔍 [3] جلب بيانات المستخدم (${userState.userId})...`);
         const { data, error } = await supabase
             .from('users')
             .select('*')
             .eq('telegram_id', userState.userId)
-            .maybeSingle(); // استخدام maybeSingle لمنع توقف التطبيق إذا لم يكن المستخدم موجوداً
+            .maybeSingle();
 
         if (error) throw error;
 
         if (data) {
+            console.log("✅ [4] المستخدم موجود.");
             userState.points = data.points || 0;
             userState.selectedClubs = data.selected_clubs || [];
             userState.lang = data.lang || userState.lang;
@@ -191,28 +189,60 @@ async function fetchDataAndRoute() {
                 userState.walletConnected = true;
             }
         } else {
+            console.log("🆕 [4] مستخدم جديد.");
             userState.hasLoggedIn = false;
         }
     } catch (error) {
-        console.error("خطأ في جلب بيانات المستخدم:", error);
+        console.error("❌ [خطأ] فشل في جلب البيانات:", error);
         userState.hasLoggedIn = false;
     }
 
-    // التوجيه: إما لشاشة تسجيل الدخول أو الشاشة الرئيسية
+    // التوجيه النهائي
     if (!userState.hasLoggedIn || !userState.selectedClubs || userState.selectedClubs.length === 0) {
-        if(typeof renderLoginScreen === 'function') renderLoginScreen();
+        triggerLoginScreen();
     } else {
+        console.log("🏠 [6] توجيه للشاشة الرئيسية...");
         userState.hasLoggedIn = true;
         updateTopBar();
         showPage('home'); 
     }
 }
 
+// 🛠️ دالة تشغيل شاشة الدخول بأمان
+function triggerLoginScreen() {
+    console.log("🚪 [توجيه] محاولة فتح شاشة تسجيل الدخول...");
+    
+    // التأكد من بقاء الأشرطة مخفية
+    const topBar = document.getElementById('top-bar');
+    const bottomNav = document.getElementById('bottom-nav');
+    if(topBar) topBar.style.display = 'none';
+    if(bottomNav) bottomNav.style.display = 'none';
+
+    if (typeof renderLoginScreen === 'function') {
+        renderLoginScreen();
+    } else {
+        console.error("⛔ [خطأ] دالة renderLoginScreen غير موجودة!");
+        const contentDiv = document.getElementById("main-content");
+        if (contentDiv) {
+            contentDiv.innerHTML = `<div style="padding: 20px; text-align: center; color: red;">
+                <h3>خطأ في النظام</h3>
+                <p>شاشة تسجيل الدخول مفقودة. تأكد من ملف login.js</p>
+            </div>`;
+        }
+    }
+}
+
 // ==========================================
-// 🔄 5. التوجيه وتحديث الواجهة الأساسية (Routing & UI Updates)
+// 🔄 5. التوجيه وتحديث الواجهة الأساسية
 // ==========================================
 
 function updateTopBar() {
+    // إظهار الأشرطة العلوية والسفلية لأن المستخدم مسجل الدخول
+    const topBar = document.getElementById("top-bar");
+    const bottomNav = document.getElementById("bottom-nav");
+    if (topBar) topBar.style.display = "flex";
+    if (bottomNav) bottomNav.style.display = "flex";
+
     const pointsEl = document.getElementById("points");
     const clubEl = document.getElementById("club");
     
