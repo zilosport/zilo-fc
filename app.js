@@ -1,5 +1,5 @@
 // ==========================================
-// 🚀 تطبيق زيلو إف سي (Zelo FC) - الكود الأساسي (app.js)
+// 🚀 تطبيق زيلو إف سي (ZELO FC) - الكود الأساسي (app.js)
 // ==========================================
 
 // 1. إعداد الاتصال بقاعدة بيانات Supabase
@@ -28,7 +28,7 @@ let userState = {
 let tonConnectUI = null;
 const tg = window.Telegram?.WebApp;
 
-// 4. دوال مساعدة للترجمة
+// 3. دوال مساعدة للترجمة واسترجاع الأسماء
 function t(key) {
     return typeof i18n !== 'undefined' && i18n[userState.lang] && i18n[userState.lang][key] ? i18n[userState.lang][key] : key;
 }
@@ -78,8 +78,12 @@ function injectLangButton() {
     }
 }
 
-// 5. تهيئة التطبيق (مُحدثة لتدعم Supabase)
-document.addEventListener("DOMContentLoaded", async () => {
+// ==========================================
+// 🚀 4. تهيئة التطبيق (مُحدثة لمعالجة الواجهة والبيانات بشكل سليم)
+// ==========================================
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. استخراج بيانات تليجرام فوراً (عملية سريعة)
     if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -104,10 +108,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    // 2. ضبط اللغة والاتجاه لتهيئة الواجهة
     document.documentElement.dir = userState.lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = userState.lang;
 
-    // إعداد TON Connect
+    // 3. تهيئة TON Connect في الخلفية
+    initTonConnect();
+
+    // 4. تفعيل زر اللغة
+    injectLangButton();
+
+    // 5. جلب البيانات من Supabase والتوجيه
+    fetchDataAndRoute();
+});
+
+// 🔄 دالة منفصلة لتهيئة المحفظة (تعمل في الخلفية)
+function initTonConnect() {
     try {
         if (typeof TON_CONNECT_UI !== 'undefined') {
             tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
@@ -143,30 +159,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (error) {
         console.error("TON Connect Error: ", error);
     }
+}
 
-    // 🔄 جلب بيانات المستخدم الحقيقية من قاعدة البيانات
-    if (supabase && userState.userId !== "غير معروف") {
-        try {
-            const { data, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('telegram_id', userState.userId)
-                .single();
+// 🔄 دالة جلب البيانات والتوجيه
+async function fetchDataAndRoute() {
+    // التحقق المبدئي من توفر اتصال وقابلية قراءة المستخدم
+    if (!supabase || userState.userId === "غير معروف") {
+        userState.hasLoggedIn = false;
+        if(typeof renderLoginScreen === 'function') renderLoginScreen();
+        return;
+    }
 
-            if (data) {
-                userState.points = data.points || 0;
-                userState.selectedClubs = data.selected_clubs || [];
-                userState.lang = data.lang || userState.lang;
-                userState.hasLoggedIn = true;
-                
-                if (data.wallet_address) {
-                    userState.walletAddress = data.wallet_address;
-                    userState.walletConnected = true;
-                }
+    try {
+        // جلب بيانات المستخدم الحقيقية من قاعدة البيانات باستخدام maybeSingle
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('telegram_id', userState.userId)
+            .maybeSingle(); // استخدام maybeSingle لمنع توقف التطبيق إذا لم يكن المستخدم موجوداً
+
+        if (error) throw error;
+
+        if (data) {
+            userState.points = data.points || 0;
+            userState.selectedClubs = data.selected_clubs || [];
+            userState.lang = data.lang || userState.lang;
+            userState.hasLoggedIn = true;
+            
+            if (data.wallet_address) {
+                userState.walletAddress = data.wallet_address;
+                userState.walletConnected = true;
             }
-        } catch (error) {
-            console.error("خطأ في جلب بيانات المستخدم:", error);
+        } else {
+            userState.hasLoggedIn = false;
         }
+    } catch (error) {
+        console.error("خطأ في جلب بيانات المستخدم:", error);
+        userState.hasLoggedIn = false;
     }
 
     // التوجيه: إما لشاشة تسجيل الدخول أو الشاشة الرئيسية
@@ -177,11 +206,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateTopBar();
         showPage('home'); 
     }
-    
-    injectLangButton();
-});
+}
 
-// 🔄 التوجيه وتحديث الواجهة الأساسية (Routing & UI Updates)
+// ==========================================
+// 🔄 5. التوجيه وتحديث الواجهة الأساسية (Routing & UI Updates)
+// ==========================================
+
 function updateTopBar() {
     const pointsEl = document.getElementById("points");
     const clubEl = document.getElementById("club");
