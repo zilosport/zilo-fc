@@ -5,7 +5,8 @@
 // 1. إعداد الاتصال بقاعدة بيانات Supabase
 const supabaseUrl = 'https://ttyfcwtlasvphkariqhw.supabase.co/rest/v1/'; 
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0eWZjd3RsYXN2cGhrYXJpcWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxODk1MjYsImV4cCI6MjA5ODc2NTUyNn0.m3wFMEASM3K63nm3bsIlrEOXhRvMQhUZqvpXyFq7NEg'; 
-const supabase = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
+// التعديل هنا: تغيير اسم المتغير إلى supabaseClient لتجنب التضارب
+const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
 
 // 2. إدارة بيانات المستخدم
 let userState = {
@@ -133,16 +134,18 @@ function initTonConnect() {
                     userState.walletAddress = walletInfo.account.address;
                     userState.walletBalance = "0.00"; 
                     
-                    if (supabase && userState.hasLoggedIn) {
-                        await supabase.from('users').update({ wallet_address: userState.walletAddress }).eq('telegram_id', userState.userId);
+                    // التعديل هنا
+                    if (supabaseClient && userState.hasLoggedIn) {
+                        await supabaseClient.from('users').update({ wallet_address: userState.walletAddress }).eq('telegram_id', userState.userId);
                     }
                 } else {
                     userState.walletConnected = false;
                     userState.walletAddress = null;
                     userState.walletBalance = "0.00";
 
-                    if (supabase && userState.hasLoggedIn) {
-                        await supabase.from('users').update({ wallet_address: null }).eq('telegram_id', userState.userId);
+                    // التعديل هنا
+                    if (supabaseClient && userState.hasLoggedIn) {
+                        await supabaseClient.from('users').update({ wallet_address: null }).eq('telegram_id', userState.userId);
                     }
                 }
                 
@@ -160,7 +163,8 @@ function initTonConnect() {
 async function fetchDataAndRoute() {
     console.log("🔄 [1] بدء جلب البيانات...");
 
-    if (!supabase || userState.userId === "غير معروف") {
+    // التعديل هنا
+    if (!supabaseClient || userState.userId === "غير معروف") {
         console.warn("⚠️ [2] لا يوجد اتصال أو المستخدم مجهول.");
         userState.hasLoggedIn = false;
         triggerLoginScreen();
@@ -169,7 +173,8 @@ async function fetchDataAndRoute() {
 
     try {
         console.log(`🔍 [3] جلب بيانات المستخدم (${userState.userId})...`);
-        const { data, error } = await supabase
+        // التعديل هنا
+        const { data, error } = await supabaseClient
             .from('users')
             .select('*')
             .eq('telegram_id', userState.userId)
