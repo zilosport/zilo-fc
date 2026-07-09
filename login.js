@@ -1,5 +1,5 @@
 // ==========================================
-// 📱 ملف login.js - شاشة تسجيل الدخول واختيار الأندية (مُحدث مع الحفظ)
+// 📱 ملف login.js - شاشة تسجيل الدخول واختيار الأندية (مُحدث مع التنبيه والحفظ)
 // ==========================================
 
 window.tempSelectedClubs = window.tempSelectedClubs || []; 
@@ -48,6 +48,18 @@ function renderLoginScreen() {
         }
     }
 
+    // إضافة صندوق التحذير ورابط الفيديو هنا
+    const warningHtml = `
+        <div style="background-color: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; color: #ffc107; padding: 12px; margin: 0 0 20px 0; border-radius: 8px; text-align: center; font-size: 0.9rem; line-height: 1.5;">
+            <strong>${t('selectionWarning')}</strong>
+            <br><br>
+            <span style="color: #fff;">${t('tutorialText')}</span> 
+            <a href="https://www.youtube.com/watch?v=TEMP_VIDEO_ID" target="_blank" style="color: #4da8da; text-decoration: underline; font-weight: bold;">
+                ${t('tutorialLinkText')}
+            </a>
+        </div>
+    `;
+
     mainContent.innerHTML = `
         <div style="padding: 20px 10px; text-align: center; max-width: 500px; margin: 0 auto; padding-bottom: 100px;">
             <div style="font-size: 3.5rem; margin-bottom: 10px;">🌍</div>
@@ -56,7 +68,7 @@ function renderLoginScreen() {
                 ${userState.lang === 'ar' ? 'اختر فريقين كحد أقصى (محلي وعالمي)' : 'Select up to 2 clubs (Local & Global)'}
             </p>
 
-            <div style="display: flex; flex-direction: column; text-align: ${userState.lang === 'ar' ? 'right' : 'left'}; max-height: 65vh; overflow-y: auto; padding-right: 5px;">
+            ${warningHtml} <div style="display: flex; flex-direction: column; text-align: ${userState.lang === 'ar' ? 'right' : 'left'}; max-height: 65vh; overflow-y: auto; padding-right: 5px;">
                 ${countriesHtml}
             </div>
         </div>
@@ -98,7 +110,9 @@ function renderLoginScreen() {
                     </h3>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 65vh; overflow-y: auto; padding-right: 5px;">
+                ${warningHtml}
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 55vh; overflow-y: auto; padding-right: 5px;">
                     ${clubsHtml}
                 </div>
             </div>
@@ -123,7 +137,7 @@ window.toggleClubSelection = function(clubId, countryKey) {
     if (countryKey) showClubsForCountry(countryKey); else renderLoginScreen();
 }
 
-// 🚀 زر تأكيد الدخول (مُحدث لدعم الحفظ في قاعدة البيانات)
+// 🚀 زر تأكيد الدخول (مُحدث لدعم الحفظ في قاعدة البيانات عبر supabaseClient)
 window.confirmLogin = async function() {
     if (window.tempSelectedClubs.length === 0) return;
 
@@ -139,9 +153,10 @@ window.confirmLogin = async function() {
     userState.hasLoggedIn = true;
 
     // 💾 حفظ المستخدم الجديد في قاعدة البيانات (Supabase)
-    if (supabase && userState.userId !== "غير معروف") {
+    // التعديل هنا: استخدام supabaseClient بدلاً من supabase
+    if (typeof supabaseClient !== 'undefined' && supabaseClient && userState.userId !== "غير معروف") {
         try {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('users')
                 .upsert({
                     telegram_id: userState.userId,
