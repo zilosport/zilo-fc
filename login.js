@@ -1,5 +1,5 @@
 // ==========================================
-// 📱 ملف login.js - شاشة تسجيل الدخول واختيار الأندية (مُحدث)
+// 📱 ملف login.js - شاشة تسجيل الدخول واختيار الأندية (مُحدث مع الحفظ)
 // ==========================================
 
 window.tempSelectedClubs = window.tempSelectedClubs || []; 
@@ -7,29 +7,28 @@ window.tempSelectedClubs = window.tempSelectedClubs || [];
 function getFloatingButton() {
     if (window.tempSelectedClubs.length === 0) return '';
     return `
-        <div onclick="confirmLogin()" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #4caf50, #2e7d32); color: white; padding: 14px 30px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; gap: 10px; width: 80%; justify-content: center;">
+        <div id="confirm-btn" onclick="confirmLogin()" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #4caf50, #2e7d32); color: white; padding: 14px 30px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; gap: 10px; width: 80%; justify-content: center; transition: 0.3s;">
             ${userState.lang === 'ar' ? 'تأكيد الدخول' : 'Confirm Login'} (${window.tempSelectedClubs.length}/2) ✅
         </div>
     `;
 }
 
 function renderLoginScreen() {
-    if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'none';
-    if (document.querySelector('.bottom-nav')) document.querySelector('.bottom-nav').style.display = 'none';
+    // التأكد من إخفاء الأشرطة باستخدام المُعرفات الجديدة
+    const topBar = document.getElementById('top-bar');
+    const bottomNav = document.getElementById('bottom-nav');
+    if (topBar) topBar.style.display = 'none';
+    if (bottomNav) bottomNav.style.display = 'none';
 
     const mainContent = document.getElementById("main-content");
     
-    // 🔄 التعديل هنا: استخدام allWorldCupCountriesClubs بدلاً من clubsData
     let countriesHtml = "";
     
-    // نمر على الكائن الجديد لاستخراج الدول وأعلامها
     for (const countryKey in allWorldCupCountriesClubs) {
         const clubsInCountry = allWorldCupCountriesClubs[countryKey];
         if (clubsInCountry && clubsInCountry.length > 0) {
-            // نأخذ العلم من أول نادي في المصفوفة
             const flag = clubsInCountry[0].countryFlag; 
             
-            // دالة للحصول على اسم الدولة بناءً على المفتاح (يمكنك تحسينها لاحقاً إذا أردت)
             let countryName = countryKey.charAt(0).toUpperCase() + countryKey.slice(1);
             if(typeof getCountryName === 'function') {
                 countryName = getCountryName(flag) || countryName;
@@ -64,7 +63,6 @@ function renderLoginScreen() {
         ${getFloatingButton()}
     `;
 
-    // 🔄 التعديل هنا: استقبال countryKey بدلاً من العلم
     window.showClubsForCountry = function(countryKey) {
         let clubs = allWorldCupCountriesClubs[countryKey];
         if (!clubs) return;
@@ -109,7 +107,6 @@ function renderLoginScreen() {
     }
 }
 
-// دالة اختيار أو إلغاء اختيار النادي (تم تحديث المعامل الثاني ليكون countryKey بدلاً من flag)
 window.toggleClubSelection = function(clubId, countryKey) {
     const index = window.tempSelectedClubs.indexOf(clubId);
     
@@ -126,18 +123,47 @@ window.toggleClubSelection = function(clubId, countryKey) {
     if (countryKey) showClubsForCountry(countryKey); else renderLoginScreen();
 }
 
-// زر تأكيد الدخول
-window.confirmLogin = function() {
+// 🚀 زر تأكيد الدخول (مُحدث لدعم الحفظ في قاعدة البيانات)
+window.confirmLogin = async function() {
     if (window.tempSelectedClubs.length === 0) return;
+
+    // تغيير شكل الزر لإظهار حالة التحميل
+    const confirmBtn = document.getElementById('confirm-btn');
+    if (confirmBtn) {
+        confirmBtn.innerText = userState.lang === 'ar' ? 'جاري الحفظ ⏳...' : 'Saving ⏳...';
+        confirmBtn.style.pointerEvents = 'none';
+        confirmBtn.style.opacity = '0.8';
+    }
     
     userState.selectedClubs = [...window.tempSelectedClubs];
     userState.hasLoggedIn = true;
 
-    if (document.querySelector('.top-bar')) document.querySelector('.top-bar').style.display = 'flex';
-    if (document.querySelector('.bottom-nav')) document.querySelector('.bottom-nav').style.display = 'flex';
+    // 💾 حفظ المستخدم الجديد في قاعدة البيانات (Supabase)
+    if (supabase && userState.userId !== "غير معروف") {
+        try {
+            const { error } = await supabase
+                .from('users')
+                .upsert({
+                    telegram_id: userState.userId,
+                    username: userState.username,
+                    points: userState.points || 1500, // منح نقاط افتراضية كهدية تسجيل إذا رغبت
+                    selected_clubs: userState.selectedClubs,
+                    lang: userState.lang
+                }, { onConflict: 'telegram_id' });
 
-    toggleLanguage(); 
-    toggleLanguage(); // إعادة استدعاء لضمان تحديث النصوص
+            if (error) throw error;
+            console.log("✅ تم حفظ المستخدم الجديد بنجاح في قاعدة البيانات.");
+        } catch (err) {
+            console.error("❌ خطأ أثناء إنشاء حساب المستخدم:", err);
+            // يمكنك إضافة إشعار للمستخدم هنا في حال فشل الحفظ
+        }
+    }
+
+    // إظهار الأشرطة العلوية والسفلية
+    const topBar = document.getElementById('top-bar');
+    const bottomNav = document.getElementById('bottom-nav');
+    if (topBar) topBar.style.display = 'flex';
+    if (bottomNav) bottomNav.style.display = 'flex';
 
     updateTopBar();
     showPage('home');
