@@ -61,7 +61,7 @@ async function renderTasksPage(container) {
         <div class="task-card" style="display: flex; justify-content: space-between; align-items: center; background: #1c1c22; margin: 8px 0; padding: 14px; border-radius: 12px; border: 1px solid #25252d;">
             <div>
                 <h5 style="margin: 0 0 4px 0; color: #fff;">${getTaskName(task)}</h5>
-                <small style="color: #0088cc; font-weight: bold;">+ ${task.points} ZILO FC</small>
+                <small style="color: #0088cc; font-weight: bold;">+ ${task.points} ZELO FC</small>
             </div>
             <button id="btn-task-${task.id}" onclick="executeTask('${task.id}', '${task.url}')" ${task.completed ? 'disabled style="background:#2b2b36; color:#666; border:none; padding:8px 16px; border-radius:8px;"' : 'style="background:#0088cc; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer;"'}>
                 ${task.completed ? t('btnDone') : t('btnGo')}
