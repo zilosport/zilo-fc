@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zelo FC App</title>
+    <title>ZELO FC App</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
@@ -93,14 +93,14 @@
 </head>
 <body>
 
-    <div class="top-bar">
+    <div class="top-bar" id="top-bar" style="display: none;">
         <div id="club" style="font-size: 0.9rem; color: #e0e0e0;">ناديك: 👑 <b style="color: #fff;">ريال مدريد</b></div>
-        <div id="points" style="font-weight: bold; color: #ffd700; background: rgba(255, 215, 0, 0.1); padding: 5px 10px; border-radius: 8px;">🪙 عملة ZILO: 1,500</div>
+        <div id="points" style="font-weight: bold; color: #ffd700; background: rgba(255, 215, 0, 0.1); padding: 5px 10px; border-radius: 8px;">🪙 عملة ZELO: 1,500</div>
     </div>
 
     <div class="content-container" id="main-content"></div>
 
-    <div class="bottom-nav">
+    <div class="bottom-nav" id="bottom-nav" style="display: none;">
         <button class="nav-item active" onclick="showPage('home')"><span class="icon">🏠</span><span>الرئيسية</span></button>
         <button class="nav-item" onclick="showPage('tasks')"><span class="icon">🛠️</span><span>المهام</span></button>
         <button class="nav-item" onclick="showPage('friends')"><span class="icon">👥</span><span>الأصدقاء</span></button>
