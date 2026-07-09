@@ -110,7 +110,7 @@ async function executeTask(taskId, url) {
             if (response.success) {
                 task.completed = true;
                 userState.points += task.points; // تحديث النقاط محلياً بعد تأكيد السيرفر
-                alert(`${t('alertTaskDone')} ${task.points} ZILO FC.`);
+                alert(`${t('alertTaskDone')} ${task.points} ZELO FC.`);
                 updateTopBar();
                 showPage('tasks'); // إعادة رسم الصفحة لتحديث حالة الزر
             } else {
