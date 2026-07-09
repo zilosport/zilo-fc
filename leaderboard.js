@@ -1,11 +1,11 @@
 // ==========================================
-// 🏆 ملف قسم الترتيب (Leaderboard) - (مُحدث)
+// 🏆 ملف قسم الترتيب (Leaderboard) - (جاهز لقواعد البيانات)
 // ==========================================
 
-const clubFansLeaderboard = {};
+const clubFansLeaderboard = {}; // هنا سيتم جلب البيانات من قاعدة البيانات (Backend)
 
 function renderLeaderboardPage(container) {
-    // 🔄 التعديل الأول: تجميع كل الأندية من الكائن الجديد في مصفوفة واحدة لترتيبها
+    // تجميع كل الأندية من الكائن الجديد في مصفوفة واحدة لترتيبها
     let allClubsFlat = [];
     if (typeof allWorldCupCountriesClubs !== 'undefined') {
         for (const country in allWorldCupCountriesClubs) {
@@ -13,7 +13,7 @@ function renderLeaderboardPage(container) {
         }
     }
 
-    // ترتيب الأندية ثم أخذ أول 100 نادي فقط
+    // ترتيب الأندية ثم أخذ أول 100 نادي فقط (حسب النقاط الحقيقية)
     let sortedClubs = allClubsFlat.sort((a, b) => (b.points || 0) - (a.points || 0)).slice(0, 100);
     
     let leaderboardHtml = sortedClubs.map((club, index) => `
@@ -24,7 +24,7 @@ function renderLeaderboardPage(container) {
                 <span style="color: #fff; font-weight: bold;">${getClubName(club)}</span>
             </div>
             <div style="text-align: ${userState.lang === 'ar' ? 'left' : 'right'};">
-                <span style="color: #4caf50; font-weight: bold; font-family: monospace;">${(club.points || 0).toLocaleString()} ZELOFC</span>
+                <span style="color: #4caf50; font-weight: bold; font-family: monospace;">${(club.points || 0).toLocaleString()} ZILO FC</span>
                 <br><small style="color: #888; font-size: 0.75rem;">${t('clickToView')}</small>
             </div>
         </div>
@@ -38,7 +38,7 @@ function renderLeaderboardPage(container) {
 }
 
 function openSpecificClubFans(clubId) {
-    // 🔄 التعديل الثاني: البحث عن النادي داخل الكائن الجديد المقسم بالدول
+    // البحث عن النادي داخل الكائن الجديد المقسم بالدول
     let club = null;
     if (typeof allWorldCupCountriesClubs !== 'undefined') {
         for (const country in allWorldCupCountriesClubs) {
@@ -50,24 +50,38 @@ function openSpecificClubFans(clubId) {
     if (!club) return; // حماية في حال لم يتم العثور على النادي
 
     const contentDiv = document.getElementById("main-content");
-    let fansList = clubFansLeaderboard[clubId] || [
-        { name: userState.username + " (أنت)", points: userState.points, referrals: userState.referrals.length }
-    ];
     
-    // ترتيب المشجعين تنازلياً حسب النقاط
-    fansList.sort((a, b) => b.points - a.points);
+    // جلب قائمة المشجعين الحقيقية من الكائن (أو من الـ API مستقبلاً)، وإذا لم يوجد نضع مصفوفة فارغة
+    let fansList = clubFansLeaderboard[clubId] || [];
     
-    // أخذ أفضل 100 مشجع فقط بعد الترتيب
-    fansList = fansList.slice(0, 100);
+    let fansTableRows = "";
 
-    let fansTableRows = fansList.map((fan, idx) => `
-        <tr style="border-bottom: 1px solid #1c1c22; text-align: center;">
-            <td style="padding: 12px; color: ${idx < 3 ? '#ff9800' : '#fff'}; font-weight: bold;">#${idx + 1}</td>
-            <td style="padding: 12px; color: #fff;">👤 ${fan.name}</td>
-            <td style="padding: 12px; color: #4caf50; font-family: monospace;">${fan.points.toLocaleString()}</td>
-            <td style="padding: 12px; color: #aaa;">${fan.referrals} ${t('referralWord')}</td>
-        </tr>
-    `).join('');
+    // التحقق مما إذا كان هناك مشجعين فعليين في قاعدة البيانات
+    if (fansList.length > 0) {
+        // ترتيب المشجعين تنازلياً حسب النقاط الحقيقية
+        fansList.sort((a, b) => b.points - a.points);
+        
+        // أخذ أفضل 100 مشجع فقط بعد الترتيب
+        fansList = fansList.slice(0, 100);
+
+        fansTableRows = fansList.map((fan, idx) => `
+            <tr style="border-bottom: 1px solid #1c1c22; text-align: center;">
+                <td style="padding: 12px; color: ${idx < 3 ? '#ff9800' : '#fff'}; font-weight: bold;">#${idx + 1}</td>
+                <td style="padding: 12px; color: #fff;">👤 ${fan.name}</td>
+                <td style="padding: 12px; color: #4caf50; font-family: monospace;">${fan.points.toLocaleString()}</td>
+                <td style="padding: 12px; color: #aaa;">${fan.referrals} ${t('referralWord')}</td>
+            </tr>
+        `).join('');
+    } else {
+        // رسالة تظهر في حال لم يقم أحد بالانضمام للنادي بعد (بنفس تناسق الألوان)
+        fansTableRows = `
+            <tr>
+                <td colspan="4" style="padding: 20px; text-align: center; color: #888; font-size: 0.9rem;">
+                    لا يوجد مشجعين مسجلين في هذا النادي حتى الآن.
+                </td>
+            </tr>
+        `;
+    }
 
     contentDiv.innerHTML = `
         <button onclick="showPage('leaderboard')" style="background: #2b2b36; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-bottom: 15px; font-weight: bold;">${t('btnBack')}</button>
