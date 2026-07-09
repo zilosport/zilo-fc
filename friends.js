@@ -85,7 +85,7 @@ async function renderFriendsPage(container) {
             friendsListContainer.innerHTML = `
                 <div style="background: rgba(255, 255, 255, 0.02); padding: 20px; border-radius: 12px; border: 1px solid #25252d;">
                     <span style="font-size: 2.5rem; display: block; margin-bottom: 10px;">🤝</span>
-                    <p style="color: #aaa; margin: 0; font-size: 0.9rem;">لم تقم بدعوة أي أصدقاء حتى الآن.<br>شارك رابطك لتبدأ بجمع نقاط ZILO FC!</p>
+                    <p style="color: #aaa; margin: 0; font-size: 0.9rem;">لم تقم بدعوة أي أصدقاء حتى الآن.<br>شارك رابطك لتبدأ بجمع نقاط ZELO FC!</p>
                 </div>
             `;
         }
