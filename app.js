@@ -134,7 +134,6 @@ function initTonConnect() {
                     userState.walletAddress = walletInfo.account.address;
                     userState.walletBalance = "0.00"; 
                     
-                    // التعديل هنا
                     if (supabaseClient && userState.hasLoggedIn) {
                         await supabaseClient.from('users').update({ wallet_address: userState.walletAddress }).eq('telegram_id', userState.userId);
                     }
@@ -143,7 +142,6 @@ function initTonConnect() {
                     userState.walletAddress = null;
                     userState.walletBalance = "0.00";
 
-                    // التعديل هنا
                     if (supabaseClient && userState.hasLoggedIn) {
                         await supabaseClient.from('users').update({ wallet_address: null }).eq('telegram_id', userState.userId);
                     }
@@ -163,7 +161,6 @@ function initTonConnect() {
 async function fetchDataAndRoute() {
     console.log("🔄 [1] بدء جلب البيانات...");
 
-    // التعديل هنا
     if (!supabaseClient || userState.userId === "غير معروف") {
         console.warn("⚠️ [2] لا يوجد اتصال أو المستخدم مجهول.");
         userState.hasLoggedIn = false;
@@ -173,7 +170,6 @@ async function fetchDataAndRoute() {
 
     try {
         console.log(`🔍 [3] جلب بيانات المستخدم (${userState.userId})...`);
-        // التعديل هنا
         const { data, error } = await supabaseClient
             .from('users')
             .select('*')
@@ -258,7 +254,8 @@ function updateTopBar() {
             let foundClub = null;
             if (typeof allWorldCupCountriesClubs !== 'undefined') {
                 for (const country in allWorldCupCountriesClubs) {
-                    const club = allWorldCupCountriesClubs[country].find(c => c.id === id);
+                    // 🛠️ الإصلاح هنا: تحويل كلاهما إلى نص لضمان التطابق التام
+                    const club = allWorldCupCountriesClubs[country].find(c => String(c.id) === String(id));
                     if (club) {
                         foundClub = club;
                         break;
