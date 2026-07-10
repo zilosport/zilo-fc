@@ -1,11 +1,10 @@
 // ==========================================
-// 🚀 تطبيق زيلو إف سي (ZELO FC) - الكود الأساسي (app.js)
+// 🚀 تطبيق زيلو إف سي (ZELO FC) - الكود الأساسي (app.js) المحُدّث
 // ==========================================
 
 // 1. إعداد الاتصال بقاعدة بيانات Supabase
 const supabaseUrl = 'https://ttyfcwtlasvphkariqhw.supabase.co'; 
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0eWZjd3RsYXN2cGhrYXJpcWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxODk1MjYsImV4cCI6MjA5ODc2NTUyNn0.m3wFMEASM3K63nm3bsIlrEOXhRvMQhUZqvpXyFq7NEg'; 
-// استبدل السطر الحالي الخاص بـ supabaseClient بهذا السطر:
 const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey, {
     db: { schema: 'public' }
 }) : null;
@@ -25,7 +24,8 @@ let userState = {
     lang: "ar",
     referrals: [], 
     dailyCheckInClaimed: false,
-    tasks: typeof defaultTasksData !== "undefined" ? defaultTasksData.map(task => ({...task})) : [] 
+    // تم التعديل لدعم المتغير إذا كان داخل window
+    tasks: typeof window.defaultTasksData !== "undefined" ? window.defaultTasksData.map(task => ({...task})) : [] 
 };
 
 let tonConnectUI = null;
@@ -86,7 +86,7 @@ function injectLangButton() {
 // ==========================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. استخراج بيانات تليجرام فوراً
+    // 1. استخراج بيانات تليجرام فوراً أو وضع بيانات وهمية للاختبار المحلي
     if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -106,8 +106,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 userState.lang = 'en';
             }
         } else {
-            userState.username = "مستخدم تليجرام";
-            userState.userId = "غير معروف";
+            // 🛠️ إضافة بيانات وهمية (Mock Data) للاختبار في المتصفح العادي بدلاً من انهيار التطبيق
+            console.warn("⚠️ لم يتم العثور على بيانات تليجرام حقيقية. استخدام بيانات وهمية للاختبار...");
+            userState.username = "Local Tester";
+            userState.userId = "123456789"; 
+            userState.userParam = "123456789";
         }
     }
 
@@ -159,13 +162,12 @@ function initTonConnect() {
     }
 }
 
-// 🔄 دالة جلب البيانات والتوجيه
+// 🔄 دالة جلب البيانات والتوجيه (تم التحسين لمنع التوقف)
 async function fetchDataAndRoute() {
     console.log("🔄 [1] بدء جلب البيانات...");
 
-    if (!supabaseClient || userState.userId === "غير معروف") {
-        console.warn("⚠️ [2] لا يوجد اتصال أو المستخدم مجهول.");
-        userState.hasLoggedIn = false;
+    if (!supabaseClient) {
+        console.warn("⚠️ [2] قاعدة بيانات Supabase غير مهيأة.");
         triggerLoginScreen();
         return;
     }
@@ -178,10 +180,13 @@ async function fetchDataAndRoute() {
             .eq('telegram_id', userState.userId)
             .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+            console.error("❌ خطأ من Supabase:", error);
+            throw error;
+        }
 
         if (data) {
-            console.log("✅ [4] المستخدم موجود.");
+            console.log("✅ [4] المستخدم موجود في النظام.");
             userState.points = data.points || 0;
             userState.selectedClubs = data.selected_clubs || [];
             userState.lang = data.lang || userState.lang;
@@ -192,12 +197,12 @@ async function fetchDataAndRoute() {
                 userState.walletConnected = true;
             }
         } else {
-            console.log("🆕 [4] مستخدم جديد.");
+            console.log("🆕 [4] مستخدم جديد (غير مسجل).");
             userState.hasLoggedIn = false;
         }
     } catch (error) {
-        console.error("❌ [خطأ] فشل في جلب البيانات:", error);
-        userState.hasLoggedIn = false;
+        console.error("❌ [خطأ] فشل في الاتصال وجلب البيانات:", error);
+        userState.hasLoggedIn = false; // الاستمرار رغم الخطأ لتوجيهه لشاشة الدخول
     }
 
     // التوجيه النهائي
@@ -240,7 +245,6 @@ function triggerLoginScreen() {
 // ==========================================
 
 function updateTopBar() {
-    // إظهار الأشرطة العلوية والسفلية لأن المستخدم مسجل الدخول
     const topBar = document.getElementById("top-bar");
     const bottomNav = document.getElementById("bottom-nav");
     if (topBar) topBar.style.display = "flex";
@@ -256,7 +260,6 @@ function updateTopBar() {
             let foundClub = null;
             if (typeof allWorldCupCountriesClubs !== 'undefined') {
                 for (const country in allWorldCupCountriesClubs) {
-                    // 🛠️ الإصلاح هنا: تحويل كلاهما إلى نص لضمان التطابق التام
                     const club = allWorldCupCountriesClubs[country].find(c => String(c.id) === String(id));
                     if (club) {
                         foundClub = club;
