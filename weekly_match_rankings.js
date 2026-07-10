@@ -1,159 +1,68 @@
 /**
- * ملف: predictions_ranking.js
- * مخصص لجلب وعرض ترتيب توقعات ZELO FC (الأسبوعي + الكؤوس)
+ * ملف: weekly_match_rankings.js
+ * الوظيفة: عرض الثلاثة الأوائل + ترتيب المستخدم الحالي (الترتيب فقط)
  */
 
-// دالة الحماية (إذا لم تكن معرفة في ملف آخر، يفضل وضعها هنا أو في ملف عام)
-function escapeHTML(str) {
-    if (!str) return '';
-    return str.replace(/[&<>'"]/g, tag => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-    }[tag] || tag));
-}
-
-async function renderLeaderboardSection(containerId) {
+async function renderWeeklyRanking(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    // دمج الـ CSS مرة واحدة فقط
-    const styles = `
-        <style>
-            .zelo-ranking-container { margin-bottom: 30px; }
-            .zelo-podium-wrapper {
-                display: flex; justify-content: center; align-items: flex-end; 
-                gap: 10px; margin: 15px 0; padding: 15px;
-                background: rgba(18, 18, 22, 0.4); border-radius: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.05);
-            }
-            .zelo-podium {
-                display: flex; flex-direction: column; align-items: center;
-                background: rgba(18, 18, 22, 0.8); border-radius: 8px 8px 0 0;
-                padding: 10px 5px; width: 30%; text-align: center;
-            }
-            .zelo-p-first { height: 130px; border-top: 3px solid #ffd700; box-shadow: 0 -5px 15px rgba(255, 215, 0, 0.1); }
-            .zelo-p-second { height: 100px; border-top: 3px solid #C0C0C0; }
-            .zelo-p-third { height: 80px; border-top: 3px solid #CD7F32; }
-            .zelo-p-avatar { font-size: 24px; margin-bottom: 4px; }
-            .zelo-p-name { font-size: 0.75rem; color: #fff; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%; }
-            .zelo-p-points { font-size: 0.7rem; color: #0088cc; margin-top: 4px; font-weight: bold; }
-            .zelo-podium-title { text-align: center; color: #ffd700; font-size: 1rem; margin-bottom: 5px; font-weight: bold; }
-            
-            /* تصميم بطاقة المستخدم الخاصة */
-            .zelo-my-rank {
-                background: linear-gradient(90deg, #1e3c72, #2a5298);
-                padding: 12px 15px; border-radius: 10px; display: flex;
-                justify-content: space-between; align-items: center;
-                color: white; font-weight: bold; font-size: 0.9rem;
-            }
-            .zelo-eliminated { background: #4a1c1c; color: #ff8888; text-align: center; padding: 10px; border-radius: 10px; font-size: 0.85rem;}
-        </style>
-    `;
+    const currentUserId = userState.userId; 
 
-    container.innerHTML = styles + `<div style="text-align:center; padding: 20px; color: #888899;">⏳ جاري جلب أبطال التوقعات...</div>`;
+    // إظهار حالة التحميل
+    container.innerHTML = `<div style="text-align:center; color: #888; padding: 15px;">⏳ جاري جلب الترتيب...</div>`;
 
     try {
-        const currentUserId = userState.userId; 
+        // 1. جلب أول 3 لاعبين (المنصة)
+        const { data: top3 } = await supabaseClient
+            .from('weekly_match_rankings')
+            .select('points_earned, users!inner(username)')
+            .eq('is_eliminated', false)
+            .eq('category', 'weekly') // حددنا الفئة هنا
+            .order('points_earned', { ascending: false })
+            .limit(3);
 
-        // رسم الترتيب الأسبوعي
-        const weeklyHtml = await buildRankingBlock('weekly', '🏆 تحدي الأسبوع (مثال: ريال مدريد ضد برشلونة)', currentUserId);
-        
-        // رسم ترتيب الكؤوس
-        const cupsHtml = await buildRankingBlock('cups', '🇪🇺🏆 أبطال كؤوس أوروبا وإسبانيا', currentUserId);
+        // 2. جلب ترتيب المستخدم الحالي
+        const { data: myRank } = await supabaseClient.rpc('get_user_rank', {
+            p_telegram_id: currentUserId,
+            p_category: 'weekly'
+        });
 
-        container.innerHTML = styles + weeklyHtml + cupsHtml;
+        const { data: myData } = await supabaseClient
+            .from('weekly_match_rankings')
+            .select('points_earned')
+            .eq('telegram_id', currentUserId)
+            .eq('category', 'weekly')
+            .maybeSingle();
+
+        // 3. بناء الواجهة
+        const html = `
+            <style>
+                .podium { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+                .winner { text-align: center; background: #1c1c22; padding: 10px; border-radius: 10px; width: 30%; border: 1px solid #333; }
+                .my-rank-card { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            </style>
+
+            <div class="podium">
+                ${top3 && top3.length > 0 ? top3.map((p, i) => `
+                    <div class="winner">
+                        <div style="font-size: 1.2rem;">${i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</div>
+                        <div style="font-size: 0.75rem; font-weight: bold; margin: 5px 0; overflow: hidden; text-overflow: ellipsis;">${p.users.username}</div>
+                        <div style="color: #ffd700; font-size: 0.85rem; font-weight: bold;">${p.points_earned}</div>
+                    </div>
+                `).join('') : '<div style="color:#666;">لا توجد بيانات ترتيب حالياً</div>'}
+            </div>
+
+            <div class="my-rank-card">
+                <div style="font-size: 0.9rem;">أنت حالياً في المركز: <b style="font-size: 1.1rem;">#${myRank || 'غير مصنف'}</b></div>
+                <div style="font-size: 0.8rem; margin-top: 5px; opacity: 0.9;">نقاطك: ${myData ? myData.points_earned : 0} ZELO</div>
+            </div>
+        `;
+
+        container.innerHTML = html;
 
     } catch (error) {
-        console.error("خطأ في جلب الترتيب:", error);
-        container.innerHTML = styles + `<div style="text-align:center; color: #ff4444; font-size:0.8rem;">تعذر تحميل الترتيب. يرجى المحاولة لاحقاً.</div>`;
+        console.error("خطأ في عرض الترتيب:", error);
+        container.innerHTML = `<div style="text-align:center; color: #ff4444; padding: 10px;">تعذر تحميل الترتيب.</div>`;
     }
-}
-
-// دالة مساعدة لجلب ورسم قسم واحد
-async function buildRankingBlock(category, title, currentUserId) {
-    // 1. جلب أول 3 لاعبين (إضافة throwOnError ليعمل الـ catch في حال فشل الاتصال)
-    const { data: topPlayers } = await supabaseClient
-        .from('user_predictions')
-        .select('points_earned, users!inner(username), is_eliminated')
-        .eq('category', category)
-        .eq('is_eliminated', false)
-        .order('points_earned', { ascending: false })
-        .limit(3)
-        .throwOnError(); 
-
-    // 2. جلب بيانات وترتيب المستخدم الحالي
-    let myRankHtml = '';
-    
-    // التحقق من حالة إقصاء المستخدم الحالي أولاً (مع throwOnError)
-    const { data: myData } = await supabaseClient
-        .from('user_predictions')
-        .select('points_earned, is_eliminated, wrong_guesses')
-        .eq('telegram_id', currentUserId)
-        .eq('category', category)
-        .maybeSingle() // نستخدم maybeSingle بدلاً من single لتجنب الخطأ إذا لم يكن المستخدم موجوداً
-        .throwOnError();
-
-    if (myData) {
-        if (myData.is_eliminated) {
-            myRankHtml = `<div class="zelo-eliminated">❌ لقد تم إقصاؤك من هذا الترتيب (تجاوزت الحد المسموح من الأخطاء).</div>`;
-        } else {
-            // استدعاء دالة RPC لمعرفة الترتيب الدقيق
-            const { data: myRank } = await supabaseClient.rpc('get_user_rank', {
-                p_telegram_id: currentUserId,
-                p_category: category
-            }).throwOnError();
-
-            myRankHtml = `
-                <div class="zelo-my-rank">
-                    <div>👤 ترتيبي: <span style="color:#ffd700; font-size: 1.1rem;">#${myRank || '+5000'}</span></div>
-                    <div>نقاطي: ${myData.points_earned} ZELO</div>
-                </div>`;
-        }
-    } else {
-        myRankHtml = `<div class="zelo-my-rank" style="background: #2b2b36; justify-content: center;">لم تشارك في هذا التحدي بعد.</div>`;
-    }
-
-    // 3. بناء الـ HTML الخاص بمنصة التتويج
-    let html = `
-        <div class="zelo-ranking-container">
-            <div class="zelo-podium-title">${title}</div>
-            <div class="zelo-podium-wrapper">
-    `;
-
-    if (!topPlayers || topPlayers.length === 0) {
-        html += `<div style="color:#888899; font-size:0.8rem; width:100%; text-align:center;">لا توجد توقعات حتى الآن. كن أول الفائزين!</div>`;
-    } else {
-        // المركز الثاني
-        if (topPlayers[1]) {
-            let safeName2 = escapeHTML(topPlayers[1].users?.username || 'لاعب');
-            html += `
-            <div class="zelo-podium zelo-p-second">
-                <div class="zelo-p-avatar">🥈</div>
-                <div class="zelo-p-name" title="${safeName2}">${safeName2}</div>
-                <div class="zelo-p-points">${topPlayers[1].points_earned} ZELO</div>
-            </div>`;
-        }
-        // المركز الأول
-        if (topPlayers[0]) {
-            let safeName1 = escapeHTML(topPlayers[0].users?.username || 'لاعب');
-            html += `
-            <div class="zelo-podium zelo-p-first">
-                <div class="zelo-p-avatar">🥇</div>
-                <div class="zelo-p-name" title="${safeName1}">${safeName1}</div>
-                <div class="zelo-p-points">${topPlayers[0].points_earned} ZELO</div>
-            </div>`;
-        }
-        // المركز الثالث
-        if (topPlayers[2]) {
-            let safeName3 = escapeHTML(topPlayers[2].users?.username || 'لاعب');
-            html += `
-            <div class="zelo-podium zelo-p-third">
-                <div class="zelo-p-avatar">🥉</div>
-                <div class="zelo-p-name" title="${safeName3}">${safeName3}</div>
-                <div class="zelo-p-points">${topPlayers[2].points_earned} ZELO</div>
-            </div>`;
-        }
-    }
-
-    html += `</div> ${myRankHtml} </div>`;
-    return html;
 }
