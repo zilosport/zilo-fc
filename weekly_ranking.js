@@ -3,6 +3,14 @@
  * مخصص لجلب وعرض ترتيب توقعات ZELO FC (الأسبوعي + الكؤوس)
  */
 
+// دالة الحماية (إذا لم تكن معرفة في ملف آخر، يفضل وضعها هنا أو في ملف عام)
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    }[tag] || tag));
+}
+
 async function renderLeaderboardSection(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -44,7 +52,6 @@ async function renderLeaderboardSection(containerId) {
     container.innerHTML = styles + `<div style="text-align:center; padding: 20px; color: #888899;">⏳ جاري جلب أبطال التوقعات...</div>`;
 
     try {
-        // نفترض أن معرف المستخدم متوفر في تطبيقك بهذا الشكل (قم بتعديله حسب متغيراتك)
         const currentUserId = userState.userId; 
 
         // رسم الترتيب الأسبوعي
@@ -57,31 +64,33 @@ async function renderLeaderboardSection(containerId) {
 
     } catch (error) {
         console.error("خطأ في جلب الترتيب:", error);
-        container.innerHTML = styles + `<div style="text-align:center; color: #ff4444; font-size:0.8rem;">تعذر تحميل الترتيب.</div>`;
+        container.innerHTML = styles + `<div style="text-align:center; color: #ff4444; font-size:0.8rem;">تعذر تحميل الترتيب. يرجى المحاولة لاحقاً.</div>`;
     }
 }
 
-// دالة مساعدة لجلب ورسم قسم واحد (لتقليل تكرار الكود)
+// دالة مساعدة لجلب ورسم قسم واحد
 async function buildRankingBlock(category, title, currentUserId) {
-    // 1. جلب أول 3 لاعبين (الذين لم يتم إقصاؤهم)
+    // 1. جلب أول 3 لاعبين (إضافة throwOnError ليعمل الـ catch في حال فشل الاتصال)
     const { data: topPlayers } = await supabaseClient
         .from('user_predictions')
         .select('points_earned, users!inner(username), is_eliminated')
         .eq('category', category)
         .eq('is_eliminated', false)
         .order('points_earned', { ascending: false })
-        .limit(3);
+        .limit(3)
+        .throwOnError(); 
 
     // 2. جلب بيانات وترتيب المستخدم الحالي
     let myRankHtml = '';
     
-    // التحقق من حالة إقصاء المستخدم الحالي أولاً
+    // التحقق من حالة إقصاء المستخدم الحالي أولاً (مع throwOnError)
     const { data: myData } = await supabaseClient
         .from('user_predictions')
         .select('points_earned, is_eliminated, wrong_guesses')
         .eq('telegram_id', currentUserId)
         .eq('category', category)
-        .single();
+        .maybeSingle() // نستخدم maybeSingle بدلاً من single لتجنب الخطأ إذا لم يكن المستخدم موجوداً
+        .throwOnError();
 
     if (myData) {
         if (myData.is_eliminated) {
@@ -91,7 +100,7 @@ async function buildRankingBlock(category, title, currentUserId) {
             const { data: myRank } = await supabaseClient.rpc('get_user_rank', {
                 p_telegram_id: currentUserId,
                 p_category: category
-            });
+            }).throwOnError();
 
             myRankHtml = `
                 <div class="zelo-my-rank">
@@ -111,32 +120,35 @@ async function buildRankingBlock(category, title, currentUserId) {
     `;
 
     if (!topPlayers || topPlayers.length === 0) {
-        html += `<div style="color:#888899; font-size:0.8rem;">لا توجد توقعات حتى الآن. كن أول الفائزين!</div>`;
+        html += `<div style="color:#888899; font-size:0.8rem; width:100%; text-align:center;">لا توجد توقعات حتى الآن. كن أول الفائزين!</div>`;
     } else {
         // المركز الثاني
         if (topPlayers[1]) {
+            let safeName2 = escapeHTML(topPlayers[1].users?.username || 'لاعب');
             html += `
             <div class="zelo-podium zelo-p-second">
                 <div class="zelo-p-avatar">🥈</div>
-                <div class="zelo-p-name">${topPlayers[1].users.username || 'لاعب'}</div>
+                <div class="zelo-p-name" title="${safeName2}">${safeName2}</div>
                 <div class="zelo-p-points">${topPlayers[1].points_earned} ZELO</div>
             </div>`;
         }
         // المركز الأول
         if (topPlayers[0]) {
+            let safeName1 = escapeHTML(topPlayers[0].users?.username || 'لاعب');
             html += `
             <div class="zelo-podium zelo-p-first">
                 <div class="zelo-p-avatar">🥇</div>
-                <div class="zelo-p-name">${topPlayers[0].users.username || 'لاعب'}</div>
+                <div class="zelo-p-name" title="${safeName1}">${safeName1}</div>
                 <div class="zelo-p-points">${topPlayers[0].points_earned} ZELO</div>
             </div>`;
         }
         // المركز الثالث
         if (topPlayers[2]) {
+            let safeName3 = escapeHTML(topPlayers[2].users?.username || 'لاعب');
             html += `
             <div class="zelo-podium zelo-p-third">
                 <div class="zelo-p-avatar">🥉</div>
-                <div class="zelo-p-name">${topPlayers[2].users.username || 'لاعب'}</div>
+                <div class="zelo-p-name" title="${safeName3}">${safeName3}</div>
                 <div class="zelo-p-points">${topPlayers[2].points_earned} ZELO</div>
             </div>`;
         }
