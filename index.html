@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="app-html">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0b0b0e">
     <title>ZELO FC App</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -19,6 +19,9 @@
             color: #fff;
             box-sizing: border-box;
             overflow-x: hidden;
+            /* منع تحديد النصوص للحصول على إحساس التطبيقات الأصلية (Native) */
+            user-select: none; 
+            -webkit-user-select: none;
         }
 
         .top-bar {
@@ -57,12 +60,13 @@
             height: 65px;
             background: rgba(18, 18, 22, 0.95);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-top: 1px solid #22222a;
             display: flex;
             justify-content: space-around;
             align-items: center;
             z-index: 1000;
-            padding-bottom: env(safe-area-inset-bottom);
+            padding-bottom: env(safe-area-inset-bottom); /* دعم خط السحب في أجهزة الآيفون */
         }
 
         .nav-item {
@@ -78,6 +82,8 @@
             flex: 1;
             height: 100%;
             transition: color 0.2s ease;
+            /* إزالة الوميض الأزرق عند الضغط على الجوال */
+            -webkit-tap-highlight-color: transparent; 
         }
 
         .nav-item .icon {
@@ -93,22 +99,21 @@
 </head>
 <body>
 
-    <div class="top-bar" id="top-bar" style="display: none;">
+    <header class="top-bar" id="top-bar" style="display: none;">
         <div id="club" style="font-size: 0.9rem; color: #e0e0e0;">ناديك: 👑 <b style="color: #fff;">ريال مدريد</b></div>
         <div id="points" style="font-weight: bold; color: #ffd700; background: rgba(255, 215, 0, 0.1); padding: 5px 10px; border-radius: 8px;">🪙 عملة ZELO: 1,500</div>
-    </div>
+    </header>
 
-    <div class="content-container" id="main-content"></div>
+    <main class="content-container" id="main-content"></main>
 
-    <div class="bottom-nav" id="bottom-nav" style="display: none;">
+    <nav class="bottom-nav" id="bottom-nav" style="display: none;">
         <button class="nav-item active" onclick="showPage('home')"><span class="icon">🏠</span><span>الرئيسية</span></button>
         <button class="nav-item" onclick="showPage('tasks')"><span class="icon">🛠️</span><span>المهام</span></button>
         <button class="nav-item" onclick="showPage('friends')"><span class="icon">👥</span><span>الأصدقاء</span></button>
         <button class="nav-item" onclick="showPage('leaderboard')"><span class="icon">🏆</span><span>الترتيب</span></button>
         <button class="nav-item" onclick="showPage('wallet')"><span class="icon">👛</span><span>المحفظة</span></button>
-    </div>
+    </nav>
 
-    <!-- ✅ تمت إضافة ?v=2 لكسر الكاش وإجبار تليجرام على قراءة التحديثات -->
     <script src="clubsData.js?v=2"></script>
     <script src="data.js?v=2"></script> 
     <script src="countries.js?v=2"></script>
