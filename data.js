@@ -112,55 +112,21 @@ const i18n = {
 };
 
 // ==========================================
-// التجميع النهائي لجميع الأندية من جميع الدول (48 ملف مفعلة)
+// 🛠️ التجميع التلقائي لجميع الأندية (بدون أخطاء)
 // ==========================================
-const clubsData = [
-    ...argentinaClubs,
-    ...franceClubs,
-    ...brazilClubs,
-    ...englandClubs,
-    ...germanyClubs,
-    ...spainClubs,
-    ...italyClubs,
-    ...portugalClubs,
-    ...netherlandsClubs,
-    ...belgiumClubs,
-    ...uruguayClubs,
-    ...colombiaClubs,
-    ...mexicoClubs,
-    ...usaClubs,
-    ...canadaClubs,
-    ...japanClubs,
-    ...southKoreaClubs,
-    ...saudiArabiaClubs,
-    ...uaeClubs,
-    ...syriaClubs,
-    ...qatarClubs,
-    ...moroccoClubs,
-    ...egyptClubs,
-    ...tunisiaClubs,
-    ...algeriaClubs,
-    ...iranClubs,
-    ...iraqClubs,
-    ...australiaClubs,
-    ...croatiaClubs,
-    ...switzerlandClubs,
-    ...denmarkClubs,
-    ...polandClubs,
-    ...serbiaClubs,
-    ...austriaClubs,
-    ...turkeyClubs,
-    ...ecuadorClubs,
-    ...chileClubs,
-    ...paraguayClubs,
-    ...peruClubs,
-    ...nigeriaClubs,
-    ...ghanaClubs,
-    ...senegalClubs,
-    ...cameroonClubs,
-    ...ivoryCoastClubs,
-    ...greeceClubs,
-    ...swedenClubs,
-    ...norwayClubs,
-    ...hungaryClubs
+let clubsData = [];
+
+// هذا الكود يسحب كل الأندية من كل الدول تلقائياً دون الحاجة لكتابة اسم كل دولة
+if (typeof allWorldCupCountriesClubs !== 'undefined') {
+    for (const country in allWorldCupCountriesClubs) {
+        clubsData.push(...allWorldCupCountriesClubs[country]);
+    }
+}
+
+// ==========================================
+// المهام الافتراضية للتطبيق
+// ==========================================
+const defaultTasksData = [
+    { id: "task1", textAr: "اشترك في قناة Zilo FC", textEn: "Join Zilo FC Channel", reward: 500, link: "https://t.me/zelosport" },
+    { id: "task2", textAr: "تابعنا على تويتر", textEn: "Follow us on Twitter", reward: 300, link: "https://twitter.com/zelosport" }
 ];
