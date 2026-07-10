@@ -12,20 +12,20 @@ function renderHomePage(container) {
         }
         return null;
     }).filter(Boolean);
-   
+ 
     if (selectedClubsData.length === 0 && typeof allWorldCupCountriesClubs !== 'undefined') {
         const firstCountry = Object.keys(allWorldCupCountriesClubs)[0];
         if (firstCountry && allWorldCupCountriesClubs[firstCountry].length > 0) {
              selectedClubsData = [allWorldCupCountriesClubs[firstCountry][0]];
         }
     }
-   
+ 
     const primaryClub = selectedClubsData[0];
     let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userState.username)}&background=1c1c22&color=0088cc&size=128&bold=true`;
     let avatarSrc = userState.photoUrl ? userState.photoUrl : fallbackAvatar;
-    
-    const profileBgStyle = primaryClub ? 
-        `background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)), url('${primaryClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${primaryClub.color || '#25252d'};` 
+  
+    const profileBgStyle = primaryClub ?
+        `background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)), url('${primaryClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${primaryClub.color || '#25252d'};`
         : 'background: #1c1c22;';
 
     // 2. بناء واجهة الأندية
@@ -55,7 +55,7 @@ function renderHomePage(container) {
             <h3 style="margin: 10px 0 2px 0; color: #fff;">${userState.username}</h3>
             <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 0.85rem;">ID: ${userState.userId}</p>
         </div>
-        
+      
         <!-- بطاقة التحديات -->
         <div id="challenges-card" style="cursor: pointer; background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 2px solid #ffd700; display: flex; align-items: center; gap: 15px;">
             <div style="font-size: 3rem;">${primaryClub ? primaryClub.countryFlag : '⚽'}</div>
@@ -70,16 +70,16 @@ function renderHomePage(container) {
         <div id="ranking-container" style="margin-top: 20px;"></div>
     `;
 
-    // 4. إضافة حدث النقر بشكل آمن
+    // 4. إضافة حدث النقر + تحقق أمان
     setTimeout(() => {
         const challengesCard = document.getElementById('challenges-card');
         if (challengesCard) {
-            challengesCard.addEventListener('click', () => {
+            challengesCard.addEventListener('click', function() {
                 if (typeof openChallengesScreen === "function") {
                     openChallengesScreen();
                 } else {
-                    console.error("خطأ: دالة openChallengesScreen غير معرفة!");
-                    alert("حدث خطأ في تحميل شاشة التحديات");
+                    console.error("❌ خطأ: دالة openChallengesScreen غير معرفة! تأكد من تحميل predictions_ranking.js قبل home.js");
+                    alert("يرجى تحديث الصفحة أو التحقق من ترتيب تحميل الملفات");
                 }
             });
         }
@@ -87,6 +87,8 @@ function renderHomePage(container) {
         // استدعاء الترتيب
         if (typeof renderWeeklyRanking === "function") {
             renderWeeklyRanking('ranking-container');
+        } else {
+            console.warn("⚠️ دالة renderWeeklyRanking غير موجودة");
         }
-    }, 150);
+    }, 200);
 }
