@@ -1,5 +1,5 @@
 // ==========================================
-// 🏠 الصفحة الرئيسية (home.js) - (مُحدث)
+// 🏠 الصفحة الرئيسية (home.js) - (مُحدث مع التوقعات)
 // ==========================================
 
 function renderHomePage(container) {
@@ -61,5 +61,17 @@ function renderHomePage(container) {
 
         <h4 style="color: #aaa; margin: 0 0 10px 0; font-size: 0.9rem;">${userState.lang === 'ar' ? 'أنديتك المفضلة:' : 'Your Supported Clubs:'}</h4>
         ${clubsCardsHtml}
+
+        <!-- 🚀 الإضافة الجديدة: حاوية الترتيب الأسبوعي لـ ZELO FC -->
+        <div id="weekly-predictions-container" style="margin-top: 30px; margin-bottom: 20px;"></div>
     `;
+
+    // 🚀 الإضافة الجديدة: استدعاء دالة رسم منصة التتويج بعد بناء الصفحة بثوانٍ قليلة لضمان تحميل العناصر
+    setTimeout(() => {
+        if (typeof renderWeeklyLeaderboard === "function") {
+            renderWeeklyLeaderboard('weekly-predictions-container');
+        } else {
+            console.warn("⚠️ لم يتم العثور على دالة renderWeeklyLeaderboard. تأكد من استدعاء ملف weekly_ranking.js في index.html");
+        }
+    }, 100);
 }
