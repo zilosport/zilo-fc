@@ -6,19 +6,20 @@ window.showClubsForCountry = function(countryKey) {
     const mainContent = document.getElementById("main-content");
 
     let clubsHtml = clubs.map(club => {
-        // التحقق مما إذا كان النادي مختاراً بالفعل
-        const isSelected = window.tempSelectedClubs.includes(club.id);
+        // 🛠️ الإصلاح هنا: تحويل الـ ID إلى نص لضمان تطابق البيانات
+        const stringClubId = String(club.id);
+        const isSelected = window.tempSelectedClubs.some(id => String(id) === stringClubId);
+        
         const borderStyle = isSelected ? 'border: 2px solid #4caf50;' : 'border: 1px solid #25252d;';
         const bgStyle = isSelected ? 'background: rgba(76, 175, 80, 0.15);' : 'background: #1c1c22;';
 
-        // الحصول على اسم النادي باللغة المناسبة
         let clubName = club.name;
         if (typeof getClubName === 'function') {
             clubName = getClubName(club);
         }
 
         return `
-            <div onclick="toggleClubSelection('${club.id}', '${countryKey}')" 
+            <div onclick="toggleClubSelection('${stringClubId}', '${countryKey}')" 
                  style="${bgStyle} ${borderStyle} padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s;">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <img src="${club.logo}" onerror="this.style.display='none'" style="width: 45px; height: 45px; object-fit: contain;">
@@ -31,7 +32,6 @@ window.showClubsForCountry = function(countryKey) {
         `;
     }).join('');
 
-    // الحصول على اسم الدولة للعنوان
     const flag = clubs[0].countryFlag;
     let countryName = countryKey.charAt(0).toUpperCase() + countryKey.slice(1);
     if (typeof getCountryName === 'function') {
@@ -56,23 +56,24 @@ window.showClubsForCountry = function(countryKey) {
 
 // ====================== اختيار / إلغاء اختيار النادي ======================
 window.toggleClubSelection = function(clubId, countryKey) {
-    const index = window.tempSelectedClubs.indexOf(clubId);
+    // 🛠️ الإصلاح هنا: البحث الدقيق عن الـ ID كنص
+    const stringClubId = String(clubId);
+    const index = window.tempSelectedClubs.findIndex(id => String(id) === stringClubId);
     
     if (index > -1) {
-        // إذا كان النادي مختاراً مسبقاً، قم بإزالته
+        // إزالة النادي إذا كان مختاراً
         window.tempSelectedClubs.splice(index, 1);
     } else {
-        // إذا لم يكن مختاراً، تأكد أن العدد أقل من 2 ثم أضفه
+        // إضافة النادي إذا كان العدد أقل من 2
         if (window.tempSelectedClubs.length < 2) {
-            window.tempSelectedClubs.push(clubId);
+            window.tempSelectedClubs.push(stringClubId);
         } else {
-            // تنبيه عند محاولة اختيار أكثر من ناديين
             alert(userState.lang === 'ar' ? 'يمكنك اختيار ناديين كحد أقصى (محلي وعالمي) ⚠️' : 'You can select a maximum of 2 clubs ⚠️');
-            return; // إيقاف الدالة حتى لا يتم تحديث الشاشة بلا فائدة
+            return; 
         }
     }
     
-    // تحديث الشاشة لإظهار التغييرات (زر التأكيد + علامة الصح)
+    // إعادة رسم الشاشة لتظهر علامة (✅) وزر التأكيد
     showClubsForCountry(countryKey);
 };
 
