@@ -3,7 +3,7 @@
  * الوظيفة: إدارة شاشة تحديات الأسبوع (عرض المباريات + الترتيب + المودال)
  */
 
-// دالة عرض شاشة التحديات (Overlay)
+// دالة عرض شاشة التحديات (Overlay) - محسنة للـ RTL
 function openChallengesScreen() {
     const overlay = document.createElement('div');
     overlay.id = 'challenges-overlay';
@@ -16,9 +16,11 @@ function openChallengesScreen() {
         padding: 20px; 
         overflow-y: auto; 
         color: white;
+        direction: rtl;
+        text-align: right;
     `;
 
-    // محاكاة المباريات (استبدلها ببيانات حقيقية من Supabase لاحقاً)
+    // محاكاة المباريات
     const matches = [
         { id: 1, team1: "ريال مدريد", team2: "ليفربول", time: "2026-07-11T21:00:00", league: "🇪🇺" },
         { id: 2, team1: "برشلونة", team2: "أتلتيكو مدريد", time: "2026-07-12T20:00:00", league: "🇪🇸" }
@@ -35,12 +37,16 @@ function openChallengesScreen() {
                 <div style="font-size: 0.85rem; color:#888; margin-bottom: 8px;">
                     ${m.league} • ${matchDate.toLocaleDateString('ar-EG')}
                 </div>
-                <div style="font-weight:bold; font-size: 1.2rem; margin: 8px 0;">
+                
+                <!-- تحسين عرض أسماء الفرق الطويلة -->
+                <div style="font-weight:bold; font-size: 1.15rem; margin: 10px 0; line-height: 1.4; word-break: break-word; overflow-wrap: break-word;">
                     ${m.team1} <span style="color:#ffd700;">VS</span> ${m.team2}
                 </div>
+                
                 <div style="color:#ffd700; font-size: 0.95rem; margin-bottom: 12px;">
                     ${matchDate.getHours()}:00
                 </div>
+                
                 ${isClosed 
                     ? `<button disabled style="width:100%; padding:12px; background:#444; color:#888; border:none; border-radius:8px; font-size:0.95rem;">
                         ❌ تم إغلاق التوقعات
@@ -54,11 +60,10 @@ function openChallengesScreen() {
         `;
     }).join('');
 
-    // قسم الترتيب (مكان لعرض الترتيب)
     const rankingHtml = `
         <div style="margin-top: 30px;">
-            <h3 style="margin: 0 0 15px 0; color:#ffd700;">ترتيب المتوقعين هذا الأسبوع</h3>
-            <div id="overlay-ranking" style="background:#1c1c22; padding:15px; border-radius:12px;">
+            <h3 style="margin: 0 0 15px 0; color:#ffd700; text-align:right;">ترتيب المتوقعين هذا الأسبوع</h3>
+            <div id="overlay-ranking" style="background:#1c1c22; padding:15px; border-radius:12px; text-align:right;">
                 جاري تحميل الترتيب...
             </div>
         </div>
@@ -80,7 +85,6 @@ function openChallengesScreen() {
 
     document.body.appendChild(overlay);
 
-    // تحميل الترتيب داخل الـ overlay
     setTimeout(() => {
         if (typeof renderLeaderboardSection === "function") {
             renderLeaderboardSection('overlay-ranking');
@@ -94,15 +98,16 @@ function closeChallengesScreen() {
     if (overlay) overlay.remove();
 }
 
-// مودال التوقع المحسن
+// مودال التوقع
 function showPredictionModal(matchId, team1, team2) {
     const modal = document.createElement('div');
     modal.id = 'prediction-modal';
     modal.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        background: #1c1c22; padding: 25px; border-radius: 16px; 
+        background: #1c1c22; padding: 25px; border-radius: 16px;
         z-index: 10000; width: 90%; max-width: 420px; color: white;
         box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        direction: rtl;
     `;
 
     modal.innerHTML = `
@@ -158,15 +163,13 @@ function submitPrediction(matchId) {
     
     alert(`✅ تم حفظ توقعك للمباراة رقم ${matchId}\nالفائز: ${winner}\nالنتيجة: ${score}`);
     closePredictionModal();
-    // هنا يمكنك إضافة حفظ في Supabase لاحقاً
 }
 
-// دالة عرض الترتيب (كما كانت)
+// دالة عرض الترتيب
 async function renderLeaderboardSection(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
     
-    // يمكنك وضع كود جلب البيانات الحقيقي هنا
     container.innerHTML = `
         <p style="color:#888; text-align:center; padding:20px;">
             📊 الترتيب سيظهر هنا (سيتم ربطه بقاعدة البيانات)
