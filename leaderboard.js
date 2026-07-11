@@ -1,43 +1,35 @@
 // ==========================================
-// 🏆 ملف قسم الترتيب (Leaderboard) - (مربوط بقاعدة بيانات Supabase الحقيقية)
+// 🏆 ملف قسم الترتيب (Leaderboard) - (متوافق مع قاعدة بياناتك الحقيقية)
 // ==========================================
 
-// دالة لحماية التطبيق من ثغرات XSS (حقن الأكواد الخبيثة في أسماء المستخدمين)
 window.escapeHTML = function(str) {
     if (!str) return '';
     return str.replace(/[&<>'"]/g, 
         tag => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            "'": '&#39;',
-            '"': '&quot;'
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
         }[tag] || tag)
     );
 };
 
-// 1. دالة ترتيب الأندية (تجمع نقاط جميع المشجعين لكل نادي)
+// 1. دالة ترتيب الأندية
 window.renderLeaderboardPage = async function(container) {
-    // إظهار حالة التحميل ريثما يتم الاتصال بقاعدة البيانات
     container.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">⏳ جاري جلب ترتيب الأندية المباشر...</div>`;
 
     try {
-        // أ. جلب بيانات جميع المشجعين ونقاطهم لمعرفة نقاط كل نادي
         let clubPointsMap = {};
         if (typeof supabaseClient !== 'undefined') {
+            // ⚠️ التحديث هنا: استخدام total_fan_points بدلاً من points
             const { data: fansData, error } = await supabaseClient
                 .from('club_fans_rankings')
-                .select('club_id, points');
+                .select('club_id, total_fan_points');
 
             if (!error && fansData) {
-                // تجميع النقاط لكل نادي
                 fansData.forEach(fan => {
-                    clubPointsMap[fan.club_id] = (clubPointsMap[fan.club_id] || 0) + (fan.points || 0);
+                    clubPointsMap[fan.club_id] = (clubPointsMap[fan.club_id] || 0) + (fan.total_fan_points || 0);
                 });
             }
         }
 
-        // ب. تجميع كل الأندية من الكائن المقسم بالدول في مصفوفة واحدة
         let allClubsFlat = [];
         if (typeof allWorldCupCountriesClubs !== 'undefined') {
             for (const country in allWorldCupCountriesClubs) {
@@ -45,18 +37,15 @@ window.renderLeaderboardPage = async function(container) {
             }
         }
 
-        // ج. تحديث نقاط كل نادي بالنقاط الحقيقية المجمعة من قاعدة البيانات
         allClubsFlat.forEach(club => {
             club.points = clubPointsMap[club.id] || 0;
         });
 
-        // د. ترتيب الأندية من الأعلى نقاطاً إلى الأقل (أول 100 نادي)
         let sortedClubs = allClubsFlat
             .sort((a, b) => (b.points || 0) - (a.points || 0))
             .slice(0, 100);
         
         let leaderboardHtml = sortedClubs.map((club, index) => {
-            // تحديد لون الحدود بناءً على المركز
             let borderColor = index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : '#25252d';
             let borderSide = (typeof userState !== 'undefined' && userState.lang === 'ar') ? 'right' : 'left';
             let textAlign = (typeof userState !== 'undefined' && userState.lang === 'ar') ? 'left' : 'right';
@@ -91,13 +80,11 @@ window.renderLeaderboardPage = async function(container) {
         `;
     } catch (error) {
         console.error("خطأ في جلب الترتيب:", error);
-        container.innerHTML = `<div style="text-align:center; padding:20px; color:#ff4444;">تعذر الاتصال بقاعدة البيانات لجلب الترتيب.</div>`;
     }
 };
 
-// 2. دالة عرض ترتيب المشجعين الفردي داخل النادي المختار
+// 2. دالة عرض ترتيب المشجعين الفردي
 window.openSpecificClubFans = async function(clubId) {
-    // أ. البحث عن تفاصيل النادي
     let club = null;
     if (typeof allWorldCupCountriesClubs !== 'undefined') {
         for (const country in allWorldCupCountriesClubs) {
@@ -112,30 +99,33 @@ window.openSpecificClubFans = async function(clubId) {
     let clubNameStr = typeof getClubName === 'function' ? getClubName(club) : club.name;
     let tFunc = typeof t === 'function' ? t : (key) => key;
     
-    // شاشة تحميل مؤقتة
     contentDiv.innerHTML = `<div style="text-align:center; padding:50px; color:#888;">⏳ جاري جلب أبطال ومشجعي ${clubNameStr}...</div>`;
 
     try {
         let fansTableRows = "";
         
-        // ب. جلب قائمة المشجعين الحقيقية لهذا النادي من Supabase
         if (typeof supabaseClient !== 'undefined') {
+            // ⚠️ التحديث هنا: استخدام total_fan_points و referrals_count وربط الاسم من جدول users
             const { data: fansList, error } = await supabaseClient
                 .from('club_fans_rankings')
-                .select('telegram_id, username, points, referrals')
+                .select(`
+                    telegram_id, 
+                    total_fan_points, 
+                    referrals_count, 
+                    users!inner(username)
+                `)
                 .eq('club_id', clubId)
-                .order('points', { ascending: false })
+                .order('total_fan_points', { ascending: false })
                 .limit(100);
 
             if (!error && fansList && fansList.length > 0) {
-                
                 const currentUserId = (typeof userState !== 'undefined') ? userState.userId : null;
 
                 fansTableRows = fansList.map((fan, idx) => {
                     let rankColor = idx === 0 ? '#ffd700' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : '#fff';
-                    let safeName = window.escapeHTML(fan.username || 'مشجع مجهول');
+                    // جلب اسم المستخدم من الجدول المرتبط
+                    let safeName = window.escapeHTML((fan.users && fan.users.username) ? fan.users.username : 'مشجع مجهول');
                     
-                    // تمييز صف المستخدم الحالي بلون خلفية مختلف ليعرف مركزه فوراً
                     let isMe = fan.telegram_id == currentUserId;
                     let rowBg = isMe ? 'background: rgba(0, 136, 204, 0.2); border-left: 3px solid #0088cc;' : 'border-bottom: 1px solid #1c1c22;';
                     let youTag = isMe ? `<span style="font-size:0.7rem; background:#0088cc; padding:2px 6px; border-radius:4px; margin-right:5px;">أنت</span>` : '';
@@ -146,8 +136,8 @@ window.openSpecificClubFans = async function(clubId) {
                         <td style="padding: 14px 10px; color: #fff; text-align: right; font-weight: ${isMe ? 'bold' : 'normal'};">
                             👤 ${safeName} ${youTag}
                         </td>
-                        <td style="padding: 14px 10px; color: #4caf50; font-family: monospace; font-weight: bold;">${(fan.points || 0).toLocaleString()}</td>
-                        <td style="padding: 14px 10px; color: #aaa; font-size: 0.85rem;">${fan.referrals || 0} ${tFunc('referralWord') || 'إحالة'}</td>
+                        <td style="padding: 14px 10px; color: #4caf50; font-family: monospace; font-weight: bold;">${(fan.total_fan_points || 0).toLocaleString()}</td>
+                        <td style="padding: 14px 10px; color: #aaa; font-size: 0.85rem;">${fan.referrals_count || 0} ${tFunc('referralWord') || 'إحالة'}</td>
                     </tr>
                     `;
                 }).join('');
@@ -162,7 +152,6 @@ window.openSpecificClubFans = async function(clubId) {
             }
         }
 
-        // ج. رسم الجدول
         contentDiv.innerHTML = `
             <button onclick="window.showPage('leaderboard')" style="background: #2b2b36; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                 ◀ ${tFunc('btnBack') || 'رجوع للترتيب العام'}
@@ -192,6 +181,5 @@ window.openSpecificClubFans = async function(clubId) {
         `;
     } catch (error) {
         console.error("خطأ في جلب بيانات النادي:", error);
-        contentDiv.innerHTML = `<div style="text-align:center; padding:20px; color:#ff4444;">حدث خطأ أثناء جلب البيانات.</div>`;
     }
 };
