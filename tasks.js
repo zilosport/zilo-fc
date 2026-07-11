@@ -16,7 +16,7 @@
     // 🔄 دوال الاتصال بقاعدة البيانات (API Calls)
     // ==========================================
 
-    // أ. دالة إرسال تأكيد إتمام المهمة لـ Supabase (تم التعديل هنا لضمان حفظ النقاط)
+    // أ. دالة إرسال تأكيد إتمام المهمة لـ Supabase (تم التحديث لضمان ترحيل النقاط للجداول الأخرى)
     async function apiVerifyTask(taskId, points) {
         if (!supabaseClient) return { success: false, message: "لا يوجد اتصال بقاعدة البيانات" };
         
@@ -32,37 +32,45 @@
                 throw taskError;
             }
 
-            // 2. جلب النقاط الحالية للمستخدم لضمان التحديث الصحيح
+            // 2. جلب النقاط الحالية بأمان (بدون استخدام .single لتفادي توقف الدالة في حال عدم وجود السجل)
+            let currentPoints = 0;
             const { data: userData, error: fetchError } = await supabaseClient
                 .from('users')
                 .select('points')
-                .eq('telegram_id', userState.userId)
-                .single();
+                .eq('telegram_id', userState.userId);
 
-            if (fetchError) throw fetchError;
+            if (!fetchError && userData && userData.length > 0) {
+                currentPoints = parseInt(userData[0].points) || 0;
+            }
 
-            // تحويل القيم إلى أرقام صحيحة لضمان الجمع وتجنب الأصفار
-            const currentPoints = parseInt(userData.points) || 0;
             const pointsToAdd = parseInt(points) || 0;
             const newPoints = currentPoints + pointsToAdd;
 
-            // 3. التحديث المباشر للنقاط في جدول المستخدمين
-            const { error: updateError } = await supabaseClient
+            // 3. تحديث أو إنشاء السجل مباشرة في جدول المستخدمين (users) لضمان ظهور إجمالي النقاط
+            const { error: userUpsertError } = await supabaseClient
                 .from('users')
-                .update({ points: newPoints })
-                .eq('telegram_id', userState.userId);
+                .upsert(
+                    { telegram_id: userState.userId, points: newPoints },
+                    { onConflict: 'telegram_id' }
+                );
 
-            if (updateError) throw updateError;
+            if (userUpsertError) throw userUpsertError;
 
-            // 4. تحديث جدول الأندية (تطابق النقاط)
-            await supabaseClient
+            // 4. تحديث أو إنشاء السجل مباشرة في جدول ترتيب الأندية (club_fans_rankings)
+            const { error: clubUpsertError } = await supabaseClient
                 .from('club_fans_rankings')
-                .update({ total_fan_points: newPoints })
-                .eq('telegram_id', userState.userId);
+                .upsert(
+                    { telegram_id: userState.userId, total_fan_points: newPoints },
+                    { onConflict: 'telegram_id' }
+                );
+
+            if (clubUpsertError) {
+                console.warn("⚠️ تنبيه: تعذر تحديث جدول الأندية، قد يتطلب الجدول حقولاً إضافية إجبارية:", clubUpsertError);
+            }
 
             return { success: true, alreadyDone: false };
         } catch (error) {
-            console.error("❌ خطأ في حفظ المهمة:", error);
+            console.error("❌ خطأ في حفظ المهمة وتحديث النقاط:", error);
             return { success: false };
         }
     }
@@ -189,17 +197,14 @@
         `;
     };
 
-    // 🛡️ دالة تنفيذ المهمة (الآن محمية ضد الضغط المزدوج)
+    // 🛡️ دالة تنفيذ المهمة (محمية ضد الضغط المزدوج)
     window.executeTask = async function(taskId, url, points) {
         const task = userState.tasks.find(t => t.id === taskId);
         
-        // منع الضغط إذا كانت المهمة مكتملة أو "جاري معالجتها حالياً"
         if (!task || task.completed || task.isProcessing) return;
 
-        // قفل المهمة برمجياً لمنع ضغطة ثانية سريعة
         task.isProcessing = true; 
 
-        // 1. فتح الرابط
         try {
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
                 if (url.includes("t.me")) {
@@ -215,25 +220,21 @@
             window.open(url, '_blank');
         }
 
-        // 2. تعطيل الزر في الواجهة فوراً
         const btn = document.getElementById(`btn-task-${taskId}`);
         if (btn) {
             btn.innerHTML = "⏳ التحقق...";
             btn.disabled = true;
         }
 
-        // 3. محاكاة التحقق وإرسال البيانات للقاعدة
         setTimeout(async () => {
             try {
                 const response = await apiVerifyTask(taskId, points);
                 
-                // فك القفل البرمجي بعد انتهاء العملية
                 task.isProcessing = false; 
 
                 if (response.success) {
                     task.completed = true;
                     
-                    // إذا لم تكن المهمة مكتملة مسبقاً، قم بإضافة النقاط محلياً وإظهار الاحتفال
                     if (!response.alreadyDone) {
                         userState.points = (userState.points || 0) + points; 
                         const doneMsg = typeof t === "function" ? t('alertTaskDone') : 'تم إضافة النقاط بنجاح:';
@@ -251,7 +252,7 @@
                 }
             } catch (error) {
                 console.error("خطأ في الاتصال:", error);
-                task.isProcessing = false; // فك القفل في حال الخطأ أيضاً
+                task.isProcessing = false; 
                 if (btn) {
                     btn.innerHTML = typeof t === "function" ? t('btnGo') : 'انطلق';
                     btn.disabled = false;
