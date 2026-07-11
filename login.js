@@ -152,7 +152,6 @@ window.showClubsForCountry = function(countryKey) {
     const mainContent = document.getElementById("main-content");
 
     let clubsHtml = clubs.map(club => {
-        // 🛠️ تحويل الـ ID إلى نص لضمان تطابق البيانات
         const stringClubId = String(club.id);
         const isSelected = window.tempSelectedClubs.some(id => String(id) === stringClubId);
         
@@ -202,15 +201,12 @@ window.showClubsForCountry = function(countryKey) {
 
 // ====================== اختيار / إلغاء اختيار النادي ======================
 window.toggleClubSelection = function(clubId, countryKey) {
-    // 🛠️ البحث الدقيق عن الـ ID كنص
     const stringClubId = String(clubId);
     const index = window.tempSelectedClubs.findIndex(id => String(id) === stringClubId);
     
     if (index > -1) {
-        // إزالة النادي إذا كان مختاراً
         window.tempSelectedClubs.splice(index, 1);
     } else {
-        // إضافة النادي إذا كان العدد أقل من 2
         if (window.tempSelectedClubs.length < 2) {
             window.tempSelectedClubs.push(stringClubId);
         } else {
@@ -219,48 +215,49 @@ window.toggleClubSelection = function(clubId, countryKey) {
         }
     }
     
-    // إعادة رسم الشاشة لتظهر علامة (✅) وزر التأكيد
     showClubsForCountry(countryKey);
 };
 
-// ====================== زر تأكيد الدخول ======================
+// ====================== زر تأكيد الدخول المحدث والآمن 🚀 ======================
 window.confirmLogin = async function() {
     if (window.tempSelectedClubs.length === 0) {
         alert(userState.lang === 'ar' ? 'الرجاء اختيار نادي واحد على الأقل للمتابعة.' : 'Please select at least one club to continue.');
         return;
     }
 
-    // 1. نقل الأندية المختارة إلى بيانات المستخدم الرسمية
     userState.selectedClubs = [...window.tempSelectedClubs];
     
-    // 2. تغيير حالة الزر ليعطي إيحاء بالتحميل
     const btn = document.getElementById('confirm-btn');
     if (btn) btn.innerHTML = '⏳...';
 
-    // 3. حفظ البيانات في قاعدة البيانات (Supabase)
     if (typeof supabaseClient !== 'undefined' && userState.userId) {
         try {
             // أ. حفظ البيانات الأساسية في جدول (users)
-            await supabaseClient.from('users').upsert({
+            const { error: userErr } = await supabaseClient.from('users').upsert({
                 telegram_id: userState.userId,
                 username: userState.username,
                 selected_clubs: userState.selectedClubs,
                 lang: userState.lang
             }, { onConflict: 'telegram_id' });
 
-            // ب. جلب نقاط المستخدم الحالية (لضمان نقل الـ 1500 نقطة بدقة)
+            if (userErr) {
+                alert("❌ فشل حفظ البيانات في جدول users:\n" + userErr.message);
+                throw userErr;
+            }
+
+            // ب. جلب نقاط المستخدم لضمان مطابقة الـ 1500 نقطة بدقة
             let startingPoints = 1500;
             const { data: userData } = await supabaseClient
                 .from('users')
                 .select('points')
                 .eq('telegram_id', userState.userId)
-                .single();
+                .maybeSingle();
             
             if (userData && userData.points) {
                 startingPoints = userData.points;
             }
 
-            // ج. تسجيل المستخدم في جدول ترتيب المشجعين (لكل نادي اختاره)
+            // ج. تجهيز البيانات للإرسال لجدول الترتيب (صف لكل نادٍ تم اختياره)
             const rankingsData = userState.selectedClubs.map(clubId => ({
                 telegram_id: userState.userId,
                 club_id: String(clubId),
@@ -269,23 +266,31 @@ window.confirmLogin = async function() {
                 referrals_count: 0
             }));
 
-            // إرسال البيانات فوراً لجدول (club_fans_rankings)
-            await supabaseClient.from('club_fans_rankings').upsert(rankingsData);
+            // د. تحديث/إدخال السجلات في جدول ترتيب المشجعين (club_fans_rankings)
+            const { error: rankErr } = await supabaseClient
+                .from('club_fans_rankings')
+                .upsert(rankingsData, { onConflict: 'telegram_id,club_id' });
             
-            console.log("✅ تم تسجيل بيانات الدخول وإضافة المستخدم لجدول الترتيب بنجاح!");
+            if (rankErr) {
+                alert("❌ فشل ربط حسابك بجدول club_fans_rankings:\n" + rankErr.message);
+                throw rankErr;
+            }
+            
+            console.log("✅ تم التسجيل وربط الجداول بنجاح دون أي عوائق!");
 
         } catch (error) {
-            console.error("⚠️ خطأ في حفظ بيانات الدخول:", error);
+            console.error("⚠️ تم إيقاف التوجيه بسبب خطأ في السيرفر:", error);
+            if (btn) btn.innerHTML = userState.lang === 'ar' ? 'إعادة المحاولة 🔄' : 'Retry 🔄';
+            return; // حماية: نوقف الدخول حتى يتم حل المشكلة المنبثقة
         }
     }
 
-    // 4. إظهار القوائم العلوية والسفلية المخفية
+    // 4. إظهار القوائم العلوية والسفلية الانتقال للشاشة الرئيسية
     const topBar = document.getElementById('top-bar');
     const bottomNav = document.getElementById('bottom-nav');
     if (topBar) topBar.style.display = 'flex';
     if (bottomNav) bottomNav.style.display = 'flex';
 
-    // 5. الانتقال الفعلي للشاشة الرئيسية للتطبيق
     if (typeof showPage === 'function') {
         showPage('home');
     } else {
