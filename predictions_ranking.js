@@ -1,6 +1,6 @@
 /**
  * ملف: predictions_ranking.js
- * الوظيفة: إدارة شاشة تحديات الأسبوع (عرض المباريات + الترتيب + المودال)
+ * الوظيفة: إدارة شاشة تحديات الأسبوع (عرض المباريات + المودال الخاص بالتوقع فقط)
  */
 
 // دالة عرض شاشة التحديات (Overlay) - محسنة للـ RTL ومربوطة بـ window
@@ -63,15 +63,6 @@ window.openChallengesScreen = function() {
         `;
     }).join('');
 
-    const rankingHtml = `
-        <div style="margin-top: 30px;">
-            <h3 style="margin: 0 0 15px 0; color:#ffd700; text-align:right;">ترتيب المتوقعين هذا الأسبوع</h3>
-            <div id="overlay-ranking" style="background:#1c1c22; padding:15px; border-radius:12px; text-align:right; box-sizing: border-box;">
-                جاري تحميل الترتيب...
-            </div>
-        </div>
-    `;
-
     overlay.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
             <h2 style="margin:0; color:#ffd700;">تحديات الأسبوع</h2>
@@ -82,17 +73,9 @@ window.openChallengesScreen = function() {
         <div style="margin-bottom: 30px;">
             ${matchesHtml}
         </div>
-        
-        ${rankingHtml}
     `;
 
     document.body.appendChild(overlay);
-
-    setTimeout(() => {
-        if (typeof window.renderLeaderboardSection === "function") {
-            window.renderLeaderboardSection('overlay-ranking');
-        }
-    }, 300);
 };
 
 // دالة إغلاق الـ overlay
@@ -169,16 +152,4 @@ window.submitPrediction = function(matchId) {
     
     alert(`✅ تم حفظ توقعك للمباراة بنجاح!\nالفائز: ${winner}\nالنتيجة: ${score}`);
     window.closePredictionModal();
-};
-
-// دالة عرض الترتيب
-window.renderLeaderboardSection = async function(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    
-    container.innerHTML = `
-        <p style="color:#888; text-align:center; padding:20px;">
-            📊 الترتيب سيظهر هنا (سيتم ربطه بقاعدة البيانات)
-        </p>
-    `;
 };
