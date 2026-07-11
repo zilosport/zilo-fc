@@ -1,12 +1,15 @@
 /**
  * ملف: predictions_ranking.js
  * الوظيفة: إدارة شاشة تحديات الأسبوع (عرض المباريات + المودال الخاص بالتوقع فقط)
+ * التحديث: تم إضافة دعم الترجمة وتغيير الاتجاه حسب لغة المستخدم
  */
 
-// دالة عرض شاشة التحديات (Overlay) - محسنة للـ RTL ومربوطة بـ window
+// دالة عرض شاشة التحديات (Overlay)
 window.openChallengesScreen = function() {
     // التحقق من عدم وجود شاشة مفتوحة مسبقاً لمنع التكرار
     if (document.getElementById('challenges-overlay')) return;
+
+    const isAr = userState.lang === 'ar'; // التحقق من اللغة
 
     const overlay = document.createElement('div');
     overlay.id = 'challenges-overlay';
@@ -20,14 +23,14 @@ window.openChallengesScreen = function() {
         box-sizing: border-box; 
         overflow-y: auto; 
         color: white;
-        direction: rtl;
-        text-align: right;
+        direction: ${isAr ? 'rtl' : 'ltr'};
+        text-align: ${isAr ? 'right' : 'left'};
     `;
 
-    // محاكاة المباريات
+    // محاكاة المباريات (تمت إضافة الأسماء بالإنجليزية)
     const matches = [
-        { id: 1, team1: "ريال مدريد", team2: "ليفربول", time: "2026-07-11T21:00:00", league: "🇪🇺" },
-        { id: 2, team1: "برشلونة", team2: "أتلتيكو مدريد", time: "2026-07-12T20:00:00", league: "🇪🇸" }
+        { id: 1, team1Ar: "ريال مدريد", team1En: "Real Madrid", team2Ar: "ليفربول", team2En: "Liverpool", time: "2026-07-11T21:00:00", league: "🇪🇺" },
+        { id: 2, team1Ar: "برشلونة", team1En: "Barcelona", team2Ar: "أتلتيكو مدريد", team2En: "Atletico Madrid", time: "2026-07-12T20:00:00", league: "🇪🇸" }
     ];
 
     let matchesHtml = matches.map(m => {
@@ -36,14 +39,18 @@ window.openChallengesScreen = function() {
         const oneHourBefore = new Date(matchDate.getTime() - 60 * 60 * 1000);
         const isClosed = now >= oneHourBefore;
 
+        const team1Name = isAr ? m.team1Ar : m.team1En;
+        const team2Name = isAr ? m.team2Ar : m.team2En;
+        const formattedDate = matchDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-US');
+
         return `
             <div style="background:#1c1c22; padding:18px; border-radius:12px; margin-bottom:18px; border: 1px solid #333; box-sizing: border-box;">
                 <div style="font-size: 0.85rem; color:#888; margin-bottom: 8px;">
-                    ${m.league} • ${matchDate.toLocaleDateString('ar-EG')}
+                    ${m.league} • ${formattedDate}
                 </div>
                 
                 <div style="font-weight:bold; font-size: 1.15rem; margin: 10px 0; line-height: 1.4; word-break: break-word; overflow-wrap: break-word;">
-                    ${m.team1} <span style="color:#ffd700;">VS</span> ${m.team2}
+                    ${team1Name} <span style="color:#ffd700;">VS</span> ${team2Name}
                 </div>
                 
                 <div style="color:#ffd700; font-size: 0.95rem; margin-bottom: 12px;">
@@ -52,11 +59,11 @@ window.openChallengesScreen = function() {
                 
                 ${isClosed 
                     ? `<button disabled style="width:100%; padding:12px; background:#444; color:#888; border:none; border-radius:8px; font-size:0.95rem; box-sizing: border-box;">
-                        ❌ تم إغلاق التوقعات
+                        ${isAr ? '❌ تم إغلاق التوقعات' : '❌ Predictions Closed'}
                        </button>`
-                    : `<button onclick="window.showPredictionModal(${m.id}, '${m.team1}', '${m.team2}')" 
+                    : `<button onclick="window.showPredictionModal(${m.id}, '${team1Name}', '${team2Name}')" 
                         style="width:100%; padding:12px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; font-size:1rem; box-sizing: border-box; cursor:pointer;">
-                        🚀 تحدي النتيجة
+                        ${isAr ? '🚀 تحدي النتيجة' : '🚀 Predict Score'}
                        </button>`
                 }
             </div>
@@ -65,7 +72,7 @@ window.openChallengesScreen = function() {
 
     overlay.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
-            <h2 style="margin:0; color:#ffd700;">تحديات الأسبوع</h2>
+            <h2 style="margin:0; color:#ffd700;">${isAr ? 'تحديات الأسبوع' : 'Weekly Challenges'}</h2>
             <button onclick="window.closeChallengesScreen()" 
                     style="background:none; border:none; color:white; font-size:1.8rem; cursor:pointer; padding:5px 15px;">✕</button>
         </div>
@@ -88,6 +95,8 @@ window.closeChallengesScreen = function() {
 window.showPredictionModal = function(matchId, team1, team2) {
     if (document.getElementById('prediction-modal')) return;
 
+    const isAr = userState.lang === 'ar';
+
     const modal = document.createElement('div');
     modal.id = 'prediction-modal';
     modal.style.cssText = `
@@ -95,28 +104,28 @@ window.showPredictionModal = function(matchId, team1, team2) {
         background: #1c1c22; padding: 25px; border-radius: 16px;
         z-index: 10000; width: 90%; max-width: 420px; color: white;
         box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        direction: rtl;
+        direction: ${isAr ? 'rtl' : 'ltr'};
         box-sizing: border-box;
     `;
 
     modal.innerHTML = `
-        <h3 style="margin:0 0 20px 0; text-align:center; color:#ffd700;">توقع نتيجة المباراة</h3>
+        <h3 style="margin:0 0 20px 0; text-align:center; color:#ffd700;">${isAr ? 'توقع نتيجة المباراة' : 'Predict Match Result'}</h3>
         <p style="text-align:center; font-size:1.1rem; margin-bottom:20px;">
             ${team1} <strong>VS</strong> ${team2}
         </p>
         
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:8px; color:#ccc;">من سيفوز؟</label>
-            <select id="winner-select" style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white; box-sizing: border-box;">
-                <option value="">اختر...</option>
+            <label style="display:block; margin-bottom:8px; color:#ccc;">${isAr ? 'من سيفوز؟' : 'Who will win?'}</label>
+            <select id="winner-select" style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white; box-sizing: border-box; direction: ${isAr ? 'rtl' : 'ltr'};">
+                <option value="">${isAr ? 'اختر...' : 'Select...'}</option>
                 <option value="${team1}">${team1}</option>
                 <option value="${team2}">${team2}</option>
-                <option value="draw">تعادل</option>
+                <option value="draw">${isAr ? 'تعادل' : 'Draw'}</option>
             </select>
         </div>
         
         <div style="margin-bottom:20px;">
-            <label style="display:block; margin-bottom:8px; color:#ccc;">النتيجة المتوقعة (مثال: 2-1)</label>
+            <label style="display:block; margin-bottom:8px; color:#ccc;">${isAr ? 'النتيجة المتوقعة (مثال: 2-1)' : 'Predicted Score (e.g., 2-1)'}</label>
             <input type="text" id="score-input" placeholder="2-1" 
                    style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white; box-sizing: border-box; text-align: left;" dir="ltr">
         </div>
@@ -124,11 +133,11 @@ window.showPredictionModal = function(matchId, team1, team2) {
         <div style="display:flex; gap:12px;">
             <button onclick="window.submitPrediction(${matchId});" 
                     style="flex:1; padding:14px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; box-sizing: border-box; cursor:pointer;">
-                ✅ تأكيد التوقع
+                ${isAr ? '✅ تأكيد التوقع' : '✅ Confirm'}
             </button>
             <button onclick="window.closePredictionModal()" 
                     style="flex:1; padding:14px; background:#444; border:none; color:white; border-radius:8px; box-sizing: border-box; cursor:pointer;">
-                إلغاء
+                ${isAr ? 'إلغاء' : 'Cancel'}
             </button>
         </div>
     `;
@@ -142,14 +151,18 @@ window.closePredictionModal = function() {
 };
 
 window.submitPrediction = function(matchId) {
+    const isAr = userState.lang === 'ar';
     const winner = document.getElementById('winner-select').value;
     const score = document.getElementById('score-input').value.trim();
     
     if (!winner || !score) {
-        alert("يرجى اختيار الفائز وكتابة النتيجة المتوقعة");
+        alert(isAr ? "يرجى اختيار الفائز وكتابة النتيجة المتوقعة" : "Please select a winner and enter the predicted score");
         return;
     }
     
-    alert(`✅ تم حفظ توقعك للمباراة بنجاح!\nالفائز: ${winner}\nالنتيجة: ${score}`);
+    alert(isAr 
+        ? `✅ تم حفظ توقعك للمباراة بنجاح!\nالفائز: ${winner === 'draw' ? 'تعادل' : winner}\nالنتيجة: ${score}`
+        : `✅ Your prediction has been saved successfully!\nWinner: ${winner === 'draw' ? 'Draw' : winner}\nScore: ${score}`
+    );
     window.closePredictionModal();
 };
