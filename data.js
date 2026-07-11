@@ -72,6 +72,8 @@ const i18n = {
         cancelBtn: "إلغاء",
         validationError: "يرجى اختيار الفائز وكتابة النتيجة المتوقعة",
         predictionSuccess: "✅ تم حفظ توقعك للمباراة بنجاح!\nالفائز: {winner}\nالنتيجة: {score}",
+        spainCups: "كؤوس إسبانيا", // تمت الإضافة هنا
+        asiaCups: "كؤوس آسيا",    // تمت الإضافة هنا
 
         // 2. الترتيب الأسبوعي
         fetchingRanking: "⏳ جاري جلب الترتيب...",
@@ -156,6 +158,8 @@ const i18n = {
         cancelBtn: "Cancel",
         validationError: "Please select a winner and enter the predicted score",
         predictionSuccess: "✅ Your prediction has been saved successfully!\nWinner: {winner}\nScore: {score}",
+        spainCups: "Spanish Cups", // Added here
+        asiaCups: "Asian Cups",    // Added here
 
         // 2. Weekly Rankings
         fetchingRanking: "⏳ Fetching ranking...",
