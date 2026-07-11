@@ -1,5 +1,5 @@
 // ==========================================
-// 🛠️ ملف قسم المهام (Tasks) - النسخة الحقيقية المربوطة بـ Supabase
+// 🛠️ ملف قسم المهام (Tasks) - النسخة الحقيقية المربوطة بـ Supabase (محدث ومحمي بالكامل 🛡️)
 // ==========================================
 
 (function() {
@@ -27,8 +27,8 @@
                 .insert([{ telegram_id: userState.userId, task_id: taskId, reward_points: points }]);
 
             if (taskError) {
-                // إذا كانت المهمة مسجلة مسبقاً (خطأ التكرار 23505)
-                if (taskError.code === '23505') return { success: true }; 
+                // إذا كانت المهمة مسجلة مسبقاً (خطأ التكرار 23505) نعيد alreadyDone لكي لا تتضاعف النقاط
+                if (taskError.code === '23505') return { success: true, alreadyDone: true }; 
                 throw taskError;
             }
 
@@ -42,7 +42,7 @@
 
             if (pointsError) throw pointsError;
 
-            return { success: true };
+            return { success: true, alreadyDone: false };
         } catch (error) {
             console.error("❌ خطأ في حفظ المهمة:", error);
             return { success: false };
@@ -84,7 +84,7 @@
     async function syncTasksFromDB() {
         if (!supabaseClient || !userState.userId) return;
 
-        // تأمين مصفوفة المهام محلياً قبل المزامنة لعدم حدوث Uncaught TypeError
+        // تأمين مصفوفة المهام محلياً قبل المزامنة
         if (!userState.tasks || userState.tasks.length === 0) {
             userState.tasks = window.defaultTasksData.map(t => ({...t}));
         }
@@ -114,7 +114,7 @@
                 const lastClaim = new Date(userData.last_daily_claim);
                 const now = new Date();
                 
-                // تعديل مأمون لحساب فارق الوقت بالاعتماد على الـ Timestamp بالملي ثانية
+                // حساب فارق الوقت
                 const diffHours = Math.abs(now.getTime() - lastClaim.getTime()) / 36e5;
                 
                 if (diffHours < 24) {
@@ -135,15 +135,12 @@
     // ==========================================
 
     window.renderTasksPage = async function(container) {
-        // تهيئة مبدئية للمهام
         if (!userState.tasks || userState.tasks.length === 0) {
             userState.tasks = window.defaultTasksData.map(t => ({...t}));
         }
 
-        // رسم مبدئي بانتظار التحميل
         container.innerHTML = `<div style="text-align:center; padding:50px; color:#fff;">⏳ جاري تحميل المهام...</div>`;
 
-        // مزامنة البيانات الحقيقية من السيرفر
         await syncTasksFromDB();
 
         let tasksHtml = userState.tasks.map(task => `
@@ -174,12 +171,17 @@
         `;
     };
 
-    // دالة تنفيذ المهمة
+    // 🛡️ دالة تنفيذ المهمة (الآن محمية ضد الضغط المزدوج)
     window.executeTask = async function(taskId, url, points) {
         const task = userState.tasks.find(t => t.id === taskId);
-        if (!task || task.completed) return;
+        
+        // منع الضغط إذا كانت المهمة مكتملة أو "جاري معالجتها حالياً"
+        if (!task || task.completed || task.isProcessing) return;
 
-        // 🛠️ 1. فتح الرابط بطريقة تدعم جميع المتصفحات وتطبيق تليجرام المصغر
+        // قفل المهمة برمجياً لمنع ضغطة ثانية سريعة
+        task.isProcessing = true; 
+
+        // 1. فتح الرابط
         try {
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
                 if (url.includes("t.me")) {
@@ -195,27 +197,32 @@
             window.open(url, '_blank');
         }
 
-        // 🛠️ 2. تعطيل الزر وإظهار حالة التحقق
+        // 2. تعطيل الزر في الواجهة فوراً
         const btn = document.getElementById(`btn-task-${taskId}`);
         if (btn) {
             btn.innerHTML = "⏳ التحقق...";
             btn.disabled = true;
         }
 
-        // 🛠️ 3. الانتظار (محاكاة التحقق من انضمام المستخدم)
+        // 3. محاكاة التحقق وإرسال البيانات للقاعدة
         setTimeout(async () => {
             try {
                 const response = await apiVerifyTask(taskId, points);
                 
+                // فك القفل البرمجي بعد انتهاء العملية
+                task.isProcessing = false; 
+
                 if (response.success) {
                     task.completed = true;
-                    userState.points = (userState.points || 0) + points; 
                     
+                    // إذا لم تكن المهمة مكتملة مسبقاً، قم بإضافة النقاط محلياً وإظهار الاحتفال
+                    if (!response.alreadyDone) {
+                        userState.points = (userState.points || 0) + points; 
+                        const doneMsg = typeof t === "function" ? t('alertTaskDone') : 'تم إضافة النقاط بنجاح:';
+                        alert(`🎉 ${doneMsg} ${points} ZELO FC.`);
+                    }
+
                     if (typeof updateTopBar === "function") updateTopBar();
-                    
-                    const doneMsg = typeof t === "function" ? t('alertTaskDone') : 'تم إضافة النقاط بنجاح:';
-                    alert(`🎉 ${doneMsg} ${points} ZELO FC.`);
-                    
                     renderTasksPage(document.getElementById("main-content")); 
                 } else {
                     alert("حدث خطأ أثناء حفظ المهمة، يرجى المحاولة لاحقاً.");
@@ -226,6 +233,7 @@
                 }
             } catch (error) {
                 console.error("خطأ في الاتصال:", error);
+                task.isProcessing = false; // فك القفل في حال الخطأ أيضاً
                 if (btn) {
                     btn.innerHTML = typeof t === "function" ? t('btnGo') : 'انطلق';
                     btn.disabled = false;
@@ -234,7 +242,7 @@
         }, 4000); 
     };
 
-    // دالة المطالبة اليومية (مربوطة بقاعدة البيانات)
+    // دالة المطالبة اليومية
     window.claimDaily = async function() {
         if (userState.dailyCheckInClaimed) return;
 
