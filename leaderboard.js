@@ -1,5 +1,5 @@
 // ==========================================
-// 🏆 ملف قسم الترتيب (Leaderboard) - (متوافق مع قاعدة بياناتك الحقيقية)
+// 🏆 ملف قسم الترتيب (Leaderboard) - (مزود بعدد المشجعين)
 // ==========================================
 
 window.escapeHTML = function(str) {
@@ -17,15 +17,19 @@ window.renderLeaderboardPage = async function(container) {
 
     try {
         let clubPointsMap = {};
+        let clubMembersMap = {}; // 💡 إضافة: خريطة لتخزين عدد المشجعين لكل نادي
+
         if (typeof supabaseClient !== 'undefined') {
-            // ⚠️ التحديث هنا: استخدام total_fan_points بدلاً من points
             const { data: fansData, error } = await supabaseClient
                 .from('club_fans_rankings')
                 .select('club_id, total_fan_points');
 
             if (!error && fansData) {
                 fansData.forEach(fan => {
+                    // حساب مجموع النقاط
                     clubPointsMap[fan.club_id] = (clubPointsMap[fan.club_id] || 0) + (fan.total_fan_points || 0);
+                    // 💡 إضافة: حساب عدد المشجعين (كل صف يمثل مشجعاً)
+                    clubMembersMap[fan.club_id] = (clubMembersMap[fan.club_id] || 0) + 1; 
                 });
             }
         }
@@ -39,6 +43,7 @@ window.renderLeaderboardPage = async function(container) {
 
         allClubsFlat.forEach(club => {
             club.points = clubPointsMap[club.id] || 0;
+            club.members = clubMembersMap[club.id] || 0; // 💡 إضافة: ربط عدد المشجعين بالنادي
         });
 
         let sortedClubs = allClubsFlat
@@ -51,6 +56,7 @@ window.renderLeaderboardPage = async function(container) {
             let textAlign = (typeof userState !== 'undefined' && userState.lang === 'ar') ? 'left' : 'right';
             let tFunc = typeof t === 'function' ? t : (key) => key;
             let clubName = typeof getClubName === 'function' ? getClubName(club) : club.name;
+            let membersWord = typeof userState !== 'undefined' && userState.lang === 'ar' ? 'مشجع' : 'Fans'; // كلمة مشجع حسب اللغة
 
             return `
             <div class="leaderboard-club-row" onclick="window.openSpecificClubFans('${club.id}')" 
@@ -58,8 +64,13 @@ window.renderLeaderboardPage = async function(container) {
                 
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <b style="font-size: 1.1rem; width: 25px; color:#fff;">#${index + 1}</b>
-                    <img src="${club.logo}" onerror="this.style.display='none'" style="width: 28px; height: 28px; object-fit: contain;">
-                    <span style="color: #fff; font-weight: bold; font-size: 1.05rem;">${clubName}</span>
+                    <img src="${club.logo}" onerror="this.style.display='none'" style="width: 32px; height: 32px; object-fit: contain;">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="color: #fff; font-weight: bold; font-size: 1.05rem;">${clubName}</span>
+                        <small style="color: #4caf50; font-size: 0.8rem; margin-top: 2px;">
+                            👥 ${(club.members || 0).toLocaleString()} ${membersWord}
+                        </small>
+                    </div>
                 </div>
                 
                 <div style="text-align: ${textAlign};">
@@ -105,7 +116,6 @@ window.openSpecificClubFans = async function(clubId) {
         let fansTableRows = "";
         
         if (typeof supabaseClient !== 'undefined') {
-            // ⚠️ التحديث هنا: استخدام total_fan_points و referrals_count وربط الاسم من جدول users
             const { data: fansList, error } = await supabaseClient
                 .from('club_fans_rankings')
                 .select(`
@@ -123,7 +133,6 @@ window.openSpecificClubFans = async function(clubId) {
 
                 fansTableRows = fansList.map((fan, idx) => {
                     let rankColor = idx === 0 ? '#ffd700' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : '#fff';
-                    // جلب اسم المستخدم من الجدول المرتبط
                     let safeName = window.escapeHTML((fan.users && fan.users.username) ? fan.users.username : 'مشجع مجهول');
                     
                     let isMe = fan.telegram_id == currentUserId;
