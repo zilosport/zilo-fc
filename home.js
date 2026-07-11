@@ -1,7 +1,10 @@
 // ==========================================
-// 🏠 الصفحة الرئيسية (home.js) - نسخة محسنة
+// 🏠 الصفحة الرئيسية (home.js) - نسخة محسنة ومرتبطة بقاعدة البيانات
 // ==========================================
-window.renderHomePage = function(container) {
+window.renderHomePage = async function(container) {
+    // رسالة تحميل مؤقتة حتى لا تظهر الصفحة فارغة أثناء جلب البيانات
+    container.innerHTML = `<div style="text-align:center; padding:50px; color:#888;">⏳ جاري تحميل بيانات ناديك...</div>`;
+
     // 1. معالجة بيانات الأندية
     let selectedClubsData = userState.selectedClubs.map(id => {
         if (typeof allWorldCupCountriesClubs !== 'undefined') {
@@ -19,7 +22,38 @@ window.renderHomePage = function(container) {
              selectedClubsData = [allWorldCupCountriesClubs[firstCountry][0]];
         }
     }
- 
+
+    // 🚀 2. جلب عدد المشجعين والنقاط الحقيقية من Supabase
+    if (typeof supabaseClient !== 'undefined' && selectedClubsData.length > 0) {
+        // نجلب فقط أرقام أندية المستخدم الحالي لتسريع العملية
+        const clubIds = selectedClubsData.map(c => c.id);
+        
+        try {
+            const { data: fansData, error } = await supabaseClient
+                .from('club_fans_rankings')
+                .select('club_id, total_fan_points')
+                .in('club_id', clubIds);
+
+            if (!error && fansData) {
+                let membersMap = {};
+                let pointsMap = {};
+                
+                fansData.forEach(fan => {
+                    membersMap[fan.club_id] = (membersMap[fan.club_id] || 0) + 1; // زيادة عدد المشجعين
+                    pointsMap[fan.club_id] = (pointsMap[fan.club_id] || 0) + (fan.total_fan_points || 0); // جمع النقاط
+                });
+
+                // حقن البيانات الحقيقية داخل كائن النادي
+                selectedClubsData.forEach(club => {
+                    club.members = membersMap[club.id] || 0;
+                    club.points = pointsMap[club.id] || 0;
+                });
+            }
+        } catch (err) {
+            console.error("خطأ في جلب إحصائيات الأندية:", err);
+        }
+    }
+
     const primaryClub = selectedClubsData[0];
     let fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userState.username)}&background=1c1c22&color=0088cc&size=128&bold=true`;
     let avatarSrc = userState.photoUrl ? userState.photoUrl : fallbackAvatar;
@@ -28,15 +62,15 @@ window.renderHomePage = function(container) {
         `background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)), url('${primaryClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${primaryClub.color || '#25252d'};`
         : 'background: #1c1c22;';
 
-    // 2. بناء واجهة الأندية
+    // 3. بناء واجهة الأندية
     let clubsCardsHtml = selectedClubsData.map(club => `
         <div style="background: #1c1c22; border: 1px solid #25252d; border-radius: 16px; padding: 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
             <div style="display: flex; align-items: center; gap: 15px;">
                 <img src="${club.logo}" onerror="this.style.display='none'" style="width: 50px; height: 50px; object-fit: contain;">
                 <div>
                     <h3 style="margin: 0; color: #fff; font-size: 1.2rem;">${typeof getClubName === "function" ? getClubName(club) : club.name} ${club.countryFlag}</h3>
-                    <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem;">
-                        👥 ${club.members ? club.members.toLocaleString() : '0'}
+                    <p style="margin: 5px 0 0 0; color: #4caf50; font-size: 0.85rem; font-weight: bold;">
+                        👥 ${club.members ? club.members.toLocaleString() : '0'} ${userState.lang === 'ar' ? 'مشجع' : 'Fans'}
                     </p>
                 </div>
             </div>
@@ -48,7 +82,7 @@ window.renderHomePage = function(container) {
         </div>
     `).join('');
 
-    // 3. تجميع الصفحة
+    // 4. تجميع الصفحة
     container.innerHTML = `
         <div class="profile-section" style="${profileBgStyle} padding: 25px 15px; border-radius: 16px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
             <img src="${avatarSrc}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; object-fit: cover;">
@@ -56,7 +90,6 @@ window.renderHomePage = function(container) {
             <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 0.85rem;">ID: ${userState.userId}</p>
         </div>
       
-        <!-- بطاقة التحديات -->
         <div id="challenges-card" style="cursor: pointer; background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 2px solid #ffd700; display: flex; align-items: center; gap: 15px;">
             <div style="font-size: 3rem;">${primaryClub ? primaryClub.countryFlag : '⚽'}</div>
             <div>
@@ -68,11 +101,10 @@ window.renderHomePage = function(container) {
         <h4 style="color: #aaa; margin: 0 0 10px 0; font-size: 0.9rem;">${userState.lang === 'ar' ? 'أنديتك المفضلة:' : 'Your Supported Clubs:'}</h4>
         ${clubsCardsHtml}
         
-        <!-- هنا سيتم رسم بطاقة ترتيب التحديات -->
         <div id="ranking-container" style="margin-top: 25px;"></div>
     `;
 
-    // 4. إضافة حدث النقر + تحقق أمان
+    // 5. إضافة حدث النقر + تحقق أمان
     setTimeout(() => {
         const challengesCard = document.getElementById('challenges-card');
         if (challengesCard) {
