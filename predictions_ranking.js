@@ -1,8 +1,14 @@
 /**
  * ملف: predictions_ranking.js
  * الوظيفة: إدارة شاشة تحديات الأسبوع (عرض المباريات + المودال الخاص بالتوقع فقط)
- * التحديث: تم إضافة دعم الترجمة وتغيير الاتجاه حسب لغة المستخدم
+ * التحديث: تم ربطه بملف data.js للترجمة وتغيير الاتجاه حسب لغة المستخدم
  */
+
+// دالة مساعدة لجلب الترجمة من ملف data.js بناءً على لغة المستخدم
+function getT(key) {
+    const lang = userState.lang || 'ar';
+    return i18n[lang][key] || key;
+}
 
 // دالة عرض شاشة التحديات (Overlay)
 window.openChallengesScreen = function() {
@@ -27,10 +33,10 @@ window.openChallengesScreen = function() {
         text-align: ${isAr ? 'right' : 'left'};
     `;
 
-    // محاكاة المباريات (تمت إضافة الأسماء بالإنجليزية)
+    // محاكاة المباريات (تم استدعاء كؤوس إسبانيا وآسيا من ملف الترجمة)
     const matches = [
-        { id: 1, team1Ar: "ريال مدريد", team1En: "Real Madrid", team2Ar: "ليفربول", team2En: "Liverpool", time: "2026-07-11T21:00:00", league: "🇪🇺" },
-        { id: 2, team1Ar: "برشلونة", team1En: "Barcelona", team2Ar: "أتلتيكو مدريد", team2En: "Atletico Madrid", time: "2026-07-12T20:00:00", league: "🇪🇸" }
+        { id: 1, team1Ar: "ريال مدريد", team1En: "Real Madrid", team2Ar: "ليفربول", team2En: "Liverpool", time: "2026-07-11T21:00:00", league: getT('asiaCups') + " 🌏" },
+        { id: 2, team1Ar: "برشلونة", team1En: "Barcelona", team2Ar: "أتلتيكو مدريد", team2En: "Atletico Madrid", time: "2026-07-12T20:00:00", league: getT('spainCups') + " 🇪🇸" }
     ];
 
     let matchesHtml = matches.map(m => {
@@ -59,11 +65,11 @@ window.openChallengesScreen = function() {
                 
                 ${isClosed 
                     ? `<button disabled style="width:100%; padding:12px; background:#444; color:#888; border:none; border-radius:8px; font-size:0.95rem; box-sizing: border-box;">
-                        ${isAr ? '❌ تم إغلاق التوقعات' : '❌ Predictions Closed'}
+                        ${getT('predictionsClosed')}
                        </button>`
                     : `<button onclick="window.showPredictionModal(${m.id}, '${team1Name}', '${team2Name}')" 
                         style="width:100%; padding:12px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; font-size:1rem; box-sizing: border-box; cursor:pointer;">
-                        ${isAr ? '🚀 تحدي النتيجة' : '🚀 Predict Score'}
+                        ${getT('predictScoreBtn')}
                        </button>`
                 }
             </div>
@@ -72,7 +78,7 @@ window.openChallengesScreen = function() {
 
     overlay.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
-            <h2 style="margin:0; color:#ffd700;">${isAr ? 'تحديات الأسبوع' : 'Weekly Challenges'}</h2>
+            <h2 style="margin:0; color:#ffd700;">${getT('weeklyChallenges')}</h2>
             <button onclick="window.closeChallengesScreen()" 
                     style="background:none; border:none; color:white; font-size:1.8rem; cursor:pointer; padding:5px 15px;">✕</button>
         </div>
@@ -109,23 +115,23 @@ window.showPredictionModal = function(matchId, team1, team2) {
     `;
 
     modal.innerHTML = `
-        <h3 style="margin:0 0 20px 0; text-align:center; color:#ffd700;">${isAr ? 'توقع نتيجة المباراة' : 'Predict Match Result'}</h3>
+        <h3 style="margin:0 0 20px 0; text-align:center; color:#ffd700;">${getT('predictMatchTitle')}</h3>
         <p style="text-align:center; font-size:1.1rem; margin-bottom:20px;">
             ${team1} <strong>VS</strong> ${team2}
         </p>
         
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:8px; color:#ccc;">${isAr ? 'من سيفوز؟' : 'Who will win?'}</label>
+            <label style="display:block; margin-bottom:8px; color:#ccc;">${getT('whoWillWin')}</label>
             <select id="winner-select" style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white; box-sizing: border-box; direction: ${isAr ? 'rtl' : 'ltr'};">
-                <option value="">${isAr ? 'اختر...' : 'Select...'}</option>
+                <option value="">${getT('selectWinner')}</option>
                 <option value="${team1}">${team1}</option>
                 <option value="${team2}">${team2}</option>
-                <option value="draw">${isAr ? 'تعادل' : 'Draw'}</option>
+                <option value="draw">${getT('drawMatch')}</option>
             </select>
         </div>
         
         <div style="margin-bottom:20px;">
-            <label style="display:block; margin-bottom:8px; color:#ccc;">${isAr ? 'النتيجة المتوقعة (مثال: 2-1)' : 'Predicted Score (e.g., 2-1)'}</label>
+            <label style="display:block; margin-bottom:8px; color:#ccc;">${getT('predictedScore')}</label>
             <input type="text" id="score-input" placeholder="2-1" 
                    style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white; box-sizing: border-box; text-align: left;" dir="ltr">
         </div>
@@ -133,11 +139,11 @@ window.showPredictionModal = function(matchId, team1, team2) {
         <div style="display:flex; gap:12px;">
             <button onclick="window.submitPrediction(${matchId});" 
                     style="flex:1; padding:14px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; box-sizing: border-box; cursor:pointer;">
-                ${isAr ? '✅ تأكيد التوقع' : '✅ Confirm'}
+                ${getT('confirmPrediction')}
             </button>
             <button onclick="window.closePredictionModal()" 
                     style="flex:1; padding:14px; background:#444; border:none; color:white; border-radius:8px; box-sizing: border-box; cursor:pointer;">
-                ${isAr ? 'إلغاء' : 'Cancel'}
+                ${getT('cancelBtn')}
             </button>
         </div>
     `;
@@ -151,18 +157,19 @@ window.closePredictionModal = function() {
 };
 
 window.submitPrediction = function(matchId) {
-    const isAr = userState.lang === 'ar';
     const winner = document.getElementById('winner-select').value;
     const score = document.getElementById('score-input').value.trim();
     
     if (!winner || !score) {
-        alert(isAr ? "يرجى اختيار الفائز وكتابة النتيجة المتوقعة" : "Please select a winner and enter the predicted score");
+        alert(getT('validationError'));
         return;
     }
     
-    alert(isAr 
-        ? `✅ تم حفظ توقعك للمباراة بنجاح!\nالفائز: ${winner === 'draw' ? 'تعادل' : winner}\nالنتيجة: ${score}`
-        : `✅ Your prediction has been saved successfully!\nWinner: ${winner === 'draw' ? 'Draw' : winner}\nScore: ${score}`
-    );
+    let successMsg = getT('predictionSuccess');
+    // استبدال المتغيرات في رسالة النجاح
+    successMsg = successMsg.replace('{winner}', winner === 'draw' ? getT('drawMatch') : winner);
+    successMsg = successMsg.replace('{score}', score);
+
+    alert(successMsg);
     window.closePredictionModal();
 };
