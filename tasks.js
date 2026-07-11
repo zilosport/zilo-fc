@@ -16,7 +16,7 @@
     // 🔄 دوال الاتصال بقاعدة البيانات (API Calls)
     // ==========================================
 
-    // أ. دالة إرسال تأكيد إتمام المهمة لـ Supabase (تم التحديث لضمان ترحيل النقاط للجداول الأخرى)
+    // أ. دالة إرسال تأكيد إتمام المهمة لـ Supabase
     async function apiVerifyTask(taskId, points) {
         if (!supabaseClient) return { success: false, message: "لا يوجد اتصال بقاعدة البيانات" };
         
@@ -32,7 +32,7 @@
                 throw taskError;
             }
 
-            // 2. جلب النقاط الحالية بأمان (بدون استخدام .single لتفادي توقف الدالة في حال عدم وجود السجل)
+            // 2. جلب النقاط الحالية لجدول المستخدمين
             let currentPoints = 0;
             const { data: userData, error: fetchError } = await supabaseClient
                 .from('users')
@@ -46,7 +46,7 @@
             const pointsToAdd = parseInt(points) || 0;
             const newPoints = currentPoints + pointsToAdd;
 
-            // 3. تحديث أو إنشاء السجل مباشرة في جدول المستخدمين (users) لضمان ظهور إجمالي النقاط
+            // 3. تحديث أو إنشاء السجل مباشرة في جدول المستخدمين (users)
             const { error: userUpsertError } = await supabaseClient
                 .from('users')
                 .upsert(
@@ -56,16 +56,27 @@
 
             if (userUpsertError) throw userUpsertError;
 
-            // 4. تحديث أو إنشاء السجل مباشرة في جدول ترتيب الأندية (club_fans_rankings)
-            const { error: clubUpsertError } = await supabaseClient
+            // 4. معالجة جدول الأندية (club_fans_rankings) بطريقة آمنة
+            // نتحقق أولاً هل للمستخدم سجل في هذا الجدول؟
+            const { data: clubData, error: clubFetchError } = await supabaseClient
                 .from('club_fans_rankings')
-                .upsert(
-                    { telegram_id: userState.userId, total_fan_points: newPoints },
-                    { onConflict: 'telegram_id' }
-                );
+                .select('total_fan_points')
+                .eq('telegram_id', userState.userId);
 
-            if (clubUpsertError) {
-                console.warn("⚠️ تنبيه: تعذر تحديث جدول الأندية، قد يتطلب الجدول حقولاً إضافية إجبارية:", clubUpsertError);
+            // إذا لم يكن هناك خطأ، والمستخدم موجود فعلاً في جدول الأندية
+            if (!clubFetchError && clubData && clubData.length > 0) {
+                // نقوم بعمل Update مباشر للنقاط لتتطابق مع نقاطه الجديدة
+                const { error: clubUpdateError } = await supabaseClient
+                    .from('club_fans_rankings')
+                    .update({ total_fan_points: newPoints })
+                    .eq('telegram_id', userState.userId);
+
+                if (clubUpdateError) {
+                    console.error("❌ خطأ في تحديث نقاط النادي:", clubUpdateError);
+                }
+            } else {
+                // المستخدم ليس لديه نادي مسجل حتى الآن، يمكن تجاهل التحديث أو طباعة ملاحظة
+                console.warn("⚠️ المستخدم ليس لديه سجل في جدول الأندية بعد، تم تحديث نقاط users فقط.");
             }
 
             return { success: true, alreadyDone: false };
