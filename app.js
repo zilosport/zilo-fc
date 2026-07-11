@@ -244,7 +244,8 @@ function triggerLoginScreen() {
 // 🔄 5. التوجيه وتحديث الواجهة الأساسية
 // ==========================================
 
-function updateTopBar() {
+// 💡 تم تعديل الدالة لتصبح async وتجلب النقاط الحقيقية من جدول الترتيب لمنع مشكلة 1500 نقطة
+async function updateTopBar() {
     const topBar = document.getElementById("top-bar");
     const bottomNav = document.getElementById("bottom-nav");
     if (topBar) topBar.style.display = "flex";
@@ -252,6 +253,23 @@ function updateTopBar() {
 
     const pointsEl = document.getElementById("points");
     const clubEl = document.getElementById("club");
+    
+    // 💡 التحقق من الرصيد الحقيقي في جدول الترتيب وتحديثه
+    if (typeof supabaseClient !== 'undefined' && supabaseClient !== null && userState.userId) {
+        try {
+            const { data } = await supabaseClient
+                .from('club_fans_rankings')
+                .select('total_fan_points')
+                .eq('telegram_id', userState.userId)
+                .maybeSingle();
+                
+            if (data && data.total_fan_points !== undefined) {
+                userState.points = data.total_fan_points;
+            }
+        } catch(error) {
+            console.error("❌ خطأ أثناء جلب النقاط من جدول الترتيب:", error);
+        }
+    }
     
     if(pointsEl) pointsEl.innerText = `${t('coins')} ${userState.points.toLocaleString()}`;
     
