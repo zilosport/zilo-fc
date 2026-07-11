@@ -24,6 +24,7 @@ let userState = {
     lang: "ar", // اللغة الافتراضية، سيتم تحديثها من قاعدة البيانات أو شاشة الدخول
     referrals: [], 
     dailyCheckInClaimed: false,
+    pendingReferrer: null, // 💡 [جديد] لحفظ معرف الداعي مؤقتاً عند الدخول من رابط إحالة
     tasks: typeof window.defaultTasksData !== "undefined" ? window.defaultTasksData.map(task => ({...task})) : [] 
 };
 
@@ -84,6 +85,17 @@ document.addEventListener("DOMContentLoaded", () => {
             if (tgUser.language_code && tgUser.language_code.startsWith('en')) {
                 userState.lang = 'en';
             }
+
+            // 🚀 [جديد] التقاط رابط الإحالة من تليجرام (start_param)
+            if (tg.initDataUnsafe.start_param && tg.initDataUnsafe.start_param.startsWith('ref_')) {
+                const referrerId = tg.initDataUnsafe.start_param.replace('ref_', '');
+                // التأكد أن الشخص لا يحيل نفسه بطريق الخطأ
+                if (String(referrerId) !== String(userState.userId)) {
+                    userState.pendingReferrer = referrerId;
+                    console.log("🔗 تم الدخول عبر رابط إحالة من الصديق:", referrerId);
+                }
+            }
+
         } else {
             console.warn("⚠️ لم يتم العثور على بيانات تليجرام حقيقية. استخدام بيانات وهمية للاختبار...");
             userState.username = "Local Tester";
@@ -176,6 +188,15 @@ async function fetchDataAndRoute() {
                 userState.walletAddress = data.wallet_address;
                 userState.walletConnected = true;
             }
+
+            // 🚀 [جديد] معالجة الإحالة فوراً إذا كان المستخدم مسجلاً بالفعل ولديه إحالة معلقة
+            // يفيد هذا الكود إذا دخل المستخدم من الرابط بعد تسجيله لتأكيد الإحالة (دالة API ستحميه من التكرار)
+            if (userState.pendingReferrer && typeof window.apiProcessReferral === "function") {
+                console.log("⚙️ جاري معالجة الإحالة المعلقة لصالح:", userState.pendingReferrer);
+                window.apiProcessReferral(userState.pendingReferrer, userState.userId);
+                userState.pendingReferrer = null; // تفريغ بعد التنفيذ لتجنب التكرار
+            }
+
         } else {
             console.log("🆕 [4] مستخدم جديد (غير مسجل).");
             userState.hasLoggedIn = false;
