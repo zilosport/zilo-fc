@@ -1,5 +1,5 @@
 // ==========================================
-// 📱 login.js - النسخة النهائية والكاملة (مربوطة بالترتيب)
+// 📱 login.js - النسخة النهائية والكاملة (مربوطة بالترتيب والتوجيه)
 // ==========================================
 
 window.tempSelectedClubs = window.tempSelectedClubs || [];
@@ -57,6 +57,11 @@ function getTutorialBox() {
 window.setLanguage = async function(lang) {
     userState.lang = lang;
 
+    // 💡 التعديل 1: تطبيق إعدادات اللغة فوراً (لتغيير اتجاه الشاشة RTL/LTR)
+    if (typeof applyLanguageSettings === 'function') {
+        applyLanguageSettings();
+    }
+
     if (typeof supabaseClient !== 'undefined' && userState.userId) {
         try {
             await supabaseClient.from('users').upsert({
@@ -83,7 +88,7 @@ function getFloatingButton() {
     `;
 }
 
-// ====================== الشاشة الرئيسية ======================
+// ====================== الشاشة الرئيسية للتسجيل ======================
 function renderLoginScreen() {
     const topBar = document.getElementById('top-bar');
     const bottomNav = document.getElementById('bottom-nav');
@@ -232,7 +237,6 @@ window.confirmLogin = async function() {
 
     if (typeof supabaseClient !== 'undefined' && userState.userId) {
         try {
-            // أ. حفظ البيانات الأساسية في جدول (users)
             const { error: userErr } = await supabaseClient.from('users').upsert({
                 telegram_id: userState.userId,
                 username: userState.username,
@@ -245,7 +249,6 @@ window.confirmLogin = async function() {
                 throw userErr;
             }
 
-            // ب. جلب نقاط المستخدم لضمان مطابقة الـ 1500 نقطة بدقة
             let startingPoints = 1500;
             const { data: userData } = await supabaseClient
                 .from('users')
@@ -257,7 +260,6 @@ window.confirmLogin = async function() {
                 startingPoints = userData.points;
             }
 
-            // ج. تجهيز البيانات للإرسال لجدول الترتيب (صف لكل نادٍ تم اختياره)
             const rankingsData = userState.selectedClubs.map(clubId => ({
                 telegram_id: userState.userId,
                 club_id: String(clubId),
@@ -266,7 +268,6 @@ window.confirmLogin = async function() {
                 referrals_count: 0
             }));
 
-            // د. تحديث/إدخال السجلات في جدول ترتيب المشجعين (club_fans_rankings)
             const { error: rankErr } = await supabaseClient
                 .from('club_fans_rankings')
                 .upsert(rankingsData, { onConflict: 'telegram_id,club_id' });
@@ -281,15 +282,23 @@ window.confirmLogin = async function() {
         } catch (error) {
             console.error("⚠️ تم إيقاف التوجيه بسبب خطأ في السيرفر:", error);
             if (btn) btn.innerHTML = userState.lang === 'ar' ? 'إعادة المحاولة 🔄' : 'Retry 🔄';
-            return; // حماية: نوقف الدخول حتى يتم حل المشكلة المنبثقة
+            return; 
         }
     }
 
-    // 4. إظهار القوائم العلوية والسفلية الانتقال للشاشة الرئيسية
+    // 💡 التعديل 2: تأكيد الدخول في التطبيق للسماح للشاشة بالفتح
+    userState.hasLoggedIn = true;
+
+    // إظهار القوائم العلوية والسفلية
     const topBar = document.getElementById('top-bar');
     const bottomNav = document.getElementById('bottom-nav');
     if (topBar) topBar.style.display = 'flex';
     if (bottomNav) bottomNav.style.display = 'flex';
+
+    // 💡 التعديل 3: تحديث الشريط العلوي ليظهر النقاط وصور الأندية الجديدة فوراً
+    if (typeof updateTopBar === 'function') {
+        updateTopBar();
+    }
 
     if (typeof showPage === 'function') {
         showPage('home');
