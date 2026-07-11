@@ -14,6 +14,7 @@ function openChallengesScreen() {
         background: #121215; 
         z-index: 9999; 
         padding: 20px; 
+        box-sizing: border-box; 
         overflow-y: auto; 
         color: white;
         direction: rtl;
@@ -33,7 +34,7 @@ function openChallengesScreen() {
         const isClosed = now >= oneHourBefore;
 
         return `
-            <div style="background:#1c1c22; padding:18px; border-radius:12px; margin-bottom:18px; border: 1px solid #333;">
+            <div style="background:#1c1c22; padding:18px; border-radius:12px; margin-bottom:18px; border: 1px solid #333; box-sizing: border-box;">
                 <div style="font-size: 0.85rem; color:#888; margin-bottom: 8px;">
                     ${m.league} • ${matchDate.toLocaleDateString('ar-EG')}
                 </div>
@@ -48,11 +49,11 @@ function openChallengesScreen() {
                 </div>
                 
                 ${isClosed 
-                    ? `<button disabled style="width:100%; padding:12px; background:#444; color:#888; border:none; border-radius:8px; font-size:0.95rem;">
+                    ? `<button disabled style="width:100%; padding:12px; background:#444; color:#888; border:none; border-radius:8px; font-size:0.95rem; box-sizing: border-box;">
                         ❌ تم إغلاق التوقعات
                        </button>`
                     : `<button onclick="showPredictionModal(${m.id}, '${m.team1}', '${m.team2}')" 
-                        style="width:100%; padding:12px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; font-size:1rem;">
+                        style="width:100%; padding:12px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; font-size:1rem; box-sizing: border-box;">
                         🚀 تحدي النتيجة
                        </button>`
                 }
@@ -63,7 +64,7 @@ function openChallengesScreen() {
     const rankingHtml = `
         <div style="margin-top: 30px;">
             <h3 style="margin: 0 0 15px 0; color:#ffd700; text-align:right;">ترتيب المتوقعين هذا الأسبوع</h3>
-            <div id="overlay-ranking" style="background:#1c1c22; padding:15px; border-radius:12px; text-align:right;">
+            <div id="overlay-ranking" style="background:#1c1c22; padding:15px; border-radius:12px; text-align:right; box-sizing: border-box;">
                 جاري تحميل الترتيب...
             </div>
         </div>
@@ -108,6 +109,7 @@ function showPredictionModal(matchId, team1, team2) {
         z-index: 10000; width: 90%; max-width: 420px; color: white;
         box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         direction: rtl;
+        box-sizing: border-box;
     `;
 
     modal.innerHTML = `
@@ -118,7 +120,7 @@ function showPredictionModal(matchId, team1, team2) {
         
         <div style="margin-bottom:15px;">
             <label style="display:block; margin-bottom:8px; color:#ccc;">من سيفوز؟</label>
-            <select id="winner-select" style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white;">
+            <select id="winner-select" style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white; box-sizing: border-box;">
                 <option value="">اختر...</option>
                 <option value="${team1}">${team1}</option>
                 <option value="${team2}">${team2}</option>
@@ -129,16 +131,16 @@ function showPredictionModal(matchId, team1, team2) {
         <div style="margin-bottom:20px;">
             <label style="display:block; margin-bottom:8px; color:#ccc;">النتيجة المتوقعة (مثال: 2-1)</label>
             <input type="text" id="score-input" placeholder="2-1" 
-                   style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white;">
+                   style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white; box-sizing: border-box;">
         </div>
         
         <div style="display:flex; gap:12px;">
             <button onclick="submitPrediction(${matchId});" 
-                    style="flex:1; padding:14px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold;">
+                    style="flex:1; padding:14px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; box-sizing: border-box;">
                 ✅ تأكيد التوقع
             </button>
             <button onclick="closePredictionModal()" 
-                    style="flex:1; padding:14px; background:#444; border:none; color:white; border-radius:8px;">
+                    style="flex:1; padding:14px; background:#444; border:none; color:white; border-radius:8px; box-sizing: border-box;">
                 إلغاء
             </button>
         </div>
@@ -161,7 +163,7 @@ function submitPrediction(matchId) {
         return;
     }
     
-    alert(`✅ تم حفظ توقعك للمباراة رقم ${matchId}\nالفائز: ${winner}\nالنتيجة: ${score}`);
+    alert(\`✅ تم حفظ توقعك للمباراة رقم ${matchId}\nالفائز: ${winner}\nالنتيجة: ${score}\`);
     closePredictionModal();
 }
 
