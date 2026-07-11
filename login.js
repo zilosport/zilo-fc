@@ -1,5 +1,5 @@
 // ==========================================
-// 📱 login.js - النسخة النهائية والكاملة
+// 📱 login.js - النسخة النهائية والكاملة (مربوطة بالترتيب)
 // ==========================================
 
 window.tempSelectedClubs = window.tempSelectedClubs || [];
@@ -152,7 +152,7 @@ window.showClubsForCountry = function(countryKey) {
     const mainContent = document.getElementById("main-content");
 
     let clubsHtml = clubs.map(club => {
-        // 🛠️ الإصلاح هنا: تحويل الـ ID إلى نص لضمان تطابق البيانات
+        // 🛠️ تحويل الـ ID إلى نص لضمان تطابق البيانات
         const stringClubId = String(club.id);
         const isSelected = window.tempSelectedClubs.some(id => String(id) === stringClubId);
         
@@ -202,7 +202,7 @@ window.showClubsForCountry = function(countryKey) {
 
 // ====================== اختيار / إلغاء اختيار النادي ======================
 window.toggleClubSelection = function(clubId, countryKey) {
-    // 🛠️ الإصلاح هنا: البحث الدقيق عن الـ ID كنص
+    // 🛠️ البحث الدقيق عن الـ ID كنص
     const stringClubId = String(clubId);
     const index = window.tempSelectedClubs.findIndex(id => String(id) === stringClubId);
     
@@ -240,12 +240,40 @@ window.confirmLogin = async function() {
     // 3. حفظ البيانات في قاعدة البيانات (Supabase)
     if (typeof supabaseClient !== 'undefined' && userState.userId) {
         try {
+            // أ. حفظ البيانات الأساسية في جدول (users)
             await supabaseClient.from('users').upsert({
                 telegram_id: userState.userId,
                 username: userState.username,
                 selected_clubs: userState.selectedClubs,
                 lang: userState.lang
             }, { onConflict: 'telegram_id' });
+
+            // ب. جلب نقاط المستخدم الحالية (لضمان نقل الـ 1500 نقطة بدقة)
+            let startingPoints = 1500;
+            const { data: userData } = await supabaseClient
+                .from('users')
+                .select('points')
+                .eq('telegram_id', userState.userId)
+                .single();
+            
+            if (userData && userData.points) {
+                startingPoints = userData.points;
+            }
+
+            // ج. تسجيل المستخدم في جدول ترتيب المشجعين (لكل نادي اختاره)
+            const rankingsData = userState.selectedClubs.map(clubId => ({
+                telegram_id: userState.userId,
+                club_id: String(clubId),
+                total_fan_points: startingPoints,
+                points_activity: 0,
+                referrals_count: 0
+            }));
+
+            // إرسال البيانات فوراً لجدول (club_fans_rankings)
+            await supabaseClient.from('club_fans_rankings').upsert(rankingsData);
+            
+            console.log("✅ تم تسجيل بيانات الدخول وإضافة المستخدم لجدول الترتيب بنجاح!");
+
         } catch (error) {
             console.error("⚠️ خطأ في حفظ بيانات الدخول:", error);
         }
