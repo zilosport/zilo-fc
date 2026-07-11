@@ -1,5 +1,5 @@
 // ==========================================
-// 🚀 تطبيق زيلو إف سي (ZELO FC) - الكود الأساسي (app.js) المحُدّث
+// 🚀 تطبيق زيلو إف سي (ZELO FC) - الكود الأساسي (app.js) المحُدّث (بدون زر تغيير اللغة)
 // ==========================================
 
 // 1. إعداد الاتصال بقاعدة بيانات Supabase
@@ -21,10 +21,9 @@ let userState = {
     walletAddress: null,
     walletBalance: "0.00",
     hasLoggedIn: false,
-    lang: "ar",
+    lang: "ar", // اللغة الافتراضية، سيتم تحديثها من قاعدة البيانات أو شاشة الدخول
     referrals: [], 
     dailyCheckInClaimed: false,
-    // تم التعديل لدعم المتغير إذا كان داخل window
     tasks: typeof window.defaultTasksData !== "undefined" ? window.defaultTasksData.map(task => ({...task})) : [] 
 };
 
@@ -44,12 +43,12 @@ function getTaskName(task) {
     return userState.lang === 'ar' ? task.textAr : task.textEn;
 }
 
-// تغيير لغة التطبيق بالكامل
-function toggleLanguage() {
-    userState.lang = userState.lang === 'ar' ? 'en' : 'ar';
+// 💡 دالة جديدة لتطبيق إعدادات اللغة على الواجهة بناءً على اختيار المستخدم
+function applyLanguageSettings() {
     document.documentElement.dir = userState.lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = userState.lang;
     
+    // تحديث نصوص القائمة السفلية إذا كانت موجودة
     const navItems = document.querySelectorAll('.nav-item span:not(.icon)');
     if (navItems.length >= 5) {
         navItems[0].innerText = t('navHome');
@@ -57,27 +56,6 @@ function toggleLanguage() {
         navItems[2].innerText = t('navFriends');
         navItems[3].innerText = t('navLeaderboard');
         navItems[4].innerText = t('navWallet');
-    }
-    
-    updateTopBar();
-    const activeNav = document.querySelector(".nav-item.active");
-    if (activeNav) {
-        const pageId = activeNav.getAttribute("onclick").match(/'([^']+)'/)[1];
-        showPage(pageId);
-    } else if (!userState.hasLoggedIn) {
-        triggerLoginScreen();
-    }
-}
-
-function injectLangButton() {
-    const topBar = document.querySelector('.top-bar');
-    if(topBar && !document.getElementById('lang-btn')) {
-        const langBtn = document.createElement('div');
-        langBtn.id = 'lang-btn';
-        langBtn.innerHTML = '🌐';
-        langBtn.style.cssText = 'position:fixed; top:15px; left:50%; transform:translateX(-50%); font-size:1.5rem; cursor:pointer; z-index:9999;';
-        langBtn.onclick = toggleLanguage;
-        document.body.appendChild(langBtn);
     }
 }
 
@@ -102,11 +80,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 userState.photoUrl = tgUser.photo_url;
             }
             
+            // تحديد اللغة المبدئية من تليجرام (سيتم الكتابة فوقها إذا كان مسجلاً في قاعدة البيانات)
             if (tgUser.language_code && tgUser.language_code.startsWith('en')) {
                 userState.lang = 'en';
             }
         } else {
-            // 🛠️ إضافة بيانات وهمية (Mock Data) للاختبار في المتصفح العادي بدلاً من انهيار التطبيق
             console.warn("⚠️ لم يتم العثور على بيانات تليجرام حقيقية. استخدام بيانات وهمية للاختبار...");
             userState.username = "Local Tester";
             userState.userId = "123456789"; 
@@ -114,13 +92,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 2. ضبط اللغة
-    document.documentElement.dir = userState.lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = userState.lang;
+    // 2. تطبيق إعدادات اللغة المبدئية
+    applyLanguageSettings();
 
-    // 3. تهيئة المحفظة وزر اللغة وجلب البيانات
+    // 3. تهيئة المحفظة وجلب البيانات
     initTonConnect();
-    injectLangButton();
     fetchDataAndRoute();
 });
 
@@ -162,7 +138,7 @@ function initTonConnect() {
     }
 }
 
-// 🔄 دالة جلب البيانات والتوجيه (تم التحسين لمنع التوقف)
+// 🔄 دالة جلب البيانات والتوجيه
 async function fetchDataAndRoute() {
     console.log("🔄 [1] بدء جلب البيانات...");
 
@@ -189,7 +165,11 @@ async function fetchDataAndRoute() {
             console.log("✅ [4] المستخدم موجود في النظام.");
             userState.points = data.points || 0;
             userState.selectedClubs = data.selected_clubs || [];
+            
+            // 💡 جلب لغة المستخدم المحفوظة في قاعدة البيانات وتطبيقها
             userState.lang = data.lang || userState.lang;
+            applyLanguageSettings();
+
             userState.hasLoggedIn = true;
             
             if (data.wallet_address) {
@@ -202,7 +182,7 @@ async function fetchDataAndRoute() {
         }
     } catch (error) {
         console.error("❌ [خطأ] فشل في الاتصال وجلب البيانات:", error);
-        userState.hasLoggedIn = false; // الاستمرار رغم الخطأ لتوجيهه لشاشة الدخول
+        userState.hasLoggedIn = false; 
     }
 
     // التوجيه النهائي
@@ -244,7 +224,6 @@ function triggerLoginScreen() {
 // 🔄 5. التوجيه وتحديث الواجهة الأساسية
 // ==========================================
 
-// 💡 تم تعديل الدالة لتصبح async وتجلب النقاط الحقيقية من جدول الترتيب لمنع مشكلة 1500 نقطة
 async function updateTopBar() {
     const topBar = document.getElementById("top-bar");
     const bottomNav = document.getElementById("bottom-nav");
@@ -254,7 +233,7 @@ async function updateTopBar() {
     const pointsEl = document.getElementById("points");
     const clubEl = document.getElementById("club");
     
-    // 💡 التحقق من الرصيد الحقيقي في جدول الترتيب وتحديثه
+    // التحقق من الرصيد الحقيقي في جدول الترتيب وتحديثه
     if (typeof supabaseClient !== 'undefined' && supabaseClient !== null && userState.userId) {
         try {
             const { data } = await supabaseClient
