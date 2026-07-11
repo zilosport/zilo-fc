@@ -164,36 +164,38 @@
         `;
     };
 
-    // دالة تنفيذ المهمة (مع إصلاح الروابط لتتوافق مع منصة تليجرام)
+    // دالة تنفيذ المهمة (محدثة لفتح الروابط إجبارياً)
     window.executeTask = async function(taskId, url, points) {
         const task = userState.tasks.find(t => t.id === taskId);
         if (!task || task.completed) return;
 
-        // 🛠️ فتح الروابط بالطريقة الرسمية لـ Telegram Web Apps
+        // 🛠️ 1. فتح الرابط بطريقة قوية تدعم جميع المتصفحات وتطبيق تليجرام
         try {
-            const tgApp = window.Telegram?.WebApp || (typeof tg !== "undefined" ? tg : null);
-            
-            if (tgApp && typeof tgApp.openLink === "function") {
-                if (url.includes("t.me") && typeof tgApp.openTelegramLink === "function") {
-                    tgApp.openTelegramLink(url);
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+                // نحن داخل تطبيق تليجرام المصغر
+                if (url.includes("t.me")) {
+                    window.Telegram.WebApp.openTelegramLink(url);
                 } else {
-                    tgApp.openLink(url);
+                    window.Telegram.WebApp.openLink(url);
                 }
             } else {
+                // نحن خارج تليجرام (متصفح ويب عادي)
                 window.open(url, '_blank');
             }
         } catch (e) {
-            console.error("خطأ في فتح الرابط:", e);
+            console.error("خطأ في فتح الرابط، محاولة بديلة:", e);
             window.open(url, '_blank');
         }
 
+        // 🛠️ 2. تعطيل الزر وإظهار حالة التحقق
         const btn = document.getElementById(`btn-task-${taskId}`);
         if (btn) {
-            btn.innerHTML = "⏳";
+            btn.innerHTML = "⏳ التحقق...";
             btn.disabled = true;
         }
 
-        // الانتظار لمحاكاة انضمام المستخدم قبل الحفظ
+        // 🛠️ 3. الانتظار (محاكاة التحقق من انضمام المستخدم)
+        // ملاحظة: هذا الكود ينتظر 4 ثوانٍ ثم يحفظ المهمة، إذا أردت تحققاً حقيقياً يجب بناء API في السيرفر.
         setTimeout(async () => {
             try {
                 // إرسال الطلب لقاعدة البيانات الحقيقية
@@ -222,7 +224,7 @@
                     btn.disabled = false;
                 }
             }
-        }, 4000); // تأخير 4 ثوانٍ
+        }, 4000); // تأخير 4 ثوانٍ للتحقق
     };
 
     // دالة المطالبة اليومية (مربوطة بقاعدة البيانات)
