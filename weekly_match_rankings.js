@@ -3,7 +3,7 @@
  * الوظيفة: عرض الثلاثة الأوائل + ترتيب المستخدم الحالي (الترتيب فقط)
  */
 
-async function renderWeeklyRanking(containerId) {
+window.renderWeeklyRanking = async function(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -65,4 +65,4 @@ async function renderWeeklyRanking(containerId) {
         console.error("خطأ في عرض الترتيب:", error);
         container.innerHTML = `<div style="text-align:center; color: #ff4444; padding: 10px;">تعذر تحميل الترتيب.</div>`;
     }
-}
+};
