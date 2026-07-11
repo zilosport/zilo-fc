@@ -142,3 +142,71 @@ window.shareOnTelegram = function(link) {
         window.open(shareUrl, '_blank');
     }
 };
+
+// ==========================================
+// 🚀 [جديد] دالة معالجة الإحالة وتوزيع النقاط على جميع الجداول
+// ==========================================
+window.apiProcessReferral = async function(referrerId, newUserId) {
+    if (!supabaseClient) return { success: false, message: "لا يوجد اتصال بقاعدة البيانات" };
+    const rewardPoints = 500; // نقاط الإحالة الثابتة
+
+    try {
+        // 1. تسجيل الإحالة في جدول referrals (لتجنب التكرار إذا سجل نفس الشخص مرتين)
+        const { error: refError } = await supabaseClient
+            .from('referrals')
+            .insert([{ referrer_id: referrerId, referred_id: newUserId, reward_points: rewardPoints }]);
+
+        if (refError) {
+            // كود 23505 يعني أن الصديق مسجل مسبقاً כـ referred_id (تمت مكافأة الداعي سابقاً)
+            if (refError.code === '23505') return { success: true, alreadyProcessed: true }; 
+            throw refError;
+        }
+
+        // 2. جلب النقاط الحالية للداعي (referrer_id) لضمان عدم ضياع أي نقاط سابقة
+        let currentPoints = 0;
+        const { data: userData, error: fetchError } = await supabaseClient
+            .from('users')
+            .select('points')
+            .eq('telegram_id', referrerId);
+
+        if (!fetchError && userData && userData.length > 0) {
+            currentPoints = parseInt(userData[0].points) || 0;
+        }
+
+        const newTotalPoints = currentPoints + rewardPoints;
+
+        // 3. تحديث جدول المستخدمين (users) للداعي
+        const { error: userUpsertError } = await supabaseClient
+            .from('users')
+            .upsert(
+                { telegram_id: referrerId, points: newTotalPoints },
+                { onConflict: 'telegram_id' }
+            );
+
+        if (userUpsertError) throw userUpsertError;
+
+        // 4. تحديث جدول الأندية (club_fans_rankings) بطريقة آمنة تماماً مثل المهام
+        const { data: clubData, error: clubFetchError } = await supabaseClient
+            .from('club_fans_rankings')
+            .select('total_fan_points')
+            .eq('telegram_id', referrerId);
+
+        if (!clubFetchError && clubData && clubData.length > 0) {
+            const { error: clubUpdateError } = await supabaseClient
+                .from('club_fans_rankings')
+                .update({ total_fan_points: newTotalPoints })
+                .eq('telegram_id', referrerId);
+
+            if (clubUpdateError) {
+                console.error("❌ خطأ في تحديث نقاط نادي الداعي:", clubUpdateError);
+            }
+        }
+
+        console.log(`🎉 تمت معالجة الإحالة بنجاح! إضافة ${rewardPoints} للداعي: ${referrerId}`);
+        return { success: true, pointsAdded: rewardPoints };
+
+    } catch (error) {
+        console.error("❌ خطأ في عملية معالجة الإحالة:", error);
+        return { success: false };
+    }
+};
