@@ -1,6 +1,7 @@
 /**
  * ملف: weekly_match_rankings.js
  * الوظيفة: عرض الثلاثة الأوائل + ترتيب المستخدم الحالي (الترتيب فقط)
+ * التحديث: دعم الترجمة الثنائية (عربي/إنجليزي) وتصحيح الاتجاهات
  */
 
 window.renderWeeklyRanking = async function(containerId) {
@@ -8,9 +9,12 @@ window.renderWeeklyRanking = async function(containerId) {
     if (!container) return;
 
     const currentUserId = userState.userId; 
+    const isAr = userState.lang === 'ar'; // التحقق من لغة المستخدم
 
     // إظهار حالة التحميل
-    container.innerHTML = `<div style="text-align:center; color: #888; padding: 15px;">⏳ جاري جلب الترتيب...</div>`;
+    container.innerHTML = `<div style="text-align:center; color: #888; padding: 15px; direction: ${isAr ? 'rtl' : 'ltr'};">
+        ${isAr ? '⏳ جاري جلب الترتيب...' : '⏳ Fetching ranking...'}
+    </div>`;
 
     try {
         // 1. جلب أول 3 لاعبين (المنصة)
@@ -38,9 +42,9 @@ window.renderWeeklyRanking = async function(containerId) {
         // 3. بناء الواجهة
         const html = `
             <style>
-                .podium { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+                .podium { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; direction: ${isAr ? 'rtl' : 'ltr'}; }
                 .winner { text-align: center; background: #1c1c22; padding: 10px; border-radius: 10px; width: 30%; border: 1px solid #333; }
-                .my-rank-card { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+                .my-rank-card { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); direction: ${isAr ? 'rtl' : 'ltr'}; }
             </style>
 
             <div class="podium">
@@ -50,19 +54,26 @@ window.renderWeeklyRanking = async function(containerId) {
                         <div style="font-size: 0.75rem; font-weight: bold; margin: 5px 0; overflow: hidden; text-overflow: ellipsis;">${p.users.username}</div>
                         <div style="color: #ffd700; font-size: 0.85rem; font-weight: bold;">${p.points_earned}</div>
                     </div>
-                `).join('') : '<div style="color:#666;">لا توجد بيانات ترتيب حالياً</div>'}
+                `).join('') : `<div style="color:#666;">${isAr ? 'لا توجد بيانات ترتيب حالياً' : 'No ranking data available'}</div>`}
             </div>
 
             <div class="my-rank-card">
-                <div style="font-size: 0.9rem;">أنت حالياً في المركز: <b style="font-size: 1.1rem;">#${myRank || 'غير مصنف'}</b></div>
-                <div style="font-size: 0.8rem; margin-top: 5px; opacity: 0.9;">نقاطك: ${myData ? myData.points_earned : 0} ZELO</div>
+                <div style="font-size: 0.9rem;">
+                    ${isAr ? 'أنت حالياً في المركز:' : 'You are currently ranked:'} 
+                    <b style="font-size: 1.1rem;">#${myRank || (isAr ? 'غير مصنف' : 'Unranked')}</b>
+                </div>
+                <div style="font-size: 0.8rem; margin-top: 5px; opacity: 0.9;">
+                    ${isAr ? 'نقاطك:' : 'Your points:'} ${myData ? myData.points_earned : 0} ZELO
+                </div>
             </div>
         `;
 
         container.innerHTML = html;
 
     } catch (error) {
-        console.error("خطأ في عرض الترتيب:", error);
-        container.innerHTML = `<div style="text-align:center; color: #ff4444; padding: 10px;">تعذر تحميل الترتيب.</div>`;
+        console.error(isAr ? "خطأ في عرض الترتيب:" : "Error displaying ranking:", error);
+        container.innerHTML = `<div style="text-align:center; color: #ff4444; padding: 10px; direction: ${isAr ? 'rtl' : 'ltr'};">
+            ${isAr ? 'تعذر تحميل الترتيب.' : 'Failed to load ranking.'}
+        </div>`;
     }
 };
