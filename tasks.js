@@ -32,7 +32,7 @@
                 throw taskError;
             }
 
-            // 2. استخدام دالة (RPC) التي أنشأتها لتحديث النقاط والسجل معاً
+            // 2. استخدام دالة (RPC) لتحديث النقاط والسجل معاً
             const { error: pointsError } = await supabaseClient.rpc('add_user_points', {
                 p_telegram_id: userState.userId,
                 p_amount: points,
@@ -84,6 +84,11 @@
     async function syncTasksFromDB() {
         if (!supabaseClient || !userState.userId) return;
 
+        // تأمين مصفوفة المهام محلياً قبل المزامنة لعدم حدوث Uncaught TypeError
+        if (!userState.tasks || userState.tasks.length === 0) {
+            userState.tasks = window.defaultTasksData.map(t => ({...t}));
+        }
+
         try {
             // جلب المهام المكتملة
             const { data: tasksData } = await supabaseClient
@@ -108,12 +113,17 @@
             if (userData && userData.last_daily_claim) {
                 const lastClaim = new Date(userData.last_daily_claim);
                 const now = new Date();
-                const diffHours = Math.abs(now - lastClaim) / 36e5;
+                
+                // تعديل مأمون لحساب فارق الوقت بالاعتماد على الـ Timestamp بالملي ثانية
+                const diffHours = Math.abs(now.getTime() - lastClaim.getTime()) / 36e5;
+                
                 if (diffHours < 24) {
                     userState.dailyCheckInClaimed = true;
                 } else {
                     userState.dailyCheckInClaimed = false;
                 }
+            } else {
+                userState.dailyCheckInClaimed = false;
             }
         } catch (error) {
             console.error("❌ خطأ في مزامنة بيانات المهام:", error);
@@ -125,7 +135,7 @@
     // ==========================================
 
     window.renderTasksPage = async function(container) {
-        // تهيئة المهام إذا كانت فارغة
+        // تهيئة مبدئية للمهام
         if (!userState.tasks || userState.tasks.length === 0) {
             userState.tasks = window.defaultTasksData.map(t => ({...t}));
         }
@@ -164,22 +174,20 @@
         `;
     };
 
-    // دالة تنفيذ المهمة (محدثة لتحديث الحساب والترتيب محلياً فوراً)
+    // دالة تنفيذ المهمة
     window.executeTask = async function(taskId, url, points) {
         const task = userState.tasks.find(t => t.id === taskId);
         if (!task || task.completed) return;
 
-        // 🛠️ 1. فتح الرابط بطريقة قوية تدعم جميع المتصفحات وتطبيق تليجرام
+        // 🛠️ 1. فتح الرابط بطريقة تدعم جميع المتصفحات وتطبيق تليجرام المصغر
         try {
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
-                // نحن داخل تطبيق تليجرام المصغر
                 if (url.includes("t.me")) {
                     window.Telegram.WebApp.openTelegramLink(url);
                 } else {
                     window.Telegram.WebApp.openLink(url);
                 }
             } else {
-                // نحن خارج تليجرام (متصفح ويب عادي)
                 window.open(url, '_blank');
             }
         } catch (e) {
@@ -197,23 +205,18 @@
         // 🛠️ 3. الانتظار (محاكاة التحقق من انضمام المستخدم)
         setTimeout(async () => {
             try {
-                // إرسال الطلب لقاعدة البيانات الحقيقية
                 const response = await apiVerifyTask(taskId, points);
                 
                 if (response.success) {
                     task.completed = true;
-                    userState.points += points; // هذا يزيد الرصيد العام محلياً
+                    userState.points = (userState.points || 0) + points; 
                     
-                    // 💡 تحديث الترتيب محلياً فوراً دون الحاجة لتحديث الصفحة
-                    if(window.renderLeaderboardPage) { /* لا يحتاج كود إضافي هنا */ }
-                    
-                    // تحديث الواجهة فوراً
                     if (typeof updateTopBar === "function") updateTopBar();
                     
                     const doneMsg = typeof t === "function" ? t('alertTaskDone') : 'تم إضافة النقاط بنجاح:';
                     alert(`🎉 ${doneMsg} ${points} ZELO FC.`);
                     
-                    renderTasksPage(document.getElementById("main-content")); // إعادة رسم الصفحة
+                    renderTasksPage(document.getElementById("main-content")); 
                 } else {
                     alert("حدث خطأ أثناء حفظ المهمة، يرجى المحاولة لاحقاً.");
                     if (btn) {
@@ -228,7 +231,7 @@
                     btn.disabled = false;
                 }
             }
-        }, 4000); // تأخير 4 ثوانٍ للتحقق
+        }, 4000); 
     };
 
     // دالة المطالبة اليومية (مربوطة بقاعدة البيانات)
@@ -246,7 +249,7 @@
 
             if (response.success) {
                 userState.dailyCheckInClaimed = true;
-                userState.points += response.pointsAdded || 200;
+                userState.points = (userState.points || 0) + (response.pointsAdded || 200);
                 alert(typeof t === "function" ? t('alertDailyDone') : 'تم استلام المكافأة اليومية بنجاح!');
                 if (typeof updateTopBar === "function") updateTopBar();
                 renderTasksPage(document.getElementById("main-content"));
