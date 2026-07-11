@@ -3,8 +3,11 @@
  * الوظيفة: إدارة شاشة تحديات الأسبوع (عرض المباريات + الترتيب + المودال)
  */
 
-// دالة عرض شاشة التحديات (Overlay) - محسنة للـ RTL
-function openChallengesScreen() {
+// دالة عرض شاشة التحديات (Overlay) - محسنة للـ RTL ومربوطة بـ window
+window.openChallengesScreen = function() {
+    // التحقق من عدم وجود شاشة مفتوحة مسبقاً لمنع التكرار
+    if (document.getElementById('challenges-overlay')) return;
+
     const overlay = document.createElement('div');
     overlay.id = 'challenges-overlay';
     overlay.style.cssText = `
@@ -39,7 +42,6 @@ function openChallengesScreen() {
                     ${m.league} • ${matchDate.toLocaleDateString('ar-EG')}
                 </div>
                 
-                <!-- تحسين عرض أسماء الفرق الطويلة -->
                 <div style="font-weight:bold; font-size: 1.15rem; margin: 10px 0; line-height: 1.4; word-break: break-word; overflow-wrap: break-word;">
                     ${m.team1} <span style="color:#ffd700;">VS</span> ${m.team2}
                 </div>
@@ -52,8 +54,8 @@ function openChallengesScreen() {
                     ? `<button disabled style="width:100%; padding:12px; background:#444; color:#888; border:none; border-radius:8px; font-size:0.95rem; box-sizing: border-box;">
                         ❌ تم إغلاق التوقعات
                        </button>`
-                    : `<button onclick="showPredictionModal(${m.id}, '${m.team1}', '${m.team2}')" 
-                        style="width:100%; padding:12px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; font-size:1rem; box-sizing: border-box;">
+                    : `<button onclick="window.showPredictionModal(${m.id}, '${m.team1}', '${m.team2}')" 
+                        style="width:100%; padding:12px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; font-size:1rem; box-sizing: border-box; cursor:pointer;">
                         🚀 تحدي النتيجة
                        </button>`
                 }
@@ -73,7 +75,7 @@ function openChallengesScreen() {
     overlay.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
             <h2 style="margin:0; color:#ffd700;">تحديات الأسبوع</h2>
-            <button onclick="closeChallengesScreen()" 
+            <button onclick="window.closeChallengesScreen()" 
                     style="background:none; border:none; color:white; font-size:1.8rem; cursor:pointer; padding:5px 15px;">✕</button>
         </div>
         
@@ -87,20 +89,22 @@ function openChallengesScreen() {
     document.body.appendChild(overlay);
 
     setTimeout(() => {
-        if (typeof renderLeaderboardSection === "function") {
-            renderLeaderboardSection('overlay-ranking');
+        if (typeof window.renderLeaderboardSection === "function") {
+            window.renderLeaderboardSection('overlay-ranking');
         }
     }, 300);
-}
+};
 
 // دالة إغلاق الـ overlay
-function closeChallengesScreen() {
+window.closeChallengesScreen = function() {
     const overlay = document.getElementById('challenges-overlay');
     if (overlay) overlay.remove();
-}
+};
 
 // مودال التوقع
-function showPredictionModal(matchId, team1, team2) {
+window.showPredictionModal = function(matchId, team1, team2) {
+    if (document.getElementById('prediction-modal')) return;
+
     const modal = document.createElement('div');
     modal.id = 'prediction-modal';
     modal.style.cssText = `
@@ -131,44 +135,44 @@ function showPredictionModal(matchId, team1, team2) {
         <div style="margin-bottom:20px;">
             <label style="display:block; margin-bottom:8px; color:#ccc;">النتيجة المتوقعة (مثال: 2-1)</label>
             <input type="text" id="score-input" placeholder="2-1" 
-                   style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white; box-sizing: border-box;">
+                   style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white; box-sizing: border-box; text-align: left;" dir="ltr">
         </div>
         
         <div style="display:flex; gap:12px;">
-            <button onclick="submitPrediction(${matchId});" 
-                    style="flex:1; padding:14px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; box-sizing: border-box;">
+            <button onclick="window.submitPrediction(${matchId});" 
+                    style="flex:1; padding:14px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; box-sizing: border-box; cursor:pointer;">
                 ✅ تأكيد التوقع
             </button>
-            <button onclick="closePredictionModal()" 
-                    style="flex:1; padding:14px; background:#444; border:none; color:white; border-radius:8px; box-sizing: border-box;">
+            <button onclick="window.closePredictionModal()" 
+                    style="flex:1; padding:14px; background:#444; border:none; color:white; border-radius:8px; box-sizing: border-box; cursor:pointer;">
                 إلغاء
             </button>
         </div>
     `;
 
     document.body.appendChild(modal);
-}
+};
 
-function closePredictionModal() {
+window.closePredictionModal = function() {
     const modal = document.getElementById('prediction-modal');
     if (modal) modal.remove();
-}
+};
 
-function submitPrediction(matchId) {
+window.submitPrediction = function(matchId) {
     const winner = document.getElementById('winner-select').value;
     const score = document.getElementById('score-input').value.trim();
     
     if (!winner || !score) {
-        alert("يرجى اختيار الفائز وكتابة النتيجة");
+        alert("يرجى اختيار الفائز وكتابة النتيجة المتوقعة");
         return;
     }
     
-    alert(\`✅ تم حفظ توقعك للمباراة رقم ${matchId}\nالفائز: ${winner}\nالنتيجة: ${score}\`);
-    closePredictionModal();
-}
+    alert(`✅ تم حفظ توقعك للمباراة بنجاح!\nالفائز: ${winner}\nالنتيجة: ${score}`);
+    window.closePredictionModal();
+};
 
 // دالة عرض الترتيب
-async function renderLeaderboardSection(containerId) {
+window.renderLeaderboardSection = async function(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
     
@@ -177,4 +181,4 @@ async function renderLeaderboardSection(containerId) {
             📊 الترتيب سيظهر هنا (سيتم ربطه بقاعدة البيانات)
         </p>
     `;
-}
+};
