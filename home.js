@@ -1,7 +1,7 @@
 // ==========================================
 // 🏠 الصفحة الرئيسية (home.js) - نسخة محسنة
 // ==========================================
-function renderHomePage(container) {
+window.renderHomePage = function(container) {
     // 1. معالجة بيانات الأندية
     let selectedClubsData = userState.selectedClubs.map(id => {
         if (typeof allWorldCupCountriesClubs !== 'undefined') {
@@ -34,7 +34,7 @@ function renderHomePage(container) {
             <div style="display: flex; align-items: center; gap: 15px;">
                 <img src="${club.logo}" onerror="this.style.display='none'" style="width: 50px; height: 50px; object-fit: contain;">
                 <div>
-                    <h3 style="margin: 0; color: #fff; font-size: 1.2rem;">${getClubName(club)} ${club.countryFlag}</h3>
+                    <h3 style="margin: 0; color: #fff; font-size: 1.2rem;">${typeof getClubName === "function" ? getClubName(club) : club.name} ${club.countryFlag}</h3>
                     <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem;">
                         👥 ${club.members ? club.members.toLocaleString() : '0'}
                     </p>
@@ -67,7 +67,9 @@ function renderHomePage(container) {
 
         <h4 style="color: #aaa; margin: 0 0 10px 0; font-size: 0.9rem;">${userState.lang === 'ar' ? 'أنديتك المفضلة:' : 'Your Supported Clubs:'}</h4>
         ${clubsCardsHtml}
-        <div id="ranking-container" style="margin-top: 20px;"></div>
+        
+        <!-- هنا سيتم رسم بطاقة ترتيب التحديات -->
+        <div id="ranking-container" style="margin-top: 25px;"></div>
     `;
 
     // 4. إضافة حدث النقر + تحقق أمان
@@ -75,20 +77,20 @@ function renderHomePage(container) {
         const challengesCard = document.getElementById('challenges-card');
         if (challengesCard) {
             challengesCard.addEventListener('click', function() {
-                if (typeof openChallengesScreen === "function") {
-                    openChallengesScreen();
+                if (typeof window.openChallengesScreen === "function") {
+                    window.openChallengesScreen();
                 } else {
-                    console.error("❌ خطأ: دالة openChallengesScreen غير معرفة! تأكد من تحميل predictions_ranking.js قبل home.js");
+                    console.error("❌ خطأ: دالة openChallengesScreen غير معرفة!");
                     alert("يرجى تحديث الصفحة أو التحقق من ترتيب تحميل الملفات");
                 }
             });
         }
 
-        // استدعاء الترتيب
-        if (typeof renderWeeklyRanking === "function") {
-            renderWeeklyRanking('ranking-container');
+        // استدعاء دالة بطاقة الترتيب الجديدة بدلاً من القديمة
+        if (typeof window.renderHomeRankingWidget === "function") {
+            window.renderHomeRankingWidget('ranking-container');
         } else {
-            console.warn("⚠️ دالة renderWeeklyRanking غير موجودة");
+            console.warn("⚠️ دالة renderHomeRankingWidget غير موجودة");
         }
     }, 200);
-}
+};
