@@ -16,7 +16,7 @@
     // 🔄 دوال الاتصال بقاعدة البيانات (API Calls)
     // ==========================================
 
-    // أ. دالة إرسال تأكيد إتمام المهمة لـ Supabase
+    // أ. دالة إرسال تأكيد إتمام المهمة لـ Supabase (تم التعديل هنا لضمان حفظ النقاط)
     async function apiVerifyTask(taskId, points) {
         if (!supabaseClient) return { success: false, message: "لا يوجد اتصال بقاعدة البيانات" };
         
@@ -32,15 +32,33 @@
                 throw taskError;
             }
 
-            // 2. استخدام دالة (RPC) لتحديث النقاط والسجل معاً
-            const { error: pointsError } = await supabaseClient.rpc('add_user_points', {
-                p_telegram_id: userState.userId,
-                p_amount: points,
-                p_source: 'task',
-                p_description: `إتمام مهمة: ${taskId}`
-            });
+            // 2. جلب النقاط الحالية للمستخدم لضمان التحديث الصحيح
+            const { data: userData, error: fetchError } = await supabaseClient
+                .from('users')
+                .select('points')
+                .eq('telegram_id', userState.userId)
+                .single();
 
-            if (pointsError) throw pointsError;
+            if (fetchError) throw fetchError;
+
+            // تحويل القيم إلى أرقام صحيحة لضمان الجمع وتجنب الأصفار
+            const currentPoints = parseInt(userData.points) || 0;
+            const pointsToAdd = parseInt(points) || 0;
+            const newPoints = currentPoints + pointsToAdd;
+
+            // 3. التحديث المباشر للنقاط في جدول المستخدمين
+            const { error: updateError } = await supabaseClient
+                .from('users')
+                .update({ points: newPoints })
+                .eq('telegram_id', userState.userId);
+
+            if (updateError) throw updateError;
+
+            // 4. تحديث جدول الأندية (تطابق النقاط)
+            await supabaseClient
+                .from('club_fans_rankings')
+                .update({ total_fan_points: newPoints })
+                .eq('telegram_id', userState.userId);
 
             return { success: true, alreadyDone: false };
         } catch (error) {
