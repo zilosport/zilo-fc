@@ -54,7 +54,38 @@ const i18n = {
         walletConnectSub: "قم بربط محفظة التليجرام الآمنة الحقيقية لاستقبال مكافآت عملات Zilo FC.",
         btnConnect: "💎 اتصل بمحفظتك الحقيقية (TON Connect)",
         alertDisconnect: "هل تريد قطع اتصال المحفظة الحالية؟",
-        alertDisconnected: "تم قطع الاتصال بنجاح."
+        alertDisconnected: "تم قطع الاتصال بنجاح.",
+
+        // ==========================================
+        // 🆕 الإضافات الجديدة (من الملفات الثلاثة)
+        // ==========================================
+        // 1. التحديات والتوقعات
+        weeklyChallenges: "تحديات الأسبوع",
+        predictionsClosed: "❌ تم إغلاق التوقعات",
+        predictScoreBtn: "🚀 تحدي النتيجة",
+        predictMatchTitle: "توقع نتيجة المباراة",
+        whoWillWin: "من سيفوز؟",
+        selectWinner: "اختر...",
+        drawMatch: "تعادل",
+        predictedScore: "النتيجة المتوقعة (مثال: 2-1)",
+        confirmPrediction: "✅ تأكيد التوقع",
+        cancelBtn: "إلغاء",
+        validationError: "يرجى اختيار الفائز وكتابة النتيجة المتوقعة",
+        predictionSuccess: "✅ تم حفظ توقعك للمباراة بنجاح!\nالفائز: {winner}\nالنتيجة: {score}",
+
+        // 2. الترتيب الأسبوعي
+        fetchingRanking: "⏳ جاري جلب الترتيب...",
+        noRankingData: "لا توجد بيانات ترتيب حالياً",
+        userCurrentRank: "أنت حالياً في المركز:",
+        unranked: "غير مصنف",
+        yourPoints: "نقاطك:",
+        failedLoadRanking: "تعذر تحميل الترتيب.",
+
+        // 3. نصوص إضافية لقسم الأصدقاء
+        fetchingFriends: "جاري جلب بيانات الأصدقاء من السيرفر...",
+        newFriend: "صديق جديد",
+        emptyFriendsState: "لم تقم بدعوة أي أصدقاء حتى الآن.<br>شارك رابطك لتبدأ بجمع نقاط ZELO FC!",
+        dbConnectionError: "تعذر الاتصال بقاعدة البيانات. يرجى المحاولة لاحقاً."
     },
     en: {
         welcomeTitle: "Welcome to Zelo Sport",
@@ -107,7 +138,38 @@ const i18n = {
         walletConnectSub: "Connect your secure Telegram Wallet to receive Zilo FC token rewards.",
         btnConnect: "💎 Connect Real Wallet (TON Connect)",
         alertDisconnect: "Do you want to disconnect the current wallet?",
-        alertDisconnected: "Disconnected successfully."
+        alertDisconnected: "Disconnected successfully.",
+
+        // ==========================================
+        // 🆕 New Additions (From the 3 files)
+        // ==========================================
+        // 1. Challenges & Predictions
+        weeklyChallenges: "Weekly Challenges",
+        predictionsClosed: "❌ Predictions Closed",
+        predictScoreBtn: "🚀 Predict Score",
+        predictMatchTitle: "Predict Match Result",
+        whoWillWin: "Who will win?",
+        selectWinner: "Select...",
+        drawMatch: "Draw",
+        predictedScore: "Predicted Score (e.g., 2-1)",
+        confirmPrediction: "✅ Confirm",
+        cancelBtn: "Cancel",
+        validationError: "Please select a winner and enter the predicted score",
+        predictionSuccess: "✅ Your prediction has been saved successfully!\nWinner: {winner}\nScore: {score}",
+
+        // 2. Weekly Rankings
+        fetchingRanking: "⏳ Fetching ranking...",
+        noRankingData: "No ranking data available",
+        userCurrentRank: "You are currently ranked:",
+        unranked: "Unranked",
+        yourPoints: "Your points:",
+        failedLoadRanking: "Failed to load ranking.",
+
+        // 3. Additional Friends Strings
+        fetchingFriends: "Fetching friends data from server...",
+        newFriend: "New Friend",
+        emptyFriendsState: "You haven't invited any friends yet.<br>Share your link to start collecting ZELO FC points!",
+        dbConnectionError: "Could not connect to the database. Please try again later."
     }
 };
 
@@ -127,6 +189,6 @@ if (typeof allWorldCupCountriesClubs !== 'undefined') {
 // المهام الافتراضية للتطبيق
 // ==========================================
 const defaultTasksData = [
-    { id: "task1", textAr: "اشترك في قناة Zilo FC", textEn: "Join Zilo FC Channel", reward: 500, link: "https://t.me/zelosport" },
+    { id: "task1", textAr: "اشترك في قناة Zelo FC", textEn: "Join Zilo FC Channel", reward: 500, link: "https://t.me/zelosport" },
     { id: "task2", textAr: "تابعنا على تويتر", textEn: "Follow us on Twitter", reward: 300, link: "https://twitter.com/zelosport" }
 ];
