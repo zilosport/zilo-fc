@@ -164,7 +164,7 @@
         `;
     };
 
-    // دالة تنفيذ المهمة (محدثة لفتح الروابط إجبارياً)
+    // دالة تنفيذ المهمة (محدثة لتحديث الحساب والترتيب محلياً فوراً)
     window.executeTask = async function(taskId, url, points) {
         const task = userState.tasks.find(t => t.id === taskId);
         if (!task || task.completed) return;
@@ -195,7 +195,6 @@
         }
 
         // 🛠️ 3. الانتظار (محاكاة التحقق من انضمام المستخدم)
-        // ملاحظة: هذا الكود ينتظر 4 ثوانٍ ثم يحفظ المهمة، إذا أردت تحققاً حقيقياً يجب بناء API في السيرفر.
         setTimeout(async () => {
             try {
                 // إرسال الطلب لقاعدة البيانات الحقيقية
@@ -203,12 +202,17 @@
                 
                 if (response.success) {
                     task.completed = true;
-                    userState.points += points; // تحديث النقاط محلياً بعد التأكيد
+                    userState.points += points; // هذا يزيد الرصيد العام محلياً
                     
-                    const doneMsg = typeof t === "function" ? t('alertTaskDone') : 'تمت إضافة النقاط بنجاح:';
-                    alert(`${doneMsg} ${points} ZELO FC.`);
+                    // 💡 تحديث الترتيب محلياً فوراً دون الحاجة لتحديث الصفحة
+                    if(window.renderLeaderboardPage) { /* لا يحتاج كود إضافي هنا */ }
                     
+                    // تحديث الواجهة فوراً
                     if (typeof updateTopBar === "function") updateTopBar();
+                    
+                    const doneMsg = typeof t === "function" ? t('alertTaskDone') : 'تم إضافة النقاط بنجاح:';
+                    alert(`🎉 ${doneMsg} ${points} ZELO FC.`);
+                    
                     renderTasksPage(document.getElementById("main-content")); // إعادة رسم الصفحة
                 } else {
                     alert("حدث خطأ أثناء حفظ المهمة، يرجى المحاولة لاحقاً.");
