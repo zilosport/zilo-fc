@@ -139,11 +139,11 @@
         let tasksHtml = userState.tasks.map(task => `
             <div class="task-card" style="display: flex; justify-content: space-between; align-items: center; background: #1c1c22; margin: 8px 0; padding: 14px; border-radius: 12px; border: 1px solid #25252d;">
                 <div>
-                    <h5 style="margin: 0 0 4px 0; color: #fff;">${getTaskName(task)}</h5>
+                    <h5 style="margin: 0 0 4px 0; color: #fff;">${typeof getTaskName === "function" ? getTaskName(task) : (task.textAr || task.textEn)}</h5>
                     <small style="color: #0088cc; font-weight: bold;">+ ${task.points} ZELO FC</small>
                 </div>
                 <button id="btn-task-${task.id}" onclick="executeTask('${task.id}', '${task.url}', ${task.points})" ${task.completed ? 'disabled style="background:#2b2b36; color:#666; border:none; padding:8px 16px; border-radius:8px;"' : 'style="background:#0088cc; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer;"'}>
-                    ${task.completed ? t('btnDone') : t('btnGo')}
+                    ${task.completed ? (typeof t === "function" ? t('btnDone') : 'مكتمل') : (typeof t === "function" ? t('btnGo') : 'انطلق')}
                 </button>
             </div>
         `).join('');
@@ -151,32 +151,39 @@
         container.innerHTML = `
             <div class="daily-reward-card" style="background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 15px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                 <div>
-                    <h4 style="margin: 0; color: #fff;">${t('dailyCheckin')}</h4>
-                    <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #e0e0e0;">${t('dailyCheckinSub')}</p>
+                    <h4 style="margin: 0; color: #fff;">${typeof t === "function" ? t('dailyCheckin') : 'المكافأة اليومية'}</h4>
+                    <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #e0e0e0;">${typeof t === "function" ? t('dailyCheckinSub') : 'سجل دخولك يومياً'}</p>
                 </div>
                 <button id="btn-daily-claim" onclick="claimDaily()" ${userState.dailyCheckInClaimed ? 'disabled style="background:#555;"' : 'style="background:#4caf50; color:white; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer;"'}>
-                    ${userState.dailyCheckInClaimed ? t('btnClaimed') : t('btnClaim')}
+                    ${userState.dailyCheckInClaimed ? (typeof t === "function" ? t('btnClaimed') : 'تمت المطالبة') : (typeof t === "function" ? t('btnClaim') : 'مطالبة')}
                 </button>
             </div>
 
-            <h3 style="color:#fff; font-size:1.1rem; margin-bottom:10px;">${t('currentTasks')}</h3>
+            <h3 style="color:#fff; font-size:1.1rem; margin-bottom:10px;">${typeof t === "function" ? t('currentTasks') : 'المهام الحالية'}</h3>
             <div class="tasks-container">${tasksHtml}</div>
         `;
     };
 
-    // دالة تنفيذ المهمة (مع إصلاح الروابط)
+    // دالة تنفيذ المهمة (مع إصلاح الروابط لتتوافق مع منصة تليجرام)
     window.executeTask = async function(taskId, url, points) {
         const task = userState.tasks.find(t => t.id === taskId);
         if (!task || task.completed) return;
 
-        // 🛠️ إصلاح فتح الروابط لتتوافق مع تليجرام
-        if (typeof tg !== "undefined" && tg) {
-            if (url.includes("t.me")) {
-                tg.openTelegramLink(url); // الروابط الداخلية لتليجرام
+        // 🛠️ فتح الروابط بالطريقة الرسمية لـ Telegram Web Apps
+        try {
+            const tgApp = window.Telegram?.WebApp || (typeof tg !== "undefined" ? tg : null);
+            
+            if (tgApp && typeof tgApp.openLink === "function") {
+                if (url.includes("t.me") && typeof tgApp.openTelegramLink === "function") {
+                    tgApp.openTelegramLink(url);
+                } else {
+                    tgApp.openLink(url);
+                }
             } else {
-                tg.openLink(url); // الروابط الخارجية مثل يوتيوب وإكس
+                window.open(url, '_blank');
             }
-        } else {
+        } catch (e) {
+            console.error("خطأ في فتح الرابط:", e);
             window.open(url, '_blank');
         }
 
@@ -195,20 +202,23 @@
                 if (response.success) {
                     task.completed = true;
                     userState.points += points; // تحديث النقاط محلياً بعد التأكيد
-                    alert(`${t('alertTaskDone')} ${points} ZELO FC.`);
-                    updateTopBar();
+                    
+                    const doneMsg = typeof t === "function" ? t('alertTaskDone') : 'تمت إضافة النقاط بنجاح:';
+                    alert(`${doneMsg} ${points} ZELO FC.`);
+                    
+                    if (typeof updateTopBar === "function") updateTopBar();
                     renderTasksPage(document.getElementById("main-content")); // إعادة رسم الصفحة
                 } else {
                     alert("حدث خطأ أثناء حفظ المهمة، يرجى المحاولة لاحقاً.");
                     if (btn) {
-                        btn.innerHTML = t('btnGo');
+                        btn.innerHTML = typeof t === "function" ? t('btnGo') : 'انطلق';
                         btn.disabled = false;
                     }
                 }
             } catch (error) {
                 console.error("خطأ في الاتصال:", error);
                 if (btn) {
-                    btn.innerHTML = t('btnGo');
+                    btn.innerHTML = typeof t === "function" ? t('btnGo') : 'انطلق';
                     btn.disabled = false;
                 }
             }
@@ -231,13 +241,13 @@
             if (response.success) {
                 userState.dailyCheckInClaimed = true;
                 userState.points += response.pointsAdded || 200;
-                alert(t('alertDailyDone'));
-                updateTopBar();
+                alert(typeof t === "function" ? t('alertDailyDone') : 'تم استلام المكافأة اليومية بنجاح!');
+                if (typeof updateTopBar === "function") updateTopBar();
                 renderTasksPage(document.getElementById("main-content"));
             } else {
                 alert("لم تمر 24 ساعة على آخر تسجيل دخول أو حدث خطأ.");
                 if (btn) {
-                    btn.innerHTML = t('btnClaim');
+                    btn.innerHTML = typeof t === "function" ? t('btnClaim') : 'مطالبة';
                     btn.disabled = false;
                 }
             }
@@ -245,7 +255,7 @@
             console.error("خطأ في الاتصال بالخادم:", error);
             alert("تعذر الاتصال بقاعدة البيانات.");
             if (btn) {
-                btn.innerHTML = t('btnClaim');
+                btn.innerHTML = typeof t === "function" ? t('btnClaim') : 'مطالبة';
                 btn.disabled = false;
             }
         }
