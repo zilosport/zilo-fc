@@ -351,6 +351,18 @@ window.confirmLogin = async function() {
             
             console.log("✅ تم التسجيل بنجاح!");
 
+            // 🚀 ==================== بداية كود الإحالة المضاف ==================== 🚀
+            if (userState.pendingReferrer && typeof window.apiProcessReferral === "function") {
+                console.log("🔄 جاري معالجة نظام الإحالة للمُحيل:", userState.pendingReferrer);
+                
+                // استدعاء دالة الإحالة لتسجيل النقاط والمكافآت
+                window.apiProcessReferral(userState.pendingReferrer, userState.userId);
+                
+                // تنظيف المتغير فوراً لمنع تكرار العملية مستقبلاً
+                userState.pendingReferrer = null; 
+            }
+            // 🚀 ==================== نهاية كود الإحالة المضاف ==================== 🚀
+
         } catch (error) {
             console.error("⚠️ تم إيقاف التوجيه بسبب خطأ:", error);
             if (btn) btn.innerHTML = userState.lang === 'ar' ? 'إعادة المحاولة 🔄' : 'Retry 🔄';
