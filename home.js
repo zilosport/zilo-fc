@@ -82,6 +82,11 @@ window.renderHomePage = async function(container) {
         </div>
     `).join('');
 
+    // متغيرات للترجمة المباشرة للقسم الخاص بالتحديات
+    let titleWeeklyChallenges = typeof t === 'function' ? t('weeklyChallenges') : (userState.lang === 'ar' ? 'تحديات الأسبوع' : 'Weekly Challenges');
+    let textEuropeCups = typeof t === 'function' ? t('europeCups') : (userState.lang === 'ar' ? 'كؤوس أوروبا' : 'European Cups');
+    let textSpainCups = typeof t === 'function' ? t('spainCups') : (userState.lang === 'ar' ? 'كؤوس إسبانيا' : 'Spanish Cups');
+
     // 4. تجميع الصفحة
     container.innerHTML = `
         <div class="profile-section" style="${profileBgStyle} padding: 25px 15px; border-radius: 16px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
@@ -93,14 +98,14 @@ window.renderHomePage = async function(container) {
         <div id="challenges-card" style="cursor: pointer; background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 2px solid #ffd700; display: flex; align-items: center; gap: 15px;">
             <div style="font-size: 3rem;">${primaryClub ? primaryClub.countryFlag : '⚽'}</div>
             <div>
-                <h3 style="color: #ffd700; margin: 0;">${userState.lang === 'ar' ? 'تحديات الأسبوع' : 'Weekly Challenges'}</h3>
-                <p style="color: #fff; font-size: 0.8rem; margin: 5px 0 0 0;">🇪🇺 كؤوس أوروبا | 🇪🇸 كؤوس إسبانيا</p>
+                <h3 style="color: #ffd700; margin: 0;">${titleWeeklyChallenges}</h3>
+                <p style="color: #fff; font-size: 0.8rem; margin: 5px 0 0 0;">🇪🇺 ${textEuropeCups} | 🇪🇸 ${textSpainCups}</p>
             </div>
         </div>
 
         <h4 style="color: #aaa; margin: 0 0 10px 0; font-size: 0.9rem;">${userState.lang === 'ar' ? 'أنديتك المفضلة:' : 'Your Supported Clubs:'}</h4>
         ${clubsCardsHtml}
-        
+      
         <div id="ranking-container" style="margin-top: 25px;"></div>
     `;
 
