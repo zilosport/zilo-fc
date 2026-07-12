@@ -33,9 +33,9 @@ window.openChallengesScreen = function() {
         text-align: ${isAr ? 'right' : 'left'};
     `;
 
-    // محاكاة المباريات (تم استدعاء كؤوس إسبانيا وآسيا من ملف الترجمة)
+    // تم التعديل هنا: استدعاء كؤوس أوروبا بدلاً من آسيا وتغيير الإيموجي
     const matches = [
-        { id: 1, team1Ar: "ريال مدريد", team1En: "Real Madrid", team2Ar: "ليفربول", team2En: "Liverpool", time: "2026-07-11T21:00:00", league: getT('asiaCups') + " 🌏" },
+        { id: 1, team1Ar: "ريال مدريد", team1En: "Real Madrid", team2Ar: "ليفربول", team2En: "Liverpool", time: "2026-07-11T21:00:00", league: getT('europeCups') + " 🇪🇺" },
         { id: 2, team1Ar: "برشلونة", team1En: "Barcelona", team2Ar: "أتلتيكو مدريد", team2En: "Atletico Madrid", time: "2026-07-12T20:00:00", league: getT('spainCups') + " 🇪🇸" }
     ];
 
