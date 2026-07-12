@@ -204,7 +204,6 @@ async function fetchDataAndRoute() {
             }
 
             // 🚀 [جديد] معالجة الإحالة فوراً إذا كان المستخدم مسجلاً بالفعل ولديه إحالة معلقة
-            // يفيد هذا الكود إذا دخل المستخدم من الرابط بعد تسجيله لتأكيد الإحالة (دالة API ستحميه من التكرار)
             if (userState.pendingReferrer && typeof window.apiProcessReferral === "function") {
                 console.log("⚙️ جاري معالجة الإحالة المعلقة لصالح:", userState.pendingReferrer);
                 window.apiProcessReferral(userState.pendingReferrer, userState.userId);
@@ -382,9 +381,13 @@ window.renderRankingScreen = async function(container) {
 
         // 4. رسم البطاقات الخاصة بكل لاعب
         let listHtml = rankings.map((rank, index) => {
-            // تجهيز بيانات اللاعب أو وضع بيانات افتراضية لو لم يتم العثور عليه
+            // تجهيز بيانات اللاعب (الاسم المستعار فقط)
             let userInfo = usersMap[rank.telegram_id] || { username: userState.lang === 'ar' ? 'لاعب مجهول' : 'Unknown Player', photo_url: null };
-            let avatar = userInfo.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userInfo.username)}&background=25252d&color=fff`;
+            let aliasName = userInfo.username;
+            
+            // تجهيز الصورة البديلة في حال لم توجد صورة أو كانت معطلة
+            let defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(aliasName)}&background=25252d&color=fff`;
+            let avatar = userInfo.photo_url || defaultAvatar;
             
             // تمييز بطاقة المستخدم الحالي بلون مختلف
             let isMe = String(rank.telegram_id) === String(userState.userId);
@@ -403,10 +406,13 @@ window.renderRankingScreen = async function(container) {
                 <div style="${cardStyle} border-radius: 16px; padding: 15px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div style="font-size: 1.2rem; font-weight: bold; color: ${rankColor}; width: 30px; text-align: center;">${rankBadge}</div>
-                        <img src="${avatar}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid ${isMe ? '#ffd700' : '#333'};">
+                        
+                        <!-- استخدام onerror لعرض الصورة البديلة فوراً إذا كانت صورة تيليجرام معطلة -->
+                        <img src="${avatar}" onerror="this.onerror=null; this.src='${defaultAvatar}';" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid ${isMe ? '#ffd700' : '#333'};">
+                        
                         <div>
-                            <h4 style="margin: 0; color: #fff; font-size: 1rem;">${userInfo.username} ${isMe ? `<span style="color:#ffd700; font-size:0.8rem;">${youText}</span>` : ''}</h4>
-                            <p style="margin: 4px 0 0 0; color: #aaa; font-size: 0.8rem;">ID: ${rank.telegram_id}</p>
+                            <!-- تم إخفاء الـ ID والاكتفاء بعرض الاسم المستعار فقط -->
+                            <h4 style="margin: 0; color: #fff; font-size: 1rem;">${aliasName} ${isMe ? `<span style="color:#ffd700; font-size:0.8rem;">${youText}</span>` : ''}</h4>
                         </div>
                     </div>
                     <div style="text-align: center; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 12px;">
