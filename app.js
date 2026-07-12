@@ -336,28 +336,116 @@ function showPage(pageId) {
 }
 
 // ==========================================
-// 🚀 6. دوال النوافذ الإضافية (تم إضافتها لحل مشكلة رسالة التحميل)
+// 🏆 6. دالة جلب وعرض شاشة الترتيب الحقيقية من قاعدة البيانات
 // ==========================================
+window.renderRankingScreen = async function(container) {
+    // 1. إظهار رسالة تحميل أثناء جلب البيانات
+    container.innerHTML = `<div style="text-align:center; padding:50px; color:#aaa;">
+        <div style="font-size: 2rem; margin-bottom: 10px;">⏳</div>
+        ${userState.lang === 'ar' ? 'جاري جلب قائمة المتصدرين...' : 'Fetching leaderboard...'}
+    </div>`;
+
+    try {
+        // 2. سحب البيانات من جدول الترتيب (الأعلى نقاطاً أولاً)
+        const { data: rankings, error } = await supabaseClient
+            .from('weekly_match_rankings')
+            .select('*')
+            .order('points_earned', { ascending: false }) // ترتيب تنازلي حسب النقاط
+            .limit(50); // جلب أعلى 50 لاعب
+
+        if (error) throw error;
+
+        // في حال كان الجدول فارغاً
+        if (!rankings || rankings.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:50px; color:#fff;">
+                    <h2 style="font-size: 2rem; margin-bottom: 15px;">🏆 ${userState.lang === 'ar' ? 'الترتيب الأسبوعي' : 'Weekly Ranking'}</h2>
+                    <p style="color: #aaa;">${userState.lang === 'ar' ? 'لا توجد بيانات في الترتيب حالياً.' : 'No ranking data available yet.'}</p>
+                    <button onclick="showPage('home')" style="margin-top: 20px; padding: 12px 24px; background: #333; color: white; border: none; border-radius: 12px; cursor: pointer;">
+                        ${userState.lang === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
+                    </button>
+                </div>`;
+            return;
+        }
+
+        // 3. سحب أسماء وصور المستخدمين بناءً على الـ ID
+        const userIds = rankings.map(r => r.telegram_id);
+        const { data: usersData } = await supabaseClient
+            .from('users')
+            .select('telegram_id, username, photo_url')
+            .in('telegram_id', userIds);
+
+        let usersMap = {};
+        if (usersData) {
+            usersData.forEach(u => { usersMap[u.telegram_id] = u; });
+        }
+
+        // 4. رسم البطاقات الخاصة بكل لاعب
+        let listHtml = rankings.map((rank, index) => {
+            // تجهيز بيانات اللاعب أو وضع بيانات افتراضية لو لم يتم العثور عليه
+            let userInfo = usersMap[rank.telegram_id] || { username: userState.lang === 'ar' ? 'لاعب مجهول' : 'Unknown Player', photo_url: null };
+            let avatar = userInfo.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userInfo.username)}&background=25252d&color=fff`;
+            
+            // تمييز بطاقة المستخدم الحالي بلون مختلف
+            let isMe = String(rank.telegram_id) === String(userState.userId);
+            let cardStyle = isMe 
+                ? 'background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700;' 
+                : 'background: #1c1c22; border: 1px solid #25252d;';
+
+            // تحديد شكل المرتبة (أول 3 مراكز لهم كؤوس)
+            let rankBadge = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+            let rankColor = index < 3 ? '#fff' : '#888';
+
+            let youText = userState.lang === 'ar' ? '(أنت)' : '(You)';
+            let pointsText = userState.lang === 'ar' ? 'نقطة' : 'Pts';
+
+            return `
+                <div style="${cardStyle} border-radius: 16px; padding: 15px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="font-size: 1.2rem; font-weight: bold; color: ${rankColor}; width: 30px; text-align: center;">${rankBadge}</div>
+                        <img src="${avatar}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid ${isMe ? '#ffd700' : '#333'};">
+                        <div>
+                            <h4 style="margin: 0; color: #fff; font-size: 1rem;">${userInfo.username} ${isMe ? `<span style="color:#ffd700; font-size:0.8rem;">${youText}</span>` : ''}</h4>
+                            <p style="margin: 4px 0 0 0; color: #aaa; font-size: 0.8rem;">ID: ${rank.telegram_id}</p>
+                        </div>
+                    </div>
+                    <div style="text-align: center; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 12px;">
+                        <div style="color: #ffd700; font-weight: bold; font-size: 1.1rem;">${rank.points_earned || 0}</div>
+                        <div style="color: #aaa; font-size: 0.7rem;">${pointsText}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // 5. عرض الصفحة بالكامل
+        container.innerHTML = `
+            <div style="padding: 20px; padding-bottom: 80px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                    <h2 style="color: white; margin: 0; font-size: 1.5rem;">🏆 ${userState.lang === 'ar' ? 'ترتيب المتصدرين' : 'Leaderboard'}</h2>
+                    <button onclick="showPage('home')" style="background: none; border: none; color: #aaa; font-size: 1.5rem; cursor: pointer;">✖</button>
+                </div>
+                ${listHtml}
+            </div>
+        `;
+
+    } catch (err) {
+        console.error("❌ خطأ في جلب بيانات الترتيب:", err);
+        container.innerHTML = `
+            <div style="text-align:center; padding:50px; color:#ff4d4d;">
+                <h3>${userState.lang === 'ar' ? 'حدث خطأ!' : 'Error!'}</h3>
+                <p>${userState.lang === 'ar' ? 'لم نتمكن من جلب الترتيب، يرجى المحاولة لاحقاً.' : 'Could not fetch rankings, please try again later.'}</p>
+                <button onclick="showPage('home')" style="margin-top: 20px; padding: 10px 20px; background: #333; color: white; border: none; border-radius: 8px;">
+                    ${userState.lang === 'ar' ? 'عودة' : 'Back'}
+                </button>
+            </div>`;
+    }
+};
 
 window.openRankingScreen = function() {
     console.log("🏆 تم طلب فتح شاشة ترتيب التحديات");
     const contentDiv = document.getElementById("main-content");
     if (contentDiv) {
-        // إذا كان لديك دالة تصميم جاهزة للصفحة (مثل renderRankingScreen)
-        if (typeof renderRankingScreen === "function") {
-            renderRankingScreen(contentDiv);
-        } else {
-            // واجهة مؤقتة لتأكيد عمل الزر حتى تقوم ببرمجة الواجهة النهائية
-            contentDiv.innerHTML = `
-                <div style="padding: 30px 20px; text-align: center; color: white;">
-                    <h2 style="font-size: 2rem; margin-bottom: 15px;">🏆 ${userState.lang === 'ar' ? 'ترتيب التحديات' : 'Challenges Ranking'}</h2>
-                    <p style="color: #ccc; margin-bottom: 25px;">${userState.lang === 'ar' ? 'البيانات جاهزة في قاعدة البيانات، قريباً سيتم عرض الواجهة هنا...' : 'Data is ready, UI coming soon...'}</p>
-                    <button onclick="showPage('home')" style="padding: 12px 24px; background: var(--gradient-primary, linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem;">
-                        ${userState.lang === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
-                    </button>
-                </div>
-            `;
-        }
+        renderRankingScreen(contentDiv);
     }
 };
 
