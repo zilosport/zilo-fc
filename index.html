@@ -6,120 +6,240 @@
     <meta name="theme-color" content="#0b0b0e">
     <title>ZELO FC App</title>
     
+    <!-- استدعاء المكتبات الخارجية -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* ==========================================
+           🏟️ تطبيق زيلو إف سي (Zelo Sport) - تصميم الـ VIP
+           ========================================== */
+
+        :root {
+            /* الألوان الأساسية الداكنة */
+            --bg-dark: #0b0b0e;        
+            --bg-card: #16161c;        
+            --text-main: #f8fafc;      
+            --text-muted: #888899;     
+            
+            /* ألوان الهوية البصرية */
+            --accent-gold: #fcb045;
+            --accent-red: #fd1d1d;
+            --accent-purple: #833ab4;
+            
+            /* التدرجات اللونية والتوهج */
+            --gradient-primary: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+            --glow-primary: rgba(253, 29, 29, 0.25);
+            
+            /* تأثير الزجاج */
+            --glass-bg: rgba(22, 22, 28, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.04);
+        }
+
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0b0b0e;
-            color: #fff;
             box-sizing: border-box;
-            overflow-x: hidden;
-            /* منع تحديد النصوص للحصول على إحساس التطبيقات الأصلية (Native) */
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             user-select: none; 
             -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-font-smoothing: antialiased; 
+            overflow-x: hidden;
         }
 
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* حاوية المحتوى الرئيسية */
+        .container {
+            margin-top: 85px; 
+            margin-bottom: 100px;
+            padding: 15px;
+            min-height: calc(100vh - 185px);
+            animation: fadeUp 0.5s ease-out forwards; 
+        }
+
+        /* 👑 الهيدر العلوي */
         .top-bar {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 65px;
-            background: rgba(18, 18, 22, 0.65);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            top: 10px;
+            left: 15px;
+            right: 15px;
+            height: 60px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             padding: 0 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
             z-index: 1000;
-            border-bottom-left-radius: 12px;
-            border-bottom-right-radius: 12px;
         }
 
-        .content-container {
-            margin-top: 75px; 
-            margin-bottom: 75px;
-            padding: 15px;
-            min-height: calc(100vh - 150px);
-            overflow-y: auto;
-        }
-
+        /* 📱 شريط التنقل السفلي الفخم */
         .bottom-nav {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 65px;
-            background: rgba(18, 18, 22, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid #22222a;
+            bottom: 20px;
+            left: 4%;
+            right: 4%;
+            width: 92%;
+            height: 70px;
+            background: rgba(18, 18, 22, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
             display: flex;
             justify-content: space-around;
             align-items: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255,255,255,0.08);
             z-index: 1000;
-            padding-bottom: env(safe-area-inset-bottom); /* دعم خط السحب في أجهزة الآيفون */
         }
 
         .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #888899;
-            font-size: 0.75rem;
-            cursor: pointer;
             background: none;
             border: none;
-            flex: 1;
-            height: 100%;
-            transition: color 0.2s ease;
-            /* إزالة الوميض الأزرق عند الضغط على الجوال */
-            -webkit-tap-highlight-color: transparent; 
+            outline: none;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 20px;
+            color: var(--text-muted);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .nav-item .icon {
-            font-size: 1.4rem;
-            margin-bottom: 2px;
+        .icon-wrapper {
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease, text-shadow 0.3s ease;
+            margin-bottom: 3px;
         }
 
-        .nav-item.active {
-            color: #0088cc;
+        .nav-text {
+            font-size: 0.7rem;
             font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .nav-item:active .icon-wrapper {
+            transform: scale(0.85);
+        }
+
+        /* حالة الزر النشط في الشريط السفلي */
+        .nav-item.active {
+            background: rgba(253, 29, 29, 0.1);
+            color: var(--accent-gold);
+        }
+
+        .nav-item.active .icon-wrapper {
+            transform: scale(1.2) translateY(-2px);
+            text-shadow: 0 0 15px var(--accent-gold);
+        }
+
+        /* 🔘 الأزرار الرئيسية المتوافقة مع app.js */
+        .btn-action {
+            width: 100%;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: bold;
+            font-size: 1.05rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px var(--glow-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-action:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 10px var(--glow-primary);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            background: transparent;
+            color: #aaa;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:active {
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* ✨ تأثيرات حركية للدخول */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
+    <!-- الشريط العلوي الفاخر -->
     <header class="top-bar" id="top-bar" style="display: none;">
-        <div id="club" style="font-size: 0.9rem; color: #e0e0e0;">ناديك: 👑 <b style="color: #fff;">ريال مدريد</b></div>
-        <div id="points" style="font-weight: bold; color: #ffd700; background: rgba(255, 215, 0, 0.1); padding: 5px 10px; border-radius: 8px;">🪙 عملة ZELO: 1,500</div>
+        <div id="club" style="font-size: 0.9rem; color: #e0e0e0; font-weight: bold;">ناديك: 👑 <b style="color: #fff;">ريال مدريد</b></div>
+        <div id="points" style="font-weight: bold; color: var(--accent-gold); background: rgba(252, 176, 69, 0.1); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(252, 176, 69, 0.2);">🪙 1,500</div>
     </header>
 
-    <main class="content-container" id="main-content"></main>
+    <!-- الحاوية الرئيسية (تم تغيير اسمها لتتطابق مع الـ CSS الجديد) -->
+    <main class="container" id="main-content"></main>
 
+    <!-- شريط التنقل السفلي الطافي -->
     <nav class="bottom-nav" id="bottom-nav" style="display: none;">
-        <button class="nav-item active" onclick="showPage('home')"><span class="icon">🏠</span><span>الرئيسية</span></button>
-        <button class="nav-item" onclick="showPage('tasks')"><span class="icon">🛠️</span><span>المهام</span></button>
-        <button class="nav-item" onclick="showPage('friends')"><span class="icon">👥</span><span>الأصدقاء</span></button>
-        <button class="nav-item" onclick="showPage('leaderboard')"><span class="icon">🏆</span><span>الترتيب</span></button>
-        <button class="nav-item" onclick="showPage('wallet')"><span class="icon">👛</span><span>المحفظة</span></button>
+        <button class="nav-item active" onclick="showPage('home')">
+            <span class="icon-wrapper">🏠</span>
+            <span class="nav-text">الرئيسية</span>
+        </button>
+        <button class="nav-item" onclick="showPage('tasks')">
+            <span class="icon-wrapper">🛠️</span>
+            <span class="nav-text">المهام</span>
+        </button>
+        <button class="nav-item" onclick="showPage('friends')">
+            <span class="icon-wrapper">👥</span>
+            <span class="nav-text">الأصدقاء</span>
+        </button>
+        <button class="nav-item" onclick="showPage('leaderboard')">
+            <span class="icon-wrapper">🏆</span>
+            <span class="nav-text">الترتيب</span>
+        </button>
+        <button class="nav-item" onclick="showPage('wallet')">
+            <span class="icon-wrapper">👛</span>
+            <span class="nav-text">المحفظة</span>
+        </button>
     </nav>
 
+    <!-- استدعاء ملفات الجافاسكريبت -->
     <script src="clubsData.js?v=2"></script>
     <script src="data.js?v=2"></script> 
     <script src="countries.js?v=2"></script>
     <script src="login.js?v=2"></script>
     <script src="weekly_ranking.js?v=2"></script>
-   <script src="predictions_ranking.js?v=2"></script> 
+    <script src="predictions_ranking.js?v=2"></script> 
     <script src="home.js?v=2"></script>
     <script src="tasks.js?v=2"></script>
     <script src="leaderboard.js?v=2"></script>
