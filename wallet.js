@@ -1,5 +1,5 @@
 // ==========================================
-// 👛 ملف قسم المحفظة (Wallet) - (مُحدث مع الرصيد الحقيقي)
+// 👛 ملف قسم المحفظة (Wallet) - (مُحدث مع الرصيد الحقيقي وقاعدة البيانات)
 // ==========================================
 
 function renderWalletPage(container) {
@@ -10,7 +10,8 @@ function renderWalletPage(container) {
             <div style="background: linear-gradient(145deg, #16161a, #1c1c22); border: 1px solid rgba(76, 175, 80, 0.4); border-radius: 20px; padding: 30px 20px; text-align: center;">
                 
                 <div style="margin-bottom: 20px;">
-                    <img src="https://ton.org/download/ton_symbol.svg" alt="TON" style="width: 55px; height: 55px;">
+                    <!-- 🚀 تم حل مشكلة الشعار هنا باستخدام رابط PNG موثوق -->
+                    <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" alt="TON" style="width: 55px; height: 55px; object-fit: contain;">
                 </div>
                 
                 <div style="background: #0d0d11; padding: 12px; border-radius: 10px; border: 1px solid #22222a; margin: 10px 0 20px 0;">
@@ -36,7 +37,8 @@ function renderWalletPage(container) {
         container.innerHTML = `
             <div style="background: linear-gradient(145deg, #16161a, #1c1c22); border: 1px solid #25252d; border-radius: 20px; padding: 30px 20px; text-align: center;">
                 <div style="margin-bottom: 20px;">
-                    <img src="https://ton.org/download/ton_symbol.svg" alt="TON" style="width: 55px; height: 55px; filter: grayscale(100%) opacity(0.6);">
+                    <!-- 🚀 تم حل مشكلة الشعار هنا أيضاً -->
+                    <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" alt="TON" style="width: 55px; height: 55px; filter: grayscale(100%) opacity(0.6); object-fit: contain;">
                 </div>
                 <h3 style="color: #fff;">${t('walletConnectTitle')}</h3>
                 <p style="color: #aaa; font-size: 0.9rem; line-height: 1.5; margin-bottom: 30px;">${t('walletConnectSub')}</p>
@@ -71,6 +73,40 @@ async function fetchRealTonBalance(walletAddress) {
 }
 
 // ==========================================
+// 💾 دوال حفظ وحذف المحفظة من قاعدة البيانات
+// ==========================================
+window.saveWalletAddressToDB = async function(walletAddress) {
+    if (typeof supabaseClient === 'undefined' || !walletAddress || !userState.userId) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('users') 
+            .update({ wallet_address: walletAddress }) 
+            .eq('telegram_id', userState.userId);
+
+        if (error) throw error;
+        console.log("✅ تم حفظ عنوان المحفظة بنجاح في قاعدة البيانات:", walletAddress);
+    } catch (err) {
+        console.error("❌ خطأ أثناء حفظ عنوان المحفظة في قاعدة البيانات:", err);
+    }
+};
+
+window.removeWalletAddressFromDB = async function() {
+    if (typeof supabaseClient === 'undefined' || !userState.userId) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('users')
+            .update({ wallet_address: null }) 
+            .eq('telegram_id', userState.userId);
+
+        if (!error) console.log("✅ تم مسح عنوان المحفظة من قاعدة البيانات بنجاح.");
+    } catch (err) {
+        console.error("❌ خطأ أثناء مسح عنوان المحفظة:", err);
+    }
+};
+
+// ==========================================
 // دوال الاتصال وقطع الاتصال
 // ==========================================
 function triggerConnect() {
@@ -82,7 +118,10 @@ function triggerConnect() {
 function triggerDisconnect() {
     if (typeof tonConnectUI !== "undefined" && tonConnectUI && tonConnectUI.connected) {
         if(confirm(t('alertDisconnect'))) {
-            tonConnectUI.disconnect().then(() => {
+            tonConnectUI.disconnect().then(async () => {
+                // 🚀 تنفيذ عملية المسح من قاعدة البيانات عند تأكيد الانفصال
+                await window.removeWalletAddressFromDB();
+                
                 alert(t('alertDisconnected'));
                 showPage('wallet');
             });
