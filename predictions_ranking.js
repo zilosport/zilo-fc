@@ -50,7 +50,7 @@ window.openChallengesScreen = async function() {
                 .from('matches') 
                 .select('id, team_a, team_b, match_date, status, result')
                 .neq('status', 'finished') 
-                .order('match_date', { ascending: true }); // إضافة: ترتيب المباريات حسب الوقت
+                .order('match_date', { ascending: true });
 
             if (!matchesError && matchesData) {
                 dbMatches = matchesData;
@@ -71,16 +71,13 @@ window.openChallengesScreen = async function() {
         return;
     }
 
-    // بناء واجهة المباريات بناءً على البيانات القادمة من قاعدة البيانات
+    // بناء واجهة المباريات
     let matchesHtml = dbMatches.map(m => {
-        // تحويل النص القادم من match_date إلى توقيت حقيقي
         const matchDate = new Date(m.match_date);
         const now = new Date();
         
-        // إضافة: الإغلاق التلقائي بمجرد بدء المباراة أو إذا كانت حالة المباراة LIVE
         const isStarted = now >= matchDate || m.status.toUpperCase() === 'LIVE'; 
         const isClosed = isStarted; 
-        
         const hasPredicted = userState.predictedMatches.includes(m.id);
 
         const team1Name = m.team_a;
@@ -89,6 +86,20 @@ window.openChallengesScreen = async function() {
         const formattedDate = !isNaN(matchDate.getTime()) ? matchDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-US') : '';
         const formattedTime = !isNaN(matchDate.getTime()) ? matchDate.toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : '';
 
+        // تحديد حالة المباراة كنص جميل للمستخدم
+        let statusText = isAr ? 'لم تبدأ بعد ⏳' : 'Not Started ⏳';
+        let statusColor = '#4caf50'; // أخضر
+        if (m.status.toUpperCase() === 'LIVE') {
+            statusText = isAr ? 'جارية الآن 🔴' : 'Live 🔴';
+            statusColor = '#ff4444'; // أحمر
+        } else if (m.status.toUpperCase() === 'FINISHED') {
+            statusText = isAr ? 'انتهت 🏁' : 'Finished 🏁';
+            statusColor = '#888888'; // رمادي
+        } else if (isStarted) {
+            statusText = isAr ? 'انطلق التحدي ⏱️' : 'Started ⏱️';
+            statusColor = '#ff9800'; // برتقالي
+        }
+
         let buttonHtml = '';
         if (hasPredicted) {
             buttonHtml = `<button disabled style="width:100%; padding:12px; background:#4caf50; color:#fff; border:none; border-radius:8px; font-size:1rem; font-weight:bold; box-sizing: border-box;">
@@ -96,28 +107,34 @@ window.openChallengesScreen = async function() {
                           </button>`;
         } else if (isClosed) {
             buttonHtml = `<button disabled style="width:100%; padding:12px; background:#444; color:#888; border:none; border-radius:8px; font-size:0.95rem; box-sizing: border-box;">
-                            ${isStarted && m.status.toUpperCase() === 'LIVE' ? (isAr ? 'المباراة جارية - مغلق' : 'Match Live - Closed') : getT('predictionsClosed')}
+                            ${isAr ? 'تم إغلاق التحدي 🔒' : 'Predictions Closed 🔒'}
                           </button>`;
         } else {
             buttonHtml = `<button id="btn-predict-${m.id}" onclick="window.showPredictionModal(${m.id}, '${team1Name}', '${team2Name}')" 
                             style="width:100%; padding:12px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; font-size:1rem; box-sizing: border-box; cursor:pointer;">
-                            ${getT('predictScoreBtn')}
+                            ${isAr ? 'توقع النتيجة الآن 🎯' : 'Predict Score 🎯'}
                           </button>`;
         }
 
         return `
-            <div style="background:#1c1c22; padding:18px; border-radius:12px; margin-bottom:18px; border: 1px solid #333; box-sizing: border-box;">
-                <div style="font-size: 0.85rem; color:#888; margin-bottom: 8px; display:flex; justify-content:space-between;">
-                    <span>🏆 ${getT('weeklyChallenges')}</span>
-                    <span>${formattedDate}</span>
+            <div style="background:#1c1c22; padding:20px; border-radius:12px; margin-bottom:18px; border: 1px solid #333; box-sizing: border-box; position: relative;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; background: #25252d; padding: 6px 15px; border-radius: 12px 12px 0 0; box-sizing: border-box; display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #333;">
+                    <span style="font-size: 0.8rem; color:#aaa;">🏆 ${getT('weeklyChallenges')}</span>
+                    <span style="font-size: 0.8rem; font-weight:bold; color:${statusColor};">حالة المباراة: ${statusText}</span>
                 </div>
                 
-                <div style="font-weight:bold; font-size: 1.15rem; margin: 10px 0; line-height: 1.4; text-align:center;">
-                    ${team1Name} <span style="color:#ffd700; margin: 0 10px;">VS</span> ${team2Name}
+                <div style="margin-top: 25px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="text-align:center; flex:1;">
+                        <div style="font-weight:bold; font-size: 1.1rem; color:#fff;">${team1Name}</div>
+                    </div>
+                    <div style="font-weight:bold; font-size: 1.2rem; color:#ffd700; margin: 0 15px;">VS</div>
+                    <div style="text-align:center; flex:1;">
+                        <div style="font-weight:bold; font-size: 1.1rem; color:#fff;">${team2Name}</div>
+                    </div>
                 </div>
                 
-                <div style="color:#ffd700; font-size: 0.95rem; margin-bottom: 15px; text-align:center;">
-                    🕒 ${formattedTime}
+                <div style="color:#aaa; font-size: 0.9rem; margin: 15px 0; text-align:center; background:#121215; padding:8px; border-radius:8px;">
+                    📅 ${formattedDate} &nbsp;|&nbsp; 🕒 ${formattedTime}
                 </div>
                 
                 <div id="btn-container-${m.id}">
@@ -128,10 +145,22 @@ window.openChallengesScreen = async function() {
     }).join('');
 
     overlay.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
             <h2 style="margin:0; color:#ffd700;">${getT('weeklyChallenges')}</h2>
             <button onclick="window.closeChallengesScreen()" style="background:none; border:none; color:white; font-size:1.8rem; cursor:pointer;">✕</button>
         </div>
+        <div style="background:#25252d; padding:12px 15px; border-radius:8px; margin-bottom:20px; display:flex; justify-content:space-around; border:1px solid #333;">
+            <div style="text-align:center;">
+                <div style="font-size:0.8rem; color:#888;">نقاطك</div>
+                <div style="font-weight:bold; color:#4caf50;">-</div>
+            </div>
+            <div style="border-left:1px solid #444;"></div>
+            <div style="text-align:center;">
+                <div style="font-size:0.8rem; color:#888;">أخطاؤك</div>
+                <div style="font-weight:bold; color:#ff4444;">- / 2</div>
+            </div>
+        </div>
+        
         <div style="margin-bottom: 30px;">
             ${matchesHtml}
         </div>
@@ -152,17 +181,18 @@ window.showPredictionModal = function(matchId, team1, team2) {
     modal.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
         background: #1c1c22; padding: 25px; border-radius: 16px;
-        z-index: 10000; width: 90%; max-width: 420px; color: white;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        z-index: 10000; width: 90%; max-width: 400px; color: white;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        border: 1px solid #333;
         direction: ${isAr ? 'rtl' : 'ltr'}; box-sizing: border-box;
     `;
 
     modal.innerHTML = `
-        <h3 style="margin:0 0 20px 0; text-align:center; color:#ffd700;">${getT('predictMatchTitle')}</h3>
+        <h3 style="margin:0 0 20px 0; text-align:center; color:#ffd700;">${isAr ? 'أدخل توقعك للمباراة' : 'Enter your prediction'}</h3>
         
         <div style="margin-bottom:15px;">
             <label style="display:block; margin-bottom:8px; color:#ccc;">${getT('whoWillWin')}</label>
-            <select id="winner-select" style="width:100%; padding:12px; background:#25252d; border:none; border-radius:8px; color:white; box-sizing: border-box; direction: ${isAr ? 'rtl' : 'ltr'};">
+            <select id="winner-select" style="width:100%; padding:12px; background:#25252d; border:1px solid #444; border-radius:8px; color:white; box-sizing: border-box; direction: ${isAr ? 'rtl' : 'ltr'}; font-size:1rem;">
                 <option value="">${getT('selectWinner')}</option>
                 <option value="${team1}">${team1}</option>
                 <option value="${team2}">${team2}</option>
@@ -170,27 +200,31 @@ window.showPredictionModal = function(matchId, team1, team2) {
             </select>
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; background:#25252d; padding:15px; border-radius:12px; margin-bottom:25px;">
-            <div style="text-align:center; flex:1;">
-                <label style="display:block; font-size:0.85rem; margin-bottom:10px; font-weight:bold;">${team1}</label>
+        <div style="background:#25252d; padding:20px; border-radius:12px; margin-bottom:25px; border:1px solid #333;">
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:1rem; margin-bottom:10px; font-weight:bold; color:#fff;">
+                    ⚽ ${isAr ? 'تخمين أهداف' : 'Guess'} <span style="color:#0088cc;">${team1}</span>
+                </label>
                 <input type="number" id="score-team1" min="0" placeholder="0" 
-                       style="width:50px; padding:10px; background:#1c1c22; border:1px solid #444; border-radius:8px; color:white; text-align:center; font-size:1.2rem; font-weight:bold;">
+                       style="width:100%; padding:15px; background:#121215; border:1px solid #444; border-radius:8px; color:white; text-align:center; font-size:1.3rem; font-weight:bold; box-sizing: border-box;">
             </div>
-            <div style="font-size:1.5rem; color:#888; padding: 0 10px; margin-top:25px;">-</div>
-            <div style="text-align:center; flex:1;">
-                <label style="display:block; font-size:0.85rem; margin-bottom:10px; font-weight:bold;">${team2}</label>
+            
+            <div>
+                <label style="display:block; font-size:1rem; margin-bottom:10px; font-weight:bold; color:#fff;">
+                    ⚽ ${isAr ? 'تخمين أهداف' : 'Guess'} <span style="color:#0088cc;">${team2}</span>
+                </label>
                 <input type="number" id="score-team2" min="0" placeholder="0" 
-                       style="width:50px; padding:10px; background:#1c1c22; border:1px solid #444; border-radius:8px; color:white; text-align:center; font-size:1.2rem; font-weight:bold;">
+                       style="width:100%; padding:15px; background:#121215; border:1px solid #444; border-radius:8px; color:white; text-align:center; font-size:1.3rem; font-weight:bold; box-sizing: border-box;">
             </div>
         </div>
         
-        <div style="display:flex; gap:12px;">
+        <div style="display:flex; flex-direction: column; gap:12px;">
             <button id="submit-prediction-btn" onclick="window.submitPrediction(${matchId}, '${team1}', '${team2}');" 
-                    style="flex:1; padding:14px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; box-sizing: border-box; cursor:pointer;">
-                ${getT('confirmPrediction')}
+                    style="width:100%; padding:15px; background:#0088cc; border:none; color:white; border-radius:8px; font-weight:bold; font-size:1.1rem; box-sizing: border-box; cursor:pointer;">
+                ${isAr ? 'أرسل التخمين' : 'Submit Prediction'}
             </button>
             <button onclick="window.closePredictionModal()" 
-                    style="flex:1; padding:14px; background:#444; border:none; color:white; border-radius:8px; box-sizing: border-box; cursor:pointer;">
+                    style="width:100%; padding:15px; background:transparent; border:1px solid #444; color:#aaa; border-radius:8px; font-weight:bold; font-size:1rem; box-sizing: border-box; cursor:pointer;">
                 ${getT('cancelBtn')}
             </button>
         </div>
@@ -230,7 +264,6 @@ window.submitPrediction = async function(matchId, team1, team2) {
                         telegram_id: userState.userId, 
                         match_id: matchId, 
                         predicted_score: finalPredictedScore,
-                        // إضافة: حفظ الأهداف بشكل رقمي منفصل لتسهيل عمل الأتمتة (Make.com) في مقارنة النتائج
                         predicted_home: t1Score, 
                         predicted_away: t2Score,
                         points_awarded: 0
@@ -246,13 +279,12 @@ window.submitPrediction = async function(matchId, team1, team2) {
             console.error("❌ خطأ أثناء حفظ التوقع:", err);
             alert("حدث خطأ في الاتصال. يرجى المحاولة لاحقاً.");
             submitBtn.disabled = false;
-            submitBtn.innerText = getT('confirmPrediction');
+            submitBtn.innerText = userState.lang === 'ar' ? 'أرسل التخمين' : 'Submit Prediction';
             return;
         }
     }
 
     let successMsg = getT('predictionSuccess') || 'تم حفظ توقعك بنجاح!';
-    // منع حدوث خطأ إذا لم تكن الترجمة مهيأة بالكامل لعملية الاستبدال
     if (successMsg.includes('{winner}')) {
         successMsg = successMsg.replace('{winner}', winner === 'draw' ? getT('drawMatch') : winner);
         successMsg = successMsg.replace('{score}', `${t1Score} - ${t2Score}`);
