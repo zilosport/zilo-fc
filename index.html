@@ -9,22 +9,22 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- مكتبة الأيقونات الحديثة Lucide -->
+    <!-- 🌟 مكتبة الأيقونات الحديثة Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
         /* ==========================================
-           🏟️ تطبيق زيلو إف سي (Zelo Sport) - نسخة الـ VIP الفاخرة
+           🏟️ تطبيق زيلو إف سي (Zelo Sport) - نسخة الـ VIP الفاخرة المحدثة
            ========================================== */
 
         :root {
-            /* الألوان الأساسية الداكنة */
+            /* الألوان الأساسية الداكنة (للفخامة وراحة العين) */
             --bg-dark: #0b0b0e;        
             --bg-card: #16161c;        
             --text-main: #f8fafc;      
             --text-muted: #888899;     
             
-            /* ألوان الهوية البصرية */
+            /* ألوان الهوية البصرية (الطاقة والحماس) */
             --accent-gold: #fcb045;
             --accent-red: #fd1d1d;
             --accent-purple: #833ab4;
@@ -33,11 +33,12 @@
             --gradient-primary: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
             --glow-primary: rgba(253, 29, 29, 0.25);
             
-            /* تأثير الزجاج */
+            /* تأثير الزجاج (Glassmorphism) */
             --glass-bg: rgba(22, 22, 28, 0.7);
             --glass-border: rgba(255, 255, 255, 0.04);
         }
 
+        /* 🌟 إعدادات التطبيق الأساسية */
         body {
             margin: 0;
             padding: 0;
@@ -58,14 +59,14 @@
         }
 
         .container {
-            margin-top: 85px; 
+            margin-top: 85px;
             padding: 15px;
             padding-bottom: 100px;
             animation: fadeUp 0.5s ease-out forwards;
         }
 
         /* 👑 الهيدر العلوي */
-        .top-bar {
+        .app-header, .top-bar {
             position: fixed;
             top: 10px;
             left: 15px;
@@ -84,14 +85,14 @@
             z-index: 1000;
         }
 
-        /* 📱 شريط التنقل السفلي الفخم */
+        /* 📱 شريط التنقل السفلي الفخم (طائر بتأثير زجاجي متقدم) */
         .bottom-nav {
             position: fixed;
             bottom: 20px;
             left: 4%;
             right: 4%;
             width: 92%;
-            height: 68px;
+            height: 70px; /* تم التعديل لاحتواء الأيقونة والنص */
             background: rgba(18, 18, 22, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -111,11 +112,12 @@
             padding: 0;
             cursor: pointer;
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* 👈 وضع الأيقونة فوق النص */
             justify-content: center;
             align-items: center;
             width: 60px;
             height: 60px;
+            border-radius: 20px; /* تعديل الزوايا لتناسب الشكل الجديد */
             color: var(--text-muted);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -124,37 +126,37 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-bottom: 4px; /* 👈 مسافة بين الأيقونة والنص */
             transition: transform 0.3s ease, filter 0.3s ease;
-            margin-bottom: 3px;
         }
 
         .nav-text {
             font-size: 0.7rem;
             font-weight: bold;
             transition: color 0.3s ease;
+            white-space: nowrap; /* 👈 منع النص من الانقسام لسطرين */
         }
 
         .nav-item:active .icon-wrapper {
             transform: scale(0.85);
         }
 
-        /* 🚀 حالة الزر النشط في الشريط السفلي */
+        /* 🚀 حالة الزر النشط في الشريط السفلي مع تأثير خرافي */
         .nav-item.active {
+            background: rgba(252, 176, 69, 0.15);
             color: var(--accent-gold);
-            background: rgba(252, 176, 69, 0.1);
-            border-radius: 20px;
             animation: pulseGlow 2s infinite;
         }
 
         .nav-item.active .icon-wrapper {
             animation: float 3s ease-in-out infinite;
-            filter: drop-shadow(0 0 8px var(--accent-gold));
+            filter: drop-shadow(0 0 10px var(--accent-gold));
         }
 
         /* ✨ تنسيق الأيقونات الحديثة (SVG) */
         .icon-wrapper svg, i[data-lucide] {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             stroke: currentColor;
             stroke-width: 2.2;
             fill: none;
@@ -166,7 +168,7 @@
             stroke-width: 2.5;
         }
 
-        /* 🃏 تفاعل البطاقات */
+        /* 🃏 تفاعل البطاقات عند اللمس والتمرير */
         .card {
             background: var(--bg-card);
             padding: 20px;
@@ -185,7 +187,7 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 15px rgba(252, 176, 69, 0.1);
         }
 
-        /* 🔘 الأزرار الرئيسية بتأثير الـ VIP */
+        /* 🔘 الأزرار الرئيسية بتأثير الـ VIP والتدرج المتحرك */
         .btn-action {
             position: relative;
             width: 100%;
@@ -243,7 +245,7 @@
             background: rgba(255,255,255,0.05);
         }
 
-        /* ✨ تأثيرات حركية */
+        /* ✨ تأثيرات حركية (Animations) */
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -275,7 +277,7 @@
 </head>
 <body>
 
-    <!-- 🌟 الهيدر العلوي بأيقونات حديثة -->
+    <!-- 🌟 الهيدر العلوي -->
     <header class="top-bar" id="top-bar">
         <div id="club" style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: #e0e0e0; font-weight: bold;">
             <span>ناديك:</span> 
@@ -292,14 +294,14 @@
         <!-- المحتوى يتغير هنا -->
     </main>
 
-    <!-- 🌟 شريط التنقل السفلي بأيقونات حديثة -->
+    <!-- 🌟 شريط التنقل السفلي الفخم مع الأيقونات الحديثة المصححة -->
     <nav class="bottom-nav" id="bottom-nav">
         <button class="nav-item active" onclick="showPage('home')">
-            <span class="icon-wrapper"><i data-lucide="home"></i></span>
+            <span class="icon-wrapper"><i data-lucide="house"></i></span>
             <span class="nav-text">الرئيسية</span>
         </button>
         <button class="nav-item" onclick="showPage('tasks')">
-            <span class="icon-wrapper"><i data-lucide="check-square"></i></span>
+            <span class="icon-wrapper"><i data-lucide="clipboard-list"></i></span>
             <span class="nav-text">المهام</span>
         </button>
         <button class="nav-item" onclick="showPage('friends')">
@@ -330,9 +332,8 @@
     <script src="wallet.js?v=2"></script>
     <script src="app.js?v=2"></script>
 
-    <!-- 🌟 سكريبت تفعيل الأيقونات (يجب أن يكون في النهاية) -->
+    <!-- 🌟 تفعيل الأيقونات -->
     <script>
-        // هذا السطر يقوم برسم الأيقونات الحديثة في الواجهة
         lucide.createIcons();
     </script>
 </body>
