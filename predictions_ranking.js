@@ -130,7 +130,7 @@ window.renderChallengesTabs = function(activeTab) {
     }
 };
 
-// بناء واجهة المباريات (نفس تصميمك الأصلي)
+// بناء واجهة المباريات
 function buildCurrentMatchesHtml(isAr, errorCount) {
     if (errorCount >= 2) {
         return `<div style="text-align:center; padding:30px; background:#25252d; border-radius:12px; border:1px solid #ff4444;">
@@ -259,7 +259,7 @@ window.closeChallengesScreen = function() {
     if (overlay) overlay.remove();
 };
 
-// وافذة إدخال التوقع (نفس تصميمك الأصلي)
+// وافذة إدخال التوقع
 window.showPredictionModal = function(matchId, team1, team2) {
     if (document.getElementById('prediction-modal')) return;
 
