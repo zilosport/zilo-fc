@@ -1,5 +1,5 @@
 // ==========================================
-// 🚀 تطبيق زيلو إف سي (ZELO FC) - الكود الأساسي (app.js) المحُدّث (بدون زر تغيير اللغة)
+// 🚀 تطبيق زيلو إف سي (ZELO FC) - الكود الأساسي (app.js) المحُدّث
 // ==========================================
 
 // 1. إعداد الاتصال بقاعدة بيانات Supabase
@@ -334,3 +334,49 @@ function showPage(pageId) {
             break;
     }
 }
+
+// ==========================================
+// 🚀 6. دوال النوافذ الإضافية (تم إضافتها لحل مشكلة رسالة التحميل)
+// ==========================================
+
+window.openRankingScreen = function() {
+    console.log("🏆 تم طلب فتح شاشة ترتيب التحديات");
+    const contentDiv = document.getElementById("main-content");
+    if (contentDiv) {
+        // إذا كان لديك دالة تصميم جاهزة للصفحة (مثل renderRankingScreen)
+        if (typeof renderRankingScreen === "function") {
+            renderRankingScreen(contentDiv);
+        } else {
+            // واجهة مؤقتة لتأكيد عمل الزر حتى تقوم ببرمجة الواجهة النهائية
+            contentDiv.innerHTML = `
+                <div style="padding: 30px 20px; text-align: center; color: white;">
+                    <h2 style="font-size: 2rem; margin-bottom: 15px;">🏆 ${userState.lang === 'ar' ? 'ترتيب التحديات' : 'Challenges Ranking'}</h2>
+                    <p style="color: #ccc; margin-bottom: 25px;">${userState.lang === 'ar' ? 'البيانات جاهزة في قاعدة البيانات، قريباً سيتم عرض الواجهة هنا...' : 'Data is ready, UI coming soon...'}</p>
+                    <button onclick="showPage('home')" style="padding: 12px 24px; background: var(--gradient-primary, linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem;">
+                        ${userState.lang === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
+                    </button>
+                </div>
+            `;
+        }
+    }
+};
+
+window.openChallengesScreen = function() {
+    console.log("⚽ تم طلب فتح شاشة تحديات الأسبوع");
+    const contentDiv = document.getElementById("main-content");
+    if (contentDiv) {
+        if (typeof renderChallengesScreen === "function") {
+            renderChallengesScreen(contentDiv);
+        } else {
+            contentDiv.innerHTML = `
+                <div style="padding: 30px 20px; text-align: center; color: white;">
+                    <h2 style="font-size: 2rem; margin-bottom: 15px;">⚽ ${userState.lang === 'ar' ? 'تحديات الأسبوع' : 'Weekly Challenges'}</h2>
+                    <p style="color: #ccc; margin-bottom: 25px;">${userState.lang === 'ar' ? 'قريباً سيتم عرض التحديات هنا...' : 'Challenges coming soon...'}</p>
+                    <button onclick="showPage('home')" style="padding: 12px 24px; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem;">
+                        ${userState.lang === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
+                    </button>
+                </div>
+            `;
+        }
+    }
+};
