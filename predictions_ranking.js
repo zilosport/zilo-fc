@@ -45,12 +45,12 @@ window.openChallengesScreen = async function() {
                 
             if (predData) userState.predictedMatches = predData.map(p => p.match_id);
 
-            // 2. جلب المباريات من جدولك الحقيقي (matches)
+            // 2. جلب المباريات من جدولك الحقيقي (matches) مع الترتيب بالساعة والدقيقة
             const { data: matchesData, error: matchesError } = await supabaseClient
-                .from('matches') // تأكد أن اسم الجدول هو matches
+                .from('matches') 
                 .select('id, team_a, team_b, match_date, status, result')
-                // نجلب فقط المباريات التي لم تنتهِ (يمكنك تعديل الكلمة حسب ما تكتبه في قاعدة بياناتك)
-                .neq('status', 'finished'); 
+                .neq('status', 'finished') 
+                .order('match_date', { ascending: true }); // إضافة: ترتيب المباريات حسب الوقت
 
             if (!matchesError && matchesData) {
                 dbMatches = matchesData;
@@ -76,10 +76,11 @@ window.openChallengesScreen = async function() {
         // تحويل النص القادم من match_date إلى توقيت حقيقي
         const matchDate = new Date(m.match_date);
         const now = new Date();
-        const oneHourBefore = new Date(matchDate.getTime() - 60 * 60 * 1000);
         
-        // الإغلاق التلقائي بناءً على الوقت الحقيقي
-        const isClosed = now >= oneHourBefore; 
+        // إضافة: الإغلاق التلقائي بمجرد بدء المباراة أو إذا كانت حالة المباراة LIVE
+        const isStarted = now >= matchDate || m.status.toUpperCase() === 'LIVE'; 
+        const isClosed = isStarted; 
+        
         const hasPredicted = userState.predictedMatches.includes(m.id);
 
         const team1Name = m.team_a;
@@ -95,7 +96,7 @@ window.openChallengesScreen = async function() {
                           </button>`;
         } else if (isClosed) {
             buttonHtml = `<button disabled style="width:100%; padding:12px; background:#444; color:#888; border:none; border-radius:8px; font-size:0.95rem; box-sizing: border-box;">
-                            ${getT('predictionsClosed')}
+                            ${isStarted && m.status.toUpperCase() === 'LIVE' ? (isAr ? 'المباراة جارية - مغلق' : 'Match Live - Closed') : getT('predictionsClosed')}
                           </button>`;
         } else {
             buttonHtml = `<button id="btn-predict-${m.id}" onclick="window.showPredictionModal(${m.id}, '${team1Name}', '${team2Name}')" 
@@ -229,6 +230,9 @@ window.submitPrediction = async function(matchId, team1, team2) {
                         telegram_id: userState.userId, 
                         match_id: matchId, 
                         predicted_score: finalPredictedScore,
+                        // إضافة: حفظ الأهداف بشكل رقمي منفصل لتسهيل عمل الأتمتة (Make.com) في مقارنة النتائج
+                        predicted_home: t1Score, 
+                        predicted_away: t2Score,
                         points_awarded: 0
                     }
                 ]);
@@ -247,9 +251,12 @@ window.submitPrediction = async function(matchId, team1, team2) {
         }
     }
 
-    let successMsg = getT('predictionSuccess');
-    successMsg = successMsg.replace('{winner}', winner === 'draw' ? getT('drawMatch') : winner);
-    successMsg = successMsg.replace('{score}', `${t1Score} - ${t2Score}`);
+    let successMsg = getT('predictionSuccess') || 'تم حفظ توقعك بنجاح!';
+    // منع حدوث خطأ إذا لم تكن الترجمة مهيأة بالكامل لعملية الاستبدال
+    if (successMsg.includes('{winner}')) {
+        successMsg = successMsg.replace('{winner}', winner === 'draw' ? getT('drawMatch') : winner);
+        successMsg = successMsg.replace('{score}', `${t1Score} - ${t2Score}`);
+    }
     alert(successMsg);
     
     window.closePredictionModal();
