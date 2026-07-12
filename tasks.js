@@ -1,5 +1,5 @@
 // ==========================================
-// 🛠️ ملف قسم المهام (Tasks) - النسخة الحقيقية المربوطة بـ Supabase (محدث ومحمي بالكامل 🛡️)
+// 🛠️ ملف قسم المهام (Tasks) - النسخة الحقيقية المربوطة بـ Supabase (بالتصميم الخرافي ✨)
 // ==========================================
 
 (function() {
@@ -57,15 +57,12 @@
             if (userUpsertError) throw userUpsertError;
 
             // 4. معالجة جدول الأندية (club_fans_rankings) بطريقة آمنة
-            // نتحقق أولاً هل للمستخدم سجل في هذا الجدول؟
             const { data: clubData, error: clubFetchError } = await supabaseClient
                 .from('club_fans_rankings')
                 .select('total_fan_points')
                 .eq('telegram_id', userState.userId);
 
-            // إذا لم يكن هناك خطأ، والمستخدم موجود فعلاً في جدول الأندية
             if (!clubFetchError && clubData && clubData.length > 0) {
-                // نقوم بعمل Update مباشر للنقاط لتتطابق مع نقاطه الجديدة
                 const { error: clubUpdateError } = await supabaseClient
                     .from('club_fans_rankings')
                     .update({ total_fan_points: newPoints })
@@ -75,7 +72,6 @@
                     console.error("❌ خطأ في تحديث نقاط النادي:", clubUpdateError);
                 }
             } else {
-                // المستخدم ليس لديه نادي مسجل حتى الآن، يمكن تجاهل التحديث أو طباعة ملاحظة
                 console.warn("⚠️ المستخدم ليس لديه سجل في جدول الأندية بعد، تم تحديث نقاط users فقط.");
             }
 
@@ -92,7 +88,6 @@
         const dailyPoints = 200; 
 
         try {
-            // 1. تحديث وقت آخر مطالبة في جدول المستخدمين
             const { error: updateError } = await supabaseClient
                 .from('users')
                 .update({ last_daily_claim: new Date().toISOString() })
@@ -100,7 +95,6 @@
 
             if (updateError) throw updateError;
 
-            // 2. إضافة النقاط باستخدام RPC
             const { error: rpcError } = await supabaseClient.rpc('add_user_points', {
                 p_telegram_id: userState.userId,
                 p_amount: dailyPoints,
@@ -121,13 +115,11 @@
     async function syncTasksFromDB() {
         if (!supabaseClient || !userState.userId) return;
 
-        // تأمين مصفوفة المهام محلياً قبل المزامنة
         if (!userState.tasks || userState.tasks.length === 0) {
             userState.tasks = window.defaultTasksData.map(t => ({...t}));
         }
 
         try {
-            // جلب المهام المكتملة
             const { data: tasksData } = await supabaseClient
                 .from('user_tasks')
                 .select('task_id')
@@ -140,7 +132,6 @@
                 });
             }
 
-            // التحقق من المكافأة اليومية
             const { data: userData } = await supabaseClient
                 .from('users')
                 .select('last_daily_claim')
@@ -150,8 +141,6 @@
             if (userData && userData.last_daily_claim) {
                 const lastClaim = new Date(userData.last_daily_claim);
                 const now = new Date();
-                
-                // حساب فارق الوقت
                 const diffHours = Math.abs(now.getTime() - lastClaim.getTime()) / 36e5;
                 
                 if (diffHours < 24) {
@@ -168,7 +157,7 @@
     }
 
     // ==========================================
-    // 🎨 دوال واجهة المهام
+    // 🎨 دوال واجهة المهام (تم التحديث لتطابق التصميم الجديد ✨)
     // ==========================================
 
     window.renderTasksPage = async function(container) {
@@ -176,34 +165,47 @@
             userState.tasks = window.defaultTasksData.map(t => ({...t}));
         }
 
-        container.innerHTML = `<div style="text-align:center; padding:50px; color:#fff;">⏳ جاري تحميل المهام...</div>`;
+        // واجهة التحميل بألوان النظام
+        container.innerHTML = `<div style="text-align:center; padding:50px; color: var(--text-main);">⏳ ${typeof t === "function" ? t('loadingTasks') || 'جاري تحميل المهام...' : 'جاري تحميل المهام...'}</div>`;
 
         await syncTasksFromDB();
+        let tFunc = typeof t === "function" ? t : (key) => key;
 
+        // رسم بطاقات المهام (باستخدام class="card" و class="btn-action")
         let tasksHtml = userState.tasks.map(task => `
-            <div class="task-card" style="display: flex; justify-content: space-between; align-items: center; background: #1c1c22; margin: 8px 0; padding: 14px; border-radius: 12px; border: 1px solid #25252d;">
-                <div>
-                    <h5 style="margin: 0 0 4px 0; color: #fff;">${typeof getTaskName === "function" ? getTaskName(task) : (task.textAr || task.textEn)}</h5>
-                    <small style="color: #0088cc; font-weight: bold;">+ ${task.points} ZELO FC</small>
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 15px;">
+                <div style="text-align: ${(typeof userState !== 'undefined' && userState.lang === 'ar') ? 'right' : 'left'};">
+                    <h5 style="margin: 0 0 5px 0; color: var(--text-main); font-size: 1rem;">${typeof getTaskName === "function" ? getTaskName(task) : (task.textAr || task.textEn)}</h5>
+                    <small style="color: var(--accent-gold); font-weight: 900; font-size: 0.9rem;">+ ${task.points} ZELO</small>
                 </div>
-                <button id="btn-task-${task.id}" onclick="executeTask('${task.id}', '${task.url}', ${task.points})" ${task.completed ? 'disabled style="background:#2b2b36; color:#666; border:none; padding:8px 16px; border-radius:8px;"' : 'style="background:#0088cc; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer;"'}>
-                    ${task.completed ? (typeof t === "function" ? t('btnDone') : 'مكتمل') : (typeof t === "function" ? t('btnGo') : 'انطلق')}
+                <button id="btn-task-${task.id}" 
+                        class="${task.completed ? 'btn-secondary' : 'btn-action'}" 
+                        onclick="executeTask('${task.id}', '${task.url}', ${task.points})" 
+                        ${task.completed ? 'disabled style="opacity: 0.5; cursor: not-allowed; padding: 10px 15px; font-size: 0.9rem; margin: 0;"' : 'style="padding: 10px 15px; font-size: 0.9rem; margin: 0;"'}>
+                    ${task.completed ? (tFunc('btnDone') || 'مكتمل') : (tFunc('btnGo') || 'انطلق')}
                 </button>
             </div>
         `).join('');
 
+        // رسم الواجهة الرئيسية للمهام والمكافأة اليومية
         container.innerHTML = `
-            <div class="daily-reward-card" style="background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 15px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                <div>
-                    <h4 style="margin: 0; color: #fff;">${typeof t === "function" ? t('dailyCheckin') : 'المكافأة اليومية'}</h4>
-                    <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #e0e0e0;">${typeof t === "function" ? t('dailyCheckinSub') : 'سجل دخولك يومياً'}</p>
+            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">${tFunc('tasksTitle') || 'Earn More ZELO'}</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-bottom: 20px;">${tFunc('tasksSub') || 'Complete tasks to boost your balance!'}</p>
+
+            <div class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 20px; margin-bottom: 25px; border-left: 4px solid var(--accent-orange);">
+                <div style="text-align: ${(typeof userState !== 'undefined' && userState.lang === 'ar') ? 'right' : 'left'};">
+                    <h4 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">🎁 ${tFunc('dailyCheckin') || 'المكافأة اليومية'}</h4>
+                    <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">${tFunc('dailyCheckinSub') || 'سجل دخولك يومياً لتحصل على مكافأتك'}</p>
                 </div>
-                <button id="btn-daily-claim" onclick="claimDaily()" ${userState.dailyCheckInClaimed ? 'disabled style="background:#555;"' : 'style="background:#4caf50; color:white; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer;"'}>
-                    ${userState.dailyCheckInClaimed ? (typeof t === "function" ? t('btnClaimed') : 'تمت المطالبة') : (typeof t === "function" ? t('btnClaim') : 'مطالبة')}
+                <button id="btn-daily-claim" 
+                        class="${userState.dailyCheckInClaimed ? 'btn-secondary' : 'btn-action'}" 
+                        onclick="claimDaily()" 
+                        ${userState.dailyCheckInClaimed ? 'disabled style="opacity: 0.5; cursor: not-allowed; margin: 0; padding: 12px 20px;"' : 'style="margin: 0; padding: 12px 20px;"'}>
+                    ${userState.dailyCheckInClaimed ? (tFunc('btnClaimed') || 'تمت المطالبة') : (tFunc('btnClaim') || 'مطالبة')}
                 </button>
             </div>
 
-            <h3 style="color:#fff; font-size:1.1rem; margin-bottom:10px;">${typeof t === "function" ? t('currentTasks') : 'المهام الحالية'}</h3>
+            <h4 style="color: var(--text-main); margin-bottom: 15px; text-align: center;">${tFunc('currentTasks') || 'المهام الحالية'} 📋</h4>
             <div class="tasks-container">${tasksHtml}</div>
         `;
     };
@@ -235,6 +237,7 @@
         if (btn) {
             btn.innerHTML = "⏳ التحقق...";
             btn.disabled = true;
+            btn.style.opacity = "0.7";
         }
 
         setTimeout(async () => {
@@ -259,6 +262,7 @@
                     if (btn) {
                         btn.innerHTML = typeof t === "function" ? t('btnGo') : 'انطلق';
                         btn.disabled = false;
+                        btn.style.opacity = "1";
                     }
                 }
             } catch (error) {
@@ -267,6 +271,7 @@
                 if (btn) {
                     btn.innerHTML = typeof t === "function" ? t('btnGo') : 'انطلق';
                     btn.disabled = false;
+                    btn.style.opacity = "1";
                 }
             }
         }, 4000); 
@@ -280,6 +285,7 @@
         if (btn) {
             btn.innerHTML = "⏳";
             btn.disabled = true;
+            btn.style.opacity = "0.7";
         }
 
         try {
@@ -296,6 +302,7 @@
                 if (btn) {
                     btn.innerHTML = typeof t === "function" ? t('btnClaim') : 'مطالبة';
                     btn.disabled = false;
+                    btn.style.opacity = "1";
                 }
             }
         } catch (error) {
@@ -304,6 +311,7 @@
             if (btn) {
                 btn.innerHTML = typeof t === "function" ? t('btnClaim') : 'مطالبة';
                 btn.disabled = false;
+                btn.style.opacity = "1";
             }
         }
     };
