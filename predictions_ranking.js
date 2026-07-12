@@ -58,15 +58,14 @@ window.openChallengesScreen = async function() {
                 
             if (predData) userState.predictedMatches = predData.map(p => p.match_id);
 
-            // 2. جلب المباريات من جدولك الحقيقي (matches) مع الترتيب بالساعة والدقيقة
-            const { data: matchesData, error: matchesError } = await supabaseClient
-                .from('matches') 
-                .select('id, team_a, team_b, match_date, status, result')
-                .neq('status', 'finished') 
+            // 2. جلب المباريات من جدولك الحقيقي (matches) - تم تعديل هذا الجزء بناءً على طلبك
+            const { data: matches, error } = await supabaseClient
+                .from('matches')
+                .select('*')
                 .order('match_date', { ascending: true });
 
-            if (!matchesError && matchesData) {
-                dbMatches = matchesData;
+            if (!error && matches) {
+                dbMatches = matches;
             }
         } catch (err) {
             console.error("خطأ في جلب البيانات:", err);
