@@ -82,10 +82,13 @@ window.renderHomePage = async function(container) {
         </div>
     `).join('');
 
-    // متغيرات للترجمة المباشرة للقسم الخاص بالتحديات
+    // متغيرات للترجمة
     let titleWeeklyChallenges = typeof t === 'function' ? t('weeklyChallenges') : (userState.lang === 'ar' ? 'تحديات الأسبوع' : 'Weekly Challenges');
     let textEuropeCups = typeof t === 'function' ? t('europeCups') : (userState.lang === 'ar' ? 'كؤوس أوروبا' : 'European Cups');
     let textSpainCups = typeof t === 'function' ? t('spainCups') : (userState.lang === 'ar' ? 'كؤوس إسبانيا' : 'Spanish Cups');
+    
+    let titleRanking = userState.lang === 'ar' ? 'ترتيب التحديات' : 'Challenges Ranking';
+    let textRankingDesc = userState.lang === 'ar' ? 'اكتشف المتصدرين في التوقعات' : 'Discover the top predictors';
 
     // 4. تجميع الصفحة
     container.innerHTML = `
@@ -95,11 +98,19 @@ window.renderHomePage = async function(container) {
             <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 0.85rem;">ID: ${userState.userId}</p>
         </div>
       
-        <div id="challenges-card" style="cursor: pointer; background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 2px solid #ffd700; display: flex; align-items: center; gap: 15px;">
+        <div id="challenges-card" style="cursor: pointer; background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 20px; border-radius: 16px; margin-bottom: 15px; border: 2px solid #ffd700; display: flex; align-items: center; gap: 15px;">
             <div style="font-size: 3rem;">${primaryClub ? primaryClub.countryFlag : '⚽'}</div>
             <div>
                 <h3 style="color: #ffd700; margin: 0;">${titleWeeklyChallenges}</h3>
                 <p style="color: #fff; font-size: 0.8rem; margin: 5px 0 0 0;">🇪🇺 ${textEuropeCups} | 🇪🇸 ${textSpainCups}</p>
+            </div>
+        </div>
+
+        <div id="ranking-card" style="cursor: pointer; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 2px solid #fff; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <div style="font-size: 3rem;">🏆</div>
+            <div>
+                <h3 style="color: #fff; margin: 0;">${titleRanking}</h3>
+                <p style="color: rgba(255,255,255,0.9); font-size: 0.85rem; margin: 5px 0 0 0;">🔥 ${textRankingDesc}</p>
             </div>
         </div>
 
@@ -109,8 +120,9 @@ window.renderHomePage = async function(container) {
         <div id="ranking-container" style="margin-top: 25px;"></div>
     `;
 
-    // 5. إضافة حدث النقر + تحقق أمان
+    // 5. إضافة أحداث النقر
     setTimeout(() => {
+        // حدث بطاقة التحديات
         const challengesCard = document.getElementById('challenges-card');
         if (challengesCard) {
             challengesCard.addEventListener('click', function() {
@@ -123,7 +135,19 @@ window.renderHomePage = async function(container) {
             });
         }
 
-        // استدعاء دالة بطاقة الترتيب الجديدة بدلاً من القديمة
+        // حدث بطاقة الترتيب (الجديد)
+        const rankingCard = document.getElementById('ranking-card');
+        if (rankingCard) {
+            rankingCard.addEventListener('click', function() {
+                if (typeof window.openRankingScreen === "function") {
+                    window.openRankingScreen();
+                } else {
+                    console.error("❌ خطأ: دالة openRankingScreen غير معرفة!");
+                }
+            });
+        }
+
+        // استدعاء دالة بطاقة الترتيب المصغرة (إذا كنت لا تزال تستخدمها، تركتها كما هي)
         if (typeof window.renderHomeRankingWidget === "function") {
             window.renderHomeRankingWidget('ranking-container');
         } else {
