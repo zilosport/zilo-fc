@@ -13,7 +13,7 @@
     
     <style>
         /* ==========================================
-           🏟️ تطبيق زيلو إف سي (Zelo Sport) - تصميم الـ VIP
+           🏟️ تطبيق زيلو إف سي (Zelo Sport) - تصميم الـ VIP (ناري وذهبي)
            ========================================== */
 
         :root {
@@ -23,18 +23,18 @@
             --text-main: #f8fafc;      
             --text-muted: #888899;     
             
-            /* ألوان الهوية البصرية */
-            --accent-gold: #fcb045;
-            --accent-red: #fd1d1d;
-            --accent-purple: #833ab4;
+            /* ألوان الهوية البصرية الجديدة (النارية والذهبية) */
+            --accent-gold: #ffde59;
+            --accent-orange: #ff914d;
+            --accent-red: #ff3131;
             
-            /* التدرجات اللونية والتوهج */
-            --gradient-primary: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
-            --glow-primary: rgba(253, 29, 29, 0.25);
+            /* التدرج الناري والذهبي الساحر */
+            --gradient-primary: linear-gradient(135deg, #ff3131, #ff914d, #ffde59);
+            --glow-primary: rgba(255, 145, 77, 0.35);
             
             /* تأثير الزجاج */
-            --glass-bg: rgba(22, 22, 28, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.04);
+            --glass-bg: rgba(22, 22, 28, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.05);
         }
 
         body {
@@ -140,26 +140,26 @@
             transform: scale(0.85);
         }
 
-        /* حالة الزر النشط في الشريط السفلي */
+        /* حالة الزر النشط في الشريط السفلي (باللون الذهبي والناري) */
         .nav-item.active {
-            background: rgba(253, 29, 29, 0.1);
+            background: rgba(255, 145, 77, 0.1);
             color: var(--accent-gold);
         }
 
         .nav-item.active .icon-wrapper {
             transform: scale(1.2) translateY(-2px);
-            text-shadow: 0 0 15px var(--accent-gold);
+            text-shadow: 0 0 15px var(--accent-orange);
         }
 
-        /* 🔘 الأزرار الرئيسية المتوافقة مع app.js */
+        /* 🔘 الأزرار الرئيسية (تم اعتماد التدرج الناري) */
         .btn-action {
             width: 100%;
             background: var(--gradient-primary);
-            color: white;
+            color: #0b0b0e; /* تم تغيير لون النص للداكن ليبرز مع الذهبي الساطع */
             border: none;
             padding: 14px;
             border-radius: 14px;
-            font-weight: bold;
+            font-weight: 900; /* خط أعرض */
             font-size: 1.05rem;
             cursor: pointer;
             margin-top: 10px;
@@ -200,16 +200,16 @@
 </head>
 <body>
 
-    <!-- الشريط العلوي الفاخر -->
+    <!-- الشريط العلوي -->
     <header class="top-bar" id="top-bar" style="display: none;">
         <div id="club" style="font-size: 0.9rem; color: #e0e0e0; font-weight: bold;">ناديك: 👑 <b style="color: #fff;">ريال مدريد</b></div>
-        <div id="points" style="font-weight: bold; color: var(--accent-gold); background: rgba(252, 176, 69, 0.1); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(252, 176, 69, 0.2);">🪙 1,500</div>
+        <div id="points" style="font-weight: bold; color: var(--accent-gold); background: rgba(255, 222, 89, 0.1); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(255, 222, 89, 0.2);">🪙 1,500</div>
     </header>
 
     <!-- الحاوية الرئيسية -->
     <main class="container" id="main-content"></main>
 
-    <!-- شريط التنقل السفلي الطافي (تم إضافة كلاس icon للإصلاح) -->
+    <!-- شريط التنقل السفلي الطافي -->
     <nav class="bottom-nav" id="bottom-nav" style="display: none;">
         <button class="nav-item active" onclick="showPage('home')">
             <span class="icon icon-wrapper">🏠</span>
