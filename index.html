@@ -6,14 +6,13 @@
     <meta name="theme-color" content="#0b0b0e">
     <title>ZELO FC App</title>
     
-    <!-- استدعاء المكتبات الخارجية -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         /* ==========================================
-           🏟️ تطبيق زيلو إف سي (Zelo Sport) - تصميم الـ VIP (ناري وذهبي)
+           🏟️ تطبيق زيلو إف سي (Zelo Sport) - تصميم الـ VIP (ناري وذهبي خرافي)
            ========================================== */
 
         :root {
@@ -140,38 +139,80 @@
             transform: scale(0.85);
         }
 
-        /* حالة الزر النشط في الشريط السفلي (باللون الذهبي والناري) */
+        /* ✨ حالة الزر النشط في الشريط السفلي (مع النبض المتوهج) */
         .nav-item.active {
-            background: rgba(255, 145, 77, 0.1);
+            background: rgba(255, 145, 77, 0.15);
             color: var(--accent-gold);
+            border-radius: 20px;
+            animation: pulseGlow 2s infinite; /* تأثير النبض */
         }
 
+        /* ✨ طفو الأيقونة النشطة */
         .nav-item.active .icon-wrapper {
-            transform: scale(1.2) translateY(-2px);
-            text-shadow: 0 0 15px var(--accent-orange);
+            animation: float 3s ease-in-out infinite; 
+            text-shadow: 0 0 15px var(--accent-orange), 0 0 5px var(--accent-gold);
         }
 
-        /* 🔘 الأزرار الرئيسية (تم اعتماد التدرج الناري) */
+        /* 🃏 البطاقات (تم إضافتها لتتفاعل باللون الذهبي والناري عند اللمس) */
+        .card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover, .card:active {
+            transform: translateY(-5px);
+            border-color: rgba(255, 222, 89, 0.4);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 15px rgba(255, 145, 77, 0.2);
+        }
+
+        /* 🔘 الأزرار الرئيسية (مع التدرج المتحرك واللمعان الخرافي) */
         .btn-action {
+            position: relative;
             width: 100%;
-            background: var(--gradient-primary);
-            color: #0b0b0e; /* تم تغيير لون النص للداكن ليبرز مع الذهبي الساطع */
+            /* تدرج ناري وذهبي عريض ليتم تحريكه */
+            background: linear-gradient(270deg, #ff3131, #ff914d, #ffde59, #ff914d, #ff3131);
+            background-size: 300% 300%;
+            animation: gradientMove 4s ease infinite;
+            color: #0b0b0e; /* لون داكن ليبرز مع الذهبي الساطع */
             border: none;
-            padding: 14px;
+            padding: 16px;
             border-radius: 14px;
-            font-weight: 900; /* خط أعرض */
-            font-size: 1.05rem;
+            font-weight: 900; 
+            font-size: 1.1rem;
             cursor: pointer;
             margin-top: 10px;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 20px var(--glow-primary);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 8px 25px var(--glow-primary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        /* تأثير اللمعان السريع (Shimmer) على الزر */
+        .btn-action::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-15deg);
+            animation: shimmer 3s infinite linear;
+            z-index: -1;
         }
 
         .btn-action:active {
-            transform: scale(0.96);
-            box-shadow: 0 2px 10px var(--glow-primary);
+            transform: scale(0.94) translateY(2px);
+            box-shadow: 0 4px 15px rgba(255, 145, 77, 0.6);
         }
 
         .btn-secondary {
@@ -191,25 +232,45 @@
             background: rgba(255,255,255,0.05);
         }
 
-        /* ✨ تأثيرات حركية للدخول */
+        /* ✨ التأثيرات الحركية (Keyframes) الأساسية للتطبيق */
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) skewX(-15deg); }
+            100% { transform: translateX(200%) skewX(-15deg); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) scale(1.2); }
+            50% { transform: translateY(-4px) scale(1.2); }
+            100% { transform: translateY(0px) scale(1.2); }
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 10px rgba(255, 145, 77, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(255, 222, 89, 0.4), 0 0 10px rgba(255, 49, 49, 0.3); }
+            100% { box-shadow: 0 0 10px rgba(255, 145, 77, 0.2); }
         }
     </style>
 </head>
 <body>
 
-    <!-- الشريط العلوي -->
     <header class="top-bar" id="top-bar" style="display: none;">
         <div id="club" style="font-size: 0.9rem; color: #e0e0e0; font-weight: bold;">ناديك: 👑 <b style="color: #fff;">ريال مدريد</b></div>
         <div id="points" style="font-weight: bold; color: var(--accent-gold); background: rgba(255, 222, 89, 0.1); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(255, 222, 89, 0.2);">🪙 1,500</div>
     </header>
 
-    <!-- الحاوية الرئيسية -->
     <main class="container" id="main-content"></main>
 
-    <!-- شريط التنقل السفلي الطافي -->
     <nav class="bottom-nav" id="bottom-nav" style="display: none;">
         <button class="nav-item active" onclick="showPage('home')">
             <span class="icon icon-wrapper">🏠</span>
@@ -233,7 +294,6 @@
         </button>
     </nav>
 
-    <!-- استدعاء ملفات الجافاسكريبت -->
     <script src="clubsData.js?v=2"></script>
     <script src="data.js?v=2"></script> 
     <script src="countries.js?v=2"></script>
