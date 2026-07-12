@@ -89,7 +89,7 @@ window.renderHomePage = async function(container) {
     let titleRanking = userState.lang === 'ar' ? 'ترتيب التحديات' : 'Challenges Ranking';
     let textRankingDesc = userState.lang === 'ar' ? 'اكتشف المتصدرين وتعرف على ترتيبك' : 'Discover top players and your rank';
 
-    // 4. تجميع الصفحة (تمت إضافة بطاقة الترتيب هنا)
+    // 4. تجميع الصفحة (تم وضع أوامر الفتح onclick مباشرة هنا)
     container.innerHTML = `
         <div class="profile-section" style="${profileBgStyle} padding: 25px 15px; border-radius: 16px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
             <img src="${avatarSrc}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; object-fit: cover;">
@@ -97,8 +97,7 @@ window.renderHomePage = async function(container) {
             <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 0.85rem;">ID: ${userState.userId}</p>
         </div>
       
-        <!-- بطاقة تحديات الأسبوع -->
-        <div id="challenges-card" style="cursor: pointer; background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 20px; border-radius: 16px; margin-bottom: 15px; border: 2px solid #ffd700; display: flex; align-items: center; gap: 15px;">
+        <div id="challenges-card" onclick="if(typeof window.openChallengesScreen === 'function') { window.openChallengesScreen(); } else { alert(userState.lang === 'ar' ? '⏳ جاري التحميل...' : '⏳ Loading...'); }" style="cursor: pointer; background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 20px; border-radius: 16px; margin-bottom: 15px; border: 2px solid #ffd700; display: flex; align-items: center; gap: 15px;">
             <div style="font-size: 3rem;">${primaryClub ? primaryClub.countryFlag : '⚽'}</div>
             <div>
                 <h3 style="color: #ffd700; margin: 0;">${titleWeeklyChallenges}</h3>
@@ -106,8 +105,7 @@ window.renderHomePage = async function(container) {
             </div>
         </div>
 
-        <!-- بطاقة الترتيب -->
-        <div id="ranking-card" style="cursor: pointer; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 2px solid #fff; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <div id="ranking-card" onclick="if(typeof window.openRankingScreen === 'function') { window.openRankingScreen(); } else { alert(userState.lang === 'ar' ? '⏳ جاري التحميل...' : '⏳ Loading...'); }" style="cursor: pointer; background: var(--gradient-primary, linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)); padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 2px solid #fff; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(253, 29, 29, 0.3);">
             <div style="font-size: 3rem;">🏆</div>
             <div>
                 <h3 style="color: #fff; margin: 0;">${titleRanking}</h3>
@@ -118,21 +116,4 @@ window.renderHomePage = async function(container) {
         <h4 style="color: #aaa; margin: 0 0 10px 0; font-size: 0.9rem;">${userState.lang === 'ar' ? 'أنديتك المفضلة:' : 'Your Supported Clubs:'}</h4>
         ${clubsCardsHtml}
     `;
-
-    // 5. إضافة حدث النقر على البطاقات لفتح الشاشات
-    setTimeout(() => {
-        const challengesCard = document.getElementById('challenges-card');
-        if (challengesCard) {
-            challengesCard.addEventListener('click', function() {
-                if (typeof window.openChallengesScreen === "function") window.openChallengesScreen();
-            });
-        }
-
-        const rankingCard = document.getElementById('ranking-card');
-        if (rankingCard) {
-            rankingCard.addEventListener('click', function() {
-                if (typeof window.openRankingScreen === "function") window.openRankingScreen();
-            });
-        }
-    }, 200);
 };
