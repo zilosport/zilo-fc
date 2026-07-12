@@ -4,7 +4,7 @@
  * التحديث: دعم الترجمة الثنائية (عربي/إنجليزي) وتصحيح الاتجاهات
  */
 
-window.renderWeeklyRanking = async function(containerId) {
+window.renderHomeRankingWidget = async function(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
