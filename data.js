@@ -34,7 +34,7 @@ const i18n = {
         friendsList: "قائمة الأصدقاء المنضمين",
         invites: "دعواته:",
         alertCopied: "تم نسخ الرابط بنجاح!",
-        shareText: "⚽ اختر ناديك المفضل في Zilo FC واجمع معي العملات والجوائز الرقمية مجاناً! 🏆",
+        shareText: "⚽ اختر ناديك المفضل في ZELO FC واجمع معي العملات والجوائز الرقمية مجاناً! 🏆",
         leaderTitle: "🏆 صدارة بطولة الكأس الأوروبي",
         leaderSub: "انقر على أي فريق لفتح قائمة ترتيب أعلى المشجعين تجميعاً للنقاط.",
         clickToView: "👉 اضغط لرؤية المتصدرين",
@@ -51,7 +51,7 @@ const i18n = {
         btnCopyAddress: "📋 نسخ العنوان",
         btnDisconnect: "🚪 إلغاء الربط",
         walletConnectTitle: "ربط محفظة Web3 الحقيقية",
-        walletConnectSub: "قم بربط محفظة التليجرام الآمنة الحقيقية لاستقبال مكافآت عملات Zilo FC.",
+        walletConnectSub: "قم بربط محفظة التليجرام الآمنة الحقيقية لاستقبال مكافآت عملات ZELO FC.",
         btnConnect: "💎 اتصل بمحفظتك الحقيقية (TON Connect)",
         alertDisconnect: "هل تريد قطع اتصال المحفظة الحالية؟",
         alertDisconnected: "تم قطع الاتصال بنجاح.",
@@ -72,8 +72,8 @@ const i18n = {
         cancelBtn: "إلغاء",
         validationError: "يرجى اختيار الفائز وكتابة النتيجة المتوقعة",
         predictionSuccess: "✅ تم حفظ توقعك للمباراة بنجاح!\nالفائز: {winner}\nالنتيجة: {score}",
-        spainCups: "كؤوس إسبانيا", // تمت الإضافة هنا
-        asiaCups: "كؤوس آسيا",    // تمت الإضافة هنا
+        spainCups: "كؤوس إسبانيا", 
+        europeCups: "كؤوس أوروبا", // تم تصحيحها هنا لتطابق الصورة
 
         // 2. الترتيب الأسبوعي
         fetchingRanking: "⏳ جاري جلب الترتيب...",
@@ -120,7 +120,7 @@ const i18n = {
         friendsList: "Joined Friends List",
         invites: "Invites:",
         alertCopied: "Link copied successfully!",
-        shareText: "⚽ Choose your favorite club in Zelo Sport and collect crypto rewards with me for free! 🏆",
+        shareText: "⚽ Choose your favorite club in ZELO FC and collect crypto rewards with me for free! 🏆",
         leaderTitle: "🏆 European Cup Leaderboard",
         leaderSub: "Click on any team to view its top fans by points.",
         clickToView: "👉 Click to view top fans",
@@ -137,7 +137,7 @@ const i18n = {
         btnCopyAddress: "📋 Copy Address",
         btnDisconnect: "🚪 Disconnect",
         walletConnectTitle: "Connect Web3 Real Wallet",
-        walletConnectSub: "Connect your secure Telegram Wallet to receive Zilo FC token rewards.",
+        walletConnectSub: "Connect your secure Telegram Wallet to receive ZELO FC token rewards.",
         btnConnect: "💎 Connect Real Wallet (TON Connect)",
         alertDisconnect: "Do you want to disconnect the current wallet?",
         alertDisconnected: "Disconnected successfully.",
@@ -158,8 +158,8 @@ const i18n = {
         cancelBtn: "Cancel",
         validationError: "Please select a winner and enter the predicted score",
         predictionSuccess: "✅ Your prediction has been saved successfully!\nWinner: {winner}\nScore: {score}",
-        spainCups: "Spanish Cups", // Added here
-        asiaCups: "Asian Cups",    // Added here
+        spainCups: "Spanish Cups", 
+        europeCups: "European Cups", // تم تصحيحها هنا لتطابق الصورة
 
         // 2. Weekly Rankings
         fetchingRanking: "⏳ Fetching ranking...",
@@ -193,6 +193,6 @@ if (typeof allWorldCupCountriesClubs !== 'undefined') {
 // المهام الافتراضية للتطبيق
 // ==========================================
 const defaultTasksData = [
-    { id: "task1", textAr: "اشترك في قناة Zelo FC", textEn: "Join Zilo FC Channel", reward: 500, link: "https://t.me/zelosport" },
-    { id: "task2", textAr: "تابعنا على تويتر", textEn: "Follow us on Twitter", reward: 300, link: "https://twitter.com/zelosport" }
+    { id: "task1", textAr: "اشترك في قناة ZELO FC", textEn: "Join ZELO FC Channel", reward: 500, link: "https://t.me/zelosport" },
+    { id: "task2", textAr: "تابعنا على إكس (تويتر)", textEn: "Follow us on X (Twitter)", reward: 300, link: "https://twitter.com/zelosport" }
 ];
