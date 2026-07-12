@@ -112,7 +112,9 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchDataAndRoute();
 });
 
-// 🔄 دالة منفصلة لتهيئة المحفظة
+// ==========================================
+// 🔄 دالة تهيئة المحفظة (تم إصلاح حفظ البيانات)
+// ==========================================
 function initTonConnect() {
     try {
         if (typeof TON_CONNECT_UI !== 'undefined') {
@@ -127,16 +129,28 @@ function initTonConnect() {
                     userState.walletAddress = walletInfo.account.address;
                     userState.walletBalance = "0.00"; 
                     
-                    if (supabaseClient && userState.hasLoggedIn) {
-                        await supabaseClient.from('users').update({ wallet_address: userState.walletAddress }).eq('telegram_id', userState.userId);
+                    // 🚀 الإصلاح: الحفظ المباشر دون انتظار حالة hasLoggedIn
+                    if (typeof window.saveWalletAddressToDB === "function") {
+                        await window.saveWalletAddressToDB(walletInfo.account.address);
+                    } else if (supabaseClient && userState.userId) {
+                        const { error } = await supabaseClient.from('users')
+                            .update({ wallet_address: walletInfo.account.address })
+                            .eq('telegram_id', userState.userId);
+                        if (error) console.error("❌ خطأ في حفظ المحفظة:", error);
+                        else console.log("✅ تم حفظ المحفظة بنجاح!");
                     }
                 } else {
                     userState.walletConnected = false;
                     userState.walletAddress = null;
                     userState.walletBalance = "0.00";
 
-                    if (supabaseClient && userState.hasLoggedIn) {
-                        await supabaseClient.from('users').update({ wallet_address: null }).eq('telegram_id', userState.userId);
+                    // 🚀 الإصلاح: المسح المباشر من قاعدة البيانات عند الانفصال
+                    if (typeof window.removeWalletAddressFromDB === "function") {
+                        await window.removeWalletAddressFromDB();
+                    } else if (supabaseClient && userState.userId) {
+                        await supabaseClient.from('users')
+                            .update({ wallet_address: null })
+                            .eq('telegram_id', userState.userId);
                     }
                 }
                 
