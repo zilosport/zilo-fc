@@ -82,15 +82,14 @@ window.renderHomePage = async function(container) {
         </div>
     `).join('');
 
-    // متغيرات للترجمة
+    // متغيرات للترجمة المباشرة للبطاقات
     let titleWeeklyChallenges = typeof t === 'function' ? t('weeklyChallenges') : (userState.lang === 'ar' ? 'تحديات الأسبوع' : 'Weekly Challenges');
     let textEuropeCups = typeof t === 'function' ? t('europeCups') : (userState.lang === 'ar' ? 'كؤوس أوروبا' : 'European Cups');
     let textSpainCups = typeof t === 'function' ? t('spainCups') : (userState.lang === 'ar' ? 'كؤوس إسبانيا' : 'Spanish Cups');
-    
     let titleRanking = userState.lang === 'ar' ? 'ترتيب التحديات' : 'Challenges Ranking';
-    let textRankingDesc = userState.lang === 'ar' ? 'اكتشف المتصدرين في التوقعات' : 'Discover the top predictors';
+    let textRankingDesc = userState.lang === 'ar' ? 'اكتشف المتصدرين وتعرف على ترتيبك' : 'Discover top players and your rank';
 
-    // 4. تجميع الصفحة
+    // 4. تجميع الصفحة (تمت إضافة بطاقة الترتيب هنا)
     container.innerHTML = `
         <div class="profile-section" style="${profileBgStyle} padding: 25px 15px; border-radius: 16px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
             <img src="${avatarSrc}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; object-fit: cover;">
@@ -98,6 +97,7 @@ window.renderHomePage = async function(container) {
             <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 0.85rem;">ID: ${userState.userId}</p>
         </div>
       
+        <!-- بطاقة تحديات الأسبوع -->
         <div id="challenges-card" style="cursor: pointer; background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 20px; border-radius: 16px; margin-bottom: 15px; border: 2px solid #ffd700; display: flex; align-items: center; gap: 15px;">
             <div style="font-size: 3rem;">${primaryClub ? primaryClub.countryFlag : '⚽'}</div>
             <div>
@@ -106,6 +106,7 @@ window.renderHomePage = async function(container) {
             </div>
         </div>
 
+        <!-- بطاقة الترتيب -->
         <div id="ranking-card" style="cursor: pointer; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 2px solid #fff; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
             <div style="font-size: 3rem;">🏆</div>
             <div>
@@ -116,42 +117,22 @@ window.renderHomePage = async function(container) {
 
         <h4 style="color: #aaa; margin: 0 0 10px 0; font-size: 0.9rem;">${userState.lang === 'ar' ? 'أنديتك المفضلة:' : 'Your Supported Clubs:'}</h4>
         ${clubsCardsHtml}
-      
-        <div id="ranking-container" style="margin-top: 25px;"></div>
     `;
 
-    // 5. إضافة أحداث النقر
+    // 5. إضافة حدث النقر على البطاقات لفتح الشاشات
     setTimeout(() => {
-        // حدث بطاقة التحديات
         const challengesCard = document.getElementById('challenges-card');
         if (challengesCard) {
             challengesCard.addEventListener('click', function() {
-                if (typeof window.openChallengesScreen === "function") {
-                    window.openChallengesScreen();
-                } else {
-                    console.error("❌ خطأ: دالة openChallengesScreen غير معرفة!");
-                    alert("يرجى تحديث الصفحة أو التحقق من ترتيب تحميل الملفات");
-                }
+                if (typeof window.openChallengesScreen === "function") window.openChallengesScreen();
             });
         }
 
-        // حدث بطاقة الترتيب (الجديد)
         const rankingCard = document.getElementById('ranking-card');
         if (rankingCard) {
             rankingCard.addEventListener('click', function() {
-                if (typeof window.openRankingScreen === "function") {
-                    window.openRankingScreen();
-                } else {
-                    console.error("❌ خطأ: دالة openRankingScreen غير معرفة!");
-                }
+                if (typeof window.openRankingScreen === "function") window.openRankingScreen();
             });
-        }
-
-        // استدعاء دالة بطاقة الترتيب المصغرة (إذا كنت لا تزال تستخدمها، تركتها كما هي)
-        if (typeof window.renderHomeRankingWidget === "function") {
-            window.renderHomeRankingWidget('ranking-container');
-        } else {
-            console.warn("⚠️ دالة renderHomeRankingWidget غير موجودة");
         }
     }, 200);
 };
