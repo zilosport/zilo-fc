@@ -1,340 +1,311 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" id="app-html">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0b0b0e">
-    <title>ZELO FC App - VIP Edition</title>
-    
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- 🌟 مكتبة الأيقونات الحديثة Lucide -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <style>
-        /* ==========================================
-           🏟️ تطبيق زيلو إف سي (Zelo Sport) - نسخة الـ VIP الفاخرة المحدثة
-           ========================================== */
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0b0b0e">
+    <title>ZELO FC App</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* ==========================================
+           🏟️ تطبيق زيلو إف سي (Zelo Sport) - تصميم الـ VIP (ناري وذهبي خرافي)
+           ========================================== */
 
-        :root {
-            /* الألوان الأساسية الداكنة (للفخامة وراحة العين) */
-            --bg-dark: #0b0b0e;        
-            --bg-card: #16161c;        
-            --text-main: #f8fafc;      
-            --text-muted: #888899;     
-            
-            /* ألوان الهوية البصرية (الطاقة والحماس) */
-            --accent-gold: #fcb045;
-            --accent-red: #fd1d1d;
-            --accent-purple: #833ab4;
-            
-            /* التدرجات اللونية والتوهج */
-            --gradient-primary: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
-            --glow-primary: rgba(253, 29, 29, 0.25);
-            
-            /* تأثير الزجاج (Glassmorphism) */
-            --glass-bg: rgba(22, 22, 28, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.04);
-        }
+        :root {
+            /* الألوان الأساسية الداكنة */
+            --bg-dark: #0b0b0e;        
+            --bg-card: #16161c;        
+            --text-main: #f8fafc;      
+            --text-muted: #888899;     
+            
+            /* ألوان الهوية البصرية الجديدة (النارية والذهبية) */
+            --accent-gold: #ffde59;
+            --accent-orange: #ff914d;
+            --accent-red: #ff3131;
+            
+            /* التدرج الناري والذهبي الساحر */
+            --gradient-primary: linear-gradient(135deg, #ff3131, #ff914d, #ffde59);
+            --glow-primary: rgba(255, 145, 77, 0.35);
+            
+            /* تأثير الزجاج */
+            --glass-bg: rgba(22, 22, 28, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.05);
+        }
 
-        /* 🌟 إعدادات التطبيق الأساسية */
-        body {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-font-smoothing: antialiased;
-            direction: rtl;
-            overflow-x: hidden;
-        }
+        body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            user-select: none; 
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-font-smoothing: antialiased; 
+            overflow-x: hidden;
+        }
 
-        ::-webkit-scrollbar {
-            display: none;
-        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
 
-        .container {
-            margin-top: 85px;
-            padding: 15px;
-            padding-bottom: 100px;
-            animation: fadeUp 0.5s ease-out forwards;
-        }
+        /* حاوية المحتوى الرئيسية */
+        .container {
+            margin-top: 85px; 
+            margin-bottom: 100px;
+            padding: 15px;
+            min-height: calc(100vh - 185px);
+            animation: fadeUp 0.5s ease-out forwards; 
+        }
 
-        /* 👑 الهيدر العلوي */
-        .app-header, .top-bar {
-            position: fixed;
-            top: 10px;
-            left: 15px;
-            right: 15px;
-            height: 60px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            padding: 0 20px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--glass-border);
-            z-index: 1000;
-        }
+        /* 👑 الهيدر العلوي */
+        .top-bar {
+            position: fixed;
+            top: 10px;
+            left: 15px;
+            right: 15px;
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 0 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            z-index: 1000;
+        }
 
-        /* 📱 شريط التنقل السفلي الفخم (طائر بتأثير زجاجي متقدم) */
-        .bottom-nav {
-            position: fixed;
-            bottom: 20px;
-            left: 4%;
-            right: 4%;
-            width: 92%;
-            height: 70px; /* تم التعديل لاحتواء الأيقونة والنص */
-            background: rgba(18, 18, 22, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 24px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
-            border: 1px solid rgba(255,255,255,0.08);
-            z-index: 1000;
-        }
+        /* 📱 شريط التنقل السفلي الفخم */
+        .bottom-nav {
+            position: fixed;
+            bottom: 20px;
+            left: 4%;
+            right: 4%;
+            width: 92%;
+            height: 70px;
+            background: rgba(18, 18, 22, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+            z-index: 1000;
+        }
 
-        .nav-item {
-            background: none;
-            border: none;
-            outline: none;
-            padding: 0;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column; /* 👈 وضع الأيقونة فوق النص */
-            justify-content: center;
-            align-items: center;
-            width: 60px;
-            height: 60px;
-            border-radius: 20px; /* تعديل الزوايا لتناسب الشكل الجديد */
-            color: var(--text-muted);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .nav-item {
+            background: none;
+            border: none;
+            outline: none;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 20px;
+            color: var(--text-muted);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        .icon-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 4px; /* 👈 مسافة بين الأيقونة والنص */
-            transition: transform 0.3s ease, filter 0.3s ease;
-        }
+        .icon-wrapper {
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease, text-shadow 0.3s ease;
+            margin-bottom: 3px;
+        }
 
-        .nav-text {
-            font-size: 0.7rem;
-            font-weight: bold;
-            transition: color 0.3s ease;
-            white-space: nowrap; /* 👈 منع النص من الانقسام لسطرين */
-        }
+        .nav-text {
+            font-size: 0.7rem;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
 
-        .nav-item:active .icon-wrapper {
-            transform: scale(0.85);
-        }
+        .nav-item:active .icon-wrapper {
+            transform: scale(0.85);
+        }
 
-        /* 🚀 حالة الزر النشط في الشريط السفلي مع تأثير خرافي */
-        .nav-item.active {
-            background: rgba(252, 176, 69, 0.15);
-            color: var(--accent-gold);
-            animation: pulseGlow 2s infinite;
-        }
+        /* ✨ حالة الزر النشط في الشريط السفلي (مع النبض المتوهج) */
+        .nav-item.active {
+            background: rgba(255, 145, 77, 0.15);
+            color: var(--accent-gold);
+            border-radius: 20px;
+            animation: pulseGlow 2s infinite; /* تأثير النبض */
+        }
 
-        .nav-item.active .icon-wrapper {
-            animation: float 3s ease-in-out infinite;
-            filter: drop-shadow(0 0 10px var(--accent-gold));
-        }
+        /* ✨ طفو الأيقونة النشطة */
+        .nav-item.active .icon-wrapper {
+            animation: float 3s ease-in-out infinite; 
+            text-shadow: 0 0 15px var(--accent-orange), 0 0 5px var(--accent-gold);
+        }
 
-        /* ✨ تنسيق الأيقونات الحديثة (SVG) */
-        .icon-wrapper svg, i[data-lucide] {
-            width: 24px;
-            height: 24px;
-            stroke: currentColor;
-            stroke-width: 2.2;
-            fill: none;
-            transition: all 0.3s ease;
-        }
+        /* 🃏 البطاقات (تم إضافتها لتتفاعل باللون الذهبي والناري عند اللمس) */
+        .card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
 
-        .nav-item.active .icon-wrapper svg {
-            transform: scale(1.1);
-            stroke-width: 2.5;
-        }
+        .card:hover, .card:active {
+            transform: translateY(-5px);
+            border-color: rgba(255, 222, 89, 0.4);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 15px rgba(255, 145, 77, 0.2);
+        }
 
-        /* 🃏 تفاعل البطاقات عند اللمس والتمرير */
-        .card {
-            background: var(--bg-card);
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 18px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-            border: 1px solid var(--glass-border);
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-        }
+        /* 🔘 الأزرار الرئيسية (مع التدرج المتحرك واللمعان الخرافي) */
+        .btn-action {
+            position: relative;
+            width: 100%;
+            /* تدرج ناري وذهبي عريض ليتم تحريكه */
+            background: linear-gradient(270deg, #ff3131, #ff914d, #ffde59, #ff914d, #ff3131);
+            background-size: 300% 300%;
+            animation: gradientMove 4s ease infinite;
+            color: #0b0b0e; /* لون داكن ليبرز مع الذهبي الساطع */
+            border: none;
+            padding: 16px;
+            border-radius: 14px;
+            font-weight: 900; 
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 8px 25px var(--glow-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            overflow: hidden;
+            z-index: 1;
+        }
 
-        .card:hover, .card:active {
-            transform: translateY(-5px);
-            border-color: rgba(252, 176, 69, 0.4);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 15px rgba(252, 176, 69, 0.1);
-        }
+        /* تأثير اللمعان السريع (Shimmer) على الزر */
+        .btn-action::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-15deg);
+            animation: shimmer 3s infinite linear;
+            z-index: -1;
+        }
 
-        /* 🔘 الأزرار الرئيسية بتأثير الـ VIP والتدرج المتحرك */
-        .btn-action {
-            position: relative;
-            width: 100%;
-            background: linear-gradient(270deg, #833ab4, #fd1d1d, #fcb045, #fd1d1d, #833ab4);
-            background-size: 300% 300%;
-            animation: gradientMove 4s ease infinite;
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 16px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 8px 25px rgba(253, 29, 29, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            overflow: hidden;
-            z-index: 1;
-        }
+        .btn-action:active {
+            transform: scale(0.94) translateY(2px);
+            box-shadow: 0 4px 15px rgba(255, 145, 77, 0.6);
+        }
 
-        .btn-action::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
-            transform: skewX(-15deg);
-            animation: shimmer 3s infinite linear;
-            z-index: -1;
-        }
+        .btn-secondary {
+            width: 100%;
+            background: transparent;
+            color: #aaa;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
 
-        .btn-action:active {
-            transform: scale(0.94) translateY(2px);
-            box-shadow: 0 4px 15px rgba(253, 29, 29, 0.6);
-        }
+        .btn-secondary:active {
+            background: rgba(255,255,255,0.05);
+        }
 
-        .btn-secondary {
-            width: 100%;
-            background: transparent;
-            color: #aaa;
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 14px;
-            border-radius: 14px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+        /* ✨ التأثيرات الحركية (Keyframes) الأساسية للتطبيق */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        .btn-secondary:active {
-            background: rgba(255,255,255,0.05);
-        }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
 
-        /* ✨ تأثيرات حركية (Animations) */
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) skewX(-15deg); }
+            100% { transform: translateX(200%) skewX(-15deg); }
+        }
 
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+        @keyframes float {
+            0% { transform: translateY(0px) scale(1.2); }
+            50% { transform: translateY(-4px) scale(1.2); }
+            100% { transform: translateY(0px) scale(1.2); }
+        }
 
-        @keyframes shimmer {
-            0% { transform: translateX(-100%) skewX(-15deg); }
-            100% { transform: translateX(200%) skewX(-15deg); }
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px) scale(1.15); }
-            50% { transform: translateY(-4px) scale(1.15); }
-            100% { transform: translateY(0px) scale(1.15); }
-        }
-
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 10px var(--glow-primary); }
-            50% { box-shadow: 0 0 25px var(--accent-gold), 0 0 10px var(--accent-red); }
-            100% { box-shadow: 0 0 10px var(--glow-primary); }
-        }
-    </style>
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 10px rgba(255, 145, 77, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(255, 222, 89, 0.4), 0 0 10px rgba(255, 49, 49, 0.3); }
+            100% { box-shadow: 0 0 10px rgba(255, 145, 77, 0.2); }
+        }
+    </style>
 </head>
 <body>
 
-    <!-- 🌟 الهيدر العلوي -->
-    <header class="top-bar" id="top-bar">
-        <div id="club" style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: #e0e0e0; font-weight: bold;">
-            <span>ناديك:</span> 
-            <i data-lucide="crown" style="color: var(--accent-gold); width: 18px; height: 18px; filter: drop-shadow(0 0 5px var(--accent-gold));"></i> 
-            <b style="color: #fff;">ريال مدريد</b>
-        </div>
-        <div id="points" style="display: flex; align-items: center; gap: 6px; font-weight: bold; color: var(--accent-gold); background: rgba(252, 176, 69, 0.1); padding: 6px 14px; border-radius: 12px; border: 1px solid rgba(252, 176, 69, 0.2);">
-            <i data-lucide="coins" style="width: 18px; height: 18px;"></i>
-            1,500
-        </div>
-    </header>
+    <header class="top-bar" id="top-bar" style="display: none;">
+        <div id="club" style="font-size: 0.9rem; color: #e0e0e0; font-weight: bold;">ناديك: 👑 <b style="color: #fff;">ريال مدريد</b></div>
+        <div id="points" style="font-weight: bold; color: var(--accent-gold); background: rgba(255, 222, 89, 0.1); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(255, 222, 89, 0.2);">🪙 1,500</div>
+    </header>
 
-    <main class="container" id="main-content">
-        <!-- المحتوى يتغير هنا -->
-    </main>
+    <main class="container" id="main-content"></main>
 
-    <!-- 🌟 شريط التنقل السفلي الفخم مع الأيقونات الحديثة المصححة -->
-    <nav class="bottom-nav" id="bottom-nav">
-        <button class="nav-item active" onclick="showPage('home')">
-            <span class="icon-wrapper"><i data-lucide="house"></i></span>
-            <span class="nav-text">الرئيسية</span>
-        </button>
-        <button class="nav-item" onclick="showPage('tasks')">
-            <span class="icon-wrapper"><i data-lucide="clipboard-list"></i></span>
-            <span class="nav-text">المهام</span>
-        </button>
-        <button class="nav-item" onclick="showPage('friends')">
-            <span class="icon-wrapper"><i data-lucide="users"></i></span>
-            <span class="nav-text">الأصدقاء</span>
-        </button>
-        <button class="nav-item" onclick="showPage('leaderboard')">
-            <span class="icon-wrapper"><i data-lucide="trophy"></i></span>
-            <span class="nav-text">الترتيب</span>
-        </button>
-        <button class="nav-item" onclick="showPage('wallet')">
-            <span class="icon-wrapper"><i data-lucide="wallet"></i></span>
-            <span class="nav-text">المحفظة</span>
-        </button>
-    </nav>
+    <nav class="bottom-nav" id="bottom-nav" style="display: none;">
+        <button class="nav-item active" onclick="showPage('home')">
+            <span class="icon icon-wrapper">🏠</span>
+            <span class="nav-text">الرئيسية</span>
+        </button>
+        <button class="nav-item" onclick="showPage('tasks')">
+            <span class="icon icon-wrapper">🛠️</span>
+            <span class="nav-text">المهام</span>
+        </button>
+        <button class="nav-item" onclick="showPage('friends')">
+            <span class="icon icon-wrapper">👥</span>
+            <span class="nav-text">الأصدقاء</span>
+        </button>
+        <button class="nav-item" onclick="showPage('leaderboard')">
+            <span class="icon icon-wrapper">🏆</span>
+            <span class="nav-text">الترتيب</span>
+        </button>
+        <button class="nav-item" onclick="showPage('wallet')">
+            <span class="icon icon-wrapper">👛</span>
+            <span class="nav-text">المحفظة</span>
+        </button>
+    </nav>
 
-    <!-- السكربتات الخاصة بك -->
-    <script src="clubsData.js?v=2"></script>
-    <script src="data.js?v=2"></script> 
-    <script src="countries.js?v=2"></script>
-    <script src="login.js?v=2"></script>
-    <script src="weekly_ranking.js?v=2"></script>
-    <script src="predictions_ranking.js?v=2"></script> 
-    <script src="home.js?v=2"></script>
-    <script src="tasks.js?v=2"></script>
-    <script src="leaderboard.js?v=2"></script>
-    <script src="friends.js?v=2"></script>
-    <script src="wallet.js?v=2"></script>
-    <script src="app.js?v=2"></script>
+    <script src="clubsData.js?v=2"></script>
+    <script src="data.js?v=2"></script> 
+    <script src="countries.js?v=2"></script>
+    <script src="login.js?v=2"></script>
+    <script src="weekly_ranking.js?v=2"></script>
+    <script src="predictions_ranking.js?v=2"></script> 
+    <script src="home.js?v=2"></script>
+    <script src="tasks.js?v=2"></script>
+    <script src="leaderboard.js?v=2"></script>
+    <script src="friends.js?v=2"></script>
+    <script src="wallet.js?v=2"></script>
+    <script src="app.js?v=2"></script>
 
-    <!-- 🌟 تفعيل الأيقونات -->
-    <script>
-        lucide.createIcons();
-    </script>
 </body>
 </html>
