@@ -1,14 +1,23 @@
 /* ==========================================
-   🏟️ تطبيق زيلو إف سي (Zelo Sport) - التنسيق السينمائي المطور
+   🏟️ تطبيق زيلو إف سي (Zelo Sport) - الهوية البصرية الجديدة (طاقة وحماس)
    ========================================== */
 
 :root {
-  --bg-dark: #0f172a;
-  --bg-card: #1e293b;
+  /* ألوان الخلفيات الداكنة (حافظنا عليها لضمان وضوح النصوص) */
+  --bg-dark: #121215;
+  --bg-card: #1c1c22;
   --text-main: #f8fafc;
-  --accent-gold: #eab308;
-  --accent-blue: #3b82f6;
-  --nav-active: #10b981;
+  
+  /* الألوان الجديدة المستوحاة من بطاقة الترتيب */
+  --accent-gold: #fcb045;
+  --accent-red: #fd1d1d;
+  --accent-purple: #833ab4;
+  
+  /* التدرج اللوني الرئيسي الذي أعجبك */
+  --gradient-primary: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+  
+  /* لون الأزرار النشطة في الشريط السفلي */
+  --nav-active: #fd1d1d; 
 }
 
 body {
@@ -51,7 +60,8 @@ body {
   width: 35px;
   height: 35px;
   border-radius: 50%;
-  border: 2px solid var(--accent-blue);
+  /* تم تغيير إطار الصورة ليتناسب مع الهوية الجديدة */
+  border: 2px solid var(--accent-gold); 
   object-fit: cover;
 }
 
@@ -89,7 +99,7 @@ body {
 }
 
 .points-badge {
-  border: 1px solid rgba(234, 179, 8, 0.3);
+  border: 1px solid rgba(252, 176, 69, 0.3); /* تم تحديث درجة اللون */
   color: var(--accent-gold);
 }
 
@@ -101,7 +111,7 @@ body {
   right: 5%;
   width: 90%;
   height: 65px;
-  background: rgba(30, 41, 59, 0.95);
+  background: rgba(28, 28, 34, 0.95);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 30px;
@@ -127,6 +137,7 @@ body {
   width: 50px;
   height: 50px;
   border-radius: 50%;
+  color: #888899;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -146,10 +157,11 @@ body {
   transform: scale(0.82); /* تأثير الضغط المرتد الأصلي */
 }
 
-/* حالة الزر النشط المستدعى برمجياً */
+/* حالة الزر النشط المستدعى برمجياً - ألوان متناسقة مع الهوية الجديدة */
 .nav-item.active {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: rgba(253, 29, 29, 0.15);
+  border: 1px solid rgba(253, 29, 29, 0.4);
+  color: var(--accent-gold);
 }
 
 .nav-item.active .icon-wrapper {
@@ -165,9 +177,10 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
+/* الأزرار الرئيسية أصبحت الآن تحمل التدرج اللوني الجميل */
 .btn-action {
   width: 100%;
-  background: var(--accent-blue);
+  background: var(--gradient-primary); /* تطبيق التدرج اللوني هنا */
   color: white;
   border: none;
   padding: 12px;
@@ -176,11 +189,13 @@ body {
   font-size: 1rem;
   cursor: pointer;
   margin-top: 10px;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 15px rgba(253, 29, 29, 0.3); /* ظل خفيف متناسق */
 }
 
 .btn-action:active {
   opacity: 0.8;
+  transform: scale(0.97);
 }
 
 /* ✨ تأثيرات حركية مضافة لشاشة الدخول واختيار الأندية */
