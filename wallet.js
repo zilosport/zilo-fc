@@ -1,5 +1,5 @@
 // ==========================================
-// 👛 ملف قسم المحفظة (Wallet) - (مُحدث مع الرصيد الحقيقي وقاعدة البيانات)
+// 👛 ملف قسم المحفظة (Wallet) - (مُحدث بتصميم الأزرار الجديد)
 // ==========================================
 
 function renderWalletPage(container) {
@@ -10,7 +10,6 @@ function renderWalletPage(container) {
             <div style="background: linear-gradient(145deg, #16161a, #1c1c22); border: 1px solid rgba(76, 175, 80, 0.4); border-radius: 20px; padding: 30px 20px; text-align: center;">
                 
                 <div style="margin-bottom: 20px;">
-                    <!-- 🚀 تم حل مشكلة الشعار هنا باستخدام رابط PNG موثوق -->
                     <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" alt="TON" style="width: 55px; height: 55px; object-fit: contain;">
                 </div>
                 
@@ -24,8 +23,15 @@ function renderWalletPage(container) {
                 </div>
                 
                 <div style="display: flex; gap: 12px; justify-content: center;">
-                    <button onclick="copyToClipboard('${userState.walletAddress}')" style="flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: bold; background: #2b2b36; color: #fff; cursor: pointer;">${t('btnCopyAddress')}</button>
-                    <button onclick="triggerDisconnect()" style="flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: bold; background: rgba(244, 67, 54, 0.15); color: #f44336; border: 1px solid rgba(244, 67, 54, 0.3); cursor: pointer;">${t('btnDisconnect')}</button>
+                    <!-- 🚀 زر نسخ العنوان بالتصميم الناري الجديد -->
+                    <button onclick="copyToClipboard('${userState.walletAddress}')" style="flex: 1; padding: 12px 24px; background: var(--gradient-primary, linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 15px rgba(253, 29, 29, 0.3);">
+                        ${t('btnCopyAddress')}
+                    </button>
+                    
+                    <!-- 🚀 زر قطع الاتصال بنفس الشكل ولكن بلون تحذيري أحمر غامق -->
+                    <button onclick="triggerDisconnect()" style="flex: 1; padding: 12px 24px; background: #2a2a35; color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.2); border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem;">
+                        ${t('btnDisconnect')}
+                    </button>
                 </div>
             </div>
         `;
@@ -37,12 +43,13 @@ function renderWalletPage(container) {
         container.innerHTML = `
             <div style="background: linear-gradient(145deg, #16161a, #1c1c22); border: 1px solid #25252d; border-radius: 20px; padding: 30px 20px; text-align: center;">
                 <div style="margin-bottom: 20px;">
-                    <!-- 🚀 تم حل مشكلة الشعار هنا أيضاً -->
                     <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" alt="TON" style="width: 55px; height: 55px; filter: grayscale(100%) opacity(0.6); object-fit: contain;">
                 </div>
                 <h3 style="color: #fff;">${t('walletConnectTitle')}</h3>
                 <p style="color: #aaa; font-size: 0.9rem; line-height: 1.5; margin-bottom: 30px;">${t('walletConnectSub')}</p>
-                <button onclick="triggerConnect()" style="background: linear-gradient(135deg, #0088cc, #005580); color: white; border: none; padding: 14px 28px; border-radius: 25px; font-size: 1rem; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0, 136, 204, 0.4);">
+                
+                <!-- 🚀 زر ربط المحفظة بالتصميم الناري الجذاب -->
+                <button onclick="triggerConnect()" style="padding: 14px 28px; background: var(--gradient-primary, linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; display: inline-flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 20px rgba(253, 29, 29, 0.4); width: 80%;">
                     ${t('btnConnect')}
                 </button>
             </div>
