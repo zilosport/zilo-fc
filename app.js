@@ -360,7 +360,7 @@ window.renderRankingScreen = async function(container) {
                 <div style="text-align:center; padding:50px; color:#fff;">
                     <h2 style="font-size: 2rem; margin-bottom: 15px;">🏆 ${userState.lang === 'ar' ? 'الترتيب الأسبوعي' : 'Weekly Ranking'}</h2>
                     <p style="color: #aaa;">${userState.lang === 'ar' ? 'لا توجد بيانات في الترتيب حالياً.' : 'No ranking data available yet.'}</p>
-                    <button onclick="showPage('home')" style="margin-top: 20px; padding: 12px 24px; background: #333; color: white; border: none; border-radius: 12px; cursor: pointer;">
+                    <button onclick="showPage('home')" class="btn-secondary" style="margin-top: 20px;">
                         ${userState.lang === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
                     </button>
                 </div>`;
@@ -440,7 +440,7 @@ window.renderRankingScreen = async function(container) {
             <div style="text-align:center; padding:50px; color:#ff4d4d;">
                 <h3>${userState.lang === 'ar' ? 'حدث خطأ!' : 'Error!'}</h3>
                 <p>${userState.lang === 'ar' ? 'لم نتمكن من جلب الترتيب، يرجى المحاولة لاحقاً.' : 'Could not fetch rankings, please try again later.'}</p>
-                <button onclick="showPage('home')" style="margin-top: 20px; padding: 10px 20px; background: #333; color: white; border: none; border-radius: 8px;">
+                <button onclick="showPage('home')" class="btn-secondary" style="margin-top: 20px;">
                     ${userState.lang === 'ar' ? 'عودة' : 'Back'}
                 </button>
             </div>`;
@@ -466,7 +466,7 @@ window.openChallengesScreen = function() {
                 <div style="padding: 30px 20px; text-align: center; color: white;">
                     <h2 style="font-size: 2rem; margin-bottom: 15px;">⚽ ${userState.lang === 'ar' ? 'تحديات الأسبوع' : 'Weekly Challenges'}</h2>
                     <p style="color: #ccc; margin-bottom: 25px;">${userState.lang === 'ar' ? 'قريباً سيتم عرض التحديات هنا...' : 'Challenges coming soon...'}</p>
-                    <button onclick="showPage('home')" style="padding: 12px 24px; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem;">
+                    <button onclick="showPage('home')" class="btn-action" style="margin-top: 20px;">
                         ${userState.lang === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
                     </button>
                 </div>
