@@ -1,12 +1,16 @@
 /**
  * ملف: predictions_ranking.js
- * الوظيفة: جلب المباريات ديناميكياً من قاعدة البيانات (جدول matches) وإدارة التوقعات
+ * الوظيفة: جلب المباريات ديناميكياً، إدارة التوقعات، وعرض لوحة الصدارة المنعزلة (Leaderboard)
  */
 
 function getT(key) {
     const lang = userState.lang || 'ar';
     return typeof i18n !== 'undefined' && i18n[lang][key] ? i18n[lang][key] : key;
 }
+
+// ==========================================
+// 1. شاشة التحديات والمباريات (Challenges)
+// ==========================================
 
 window.openChallengesScreen = async function() {
     if (document.getElementById('challenges-overlay')) return;
@@ -37,7 +41,7 @@ window.openChallengesScreen = async function() {
 
     if (typeof supabaseClient !== 'undefined' && userState.userId) {
         try {
-            // 1. جلب التوقعات السابقة للمستخدم
+            // جلب التوقعات السابقة للمستخدم
             const { data: predData } = await supabaseClient
                 .from('match_predictions')
                 .select('match_id')
@@ -45,7 +49,7 @@ window.openChallengesScreen = async function() {
                 
             if (predData) userState.predictedMatches = predData.map(p => p.match_id);
 
-            // 2. جلب المباريات من جدولك الحقيقي (matches) مع الترتيب بالساعة والدقيقة
+            // جلب المباريات من جدولك الحقيقي (matches) مع الترتيب بالساعة والدقيقة
             const { data: matchesData, error: matchesError } = await supabaseClient
                 .from('matches') 
                 .select('id, team_a, team_b, match_date, status, result')
@@ -171,6 +175,10 @@ window.closeChallengesScreen = function() {
     const overlay = document.getElementById('challenges-overlay');
     if (overlay) overlay.remove();
 };
+
+// ==========================================
+// 2. نافذة إدخال التوقع (Prediction Modal)
+// ==========================================
 
 window.showPredictionModal = function(matchId, team1, team2) {
     if (document.getElementById('prediction-modal')) return;
@@ -299,4 +307,71 @@ window.submitPrediction = async function(matchId, team1, team2) {
                                     ${userState.lang === 'ar' ? 'تم التوقع ✅' : 'Predicted ✅'}
                                   </button>`;
     }
+};
+
+// ==========================================
+// 3. شاشة لوحة الصدارة (Leaderboard)
+// ==========================================
+
+window.openLeaderboardScreen = async function() {
+    if (document.getElementById('leaderboard-overlay')) return;
+
+    const isAr = userState.lang === 'ar';
+    const overlay = document.createElement('div');
+    overlay.id = 'leaderboard-overlay';
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: #121215; z-index: 9999; padding: 20px; 
+        box-sizing: border-box; overflow-y: auto; color: white;
+        direction: ${isAr ? 'rtl' : 'ltr'}; text-align: ${isAr ? 'right' : 'left'};
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
+            <h2 style="margin:0; color:#ffd700;">${isAr ? 'لوحة الصدارة 🏆' : 'Leaderboard 🏆'}</h2>
+            <button onclick="window.closeLeaderboardScreen()" style="background:none; border:none; color:white; font-size:1.8rem; cursor:pointer;">✕</button>
+        </div>
+        <div id="leaderboard-content" style="text-align:center; color:#888; padding:50px;">⏳ جاري تحميل الترتيب...</div>
+    `;
+
+    try {
+        // جلب الترتيب من الجدول المنعزل (Challenge Rankings)
+        const { data: rankings, error } = await supabaseClient
+            .from('challenge_rankings')
+            .select('*')
+            .order('points', { ascending: false });
+
+        if (error) throw error;
+
+        if (!rankings || rankings.length === 0) {
+            document.getElementById('leaderboard-content').innerHTML = isAr ? 'لا يوجد ترتيب حالياً' : 'No rankings available';
+            return;
+        }
+
+        let listHtml = rankings.map((r, index) => {
+            const isEliminated = r.is_eliminated;
+            return `
+                <div style="background:${isEliminated ? '#331a1a' : '#1c1c22'}; padding:15px; border-radius:12px; margin-bottom:10px; border:1px solid ${isEliminated ? '#600' : '#333'}; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-weight:bold; font-size:1.2rem; color:${index < 3 ? '#ffd700' : '#fff'};">#${index + 1}</div>
+                    <div style="flex:1; margin: 0 15px; text-align:start;">
+                        ${isAr ? 'مستخدم' : 'User'} ${r.telegram_id.slice(-4)}
+                        ${isEliminated ? `<span style="color:#ff4444; font-size:0.8rem;"> (${isAr ? 'مقصى' : 'Eliminated'})</span>` : ''}
+                    </div>
+                    <div style="font-weight:bold; color:#4caf50;">${r.points} ${isAr ? 'نقطة' : 'pts'}</div>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('leaderboard-content').innerHTML = listHtml;
+
+    } catch (err) {
+        console.error("Error:", err);
+        document.getElementById('leaderboard-content').innerHTML = isAr ? 'خطأ في جلب البيانات' : 'Error loading rankings';
+    }
+};
+
+window.closeLeaderboardScreen = function() {
+    const overlay = document.getElementById('leaderboard-overlay');
+    if (overlay) overlay.remove();
 };
