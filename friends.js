@@ -40,10 +40,13 @@ window.fetchFriendsFromDB = async function(userId) {
         // 3. دمج البيانات (الاسم مع النقاط) لتناسب واجهة التطبيق
         const friendsList = referrals.map(ref => {
             const friendInfo = users.find(u => u.telegram_id === ref.referred_id);
-            let name = "صديق جديد";
+            // جلب الترجمة لكلمة "صديق جديد"
+            let fallbackName = typeof t === 'function' ? t('newFriend') : "New Friend";
+            let name = fallbackName;
+            
             if (friendInfo) {
                 // نفضل الاسم الأول، وإذا لم يوجد نأخذ المعرف (username)
-                name = friendInfo.first_name || friendInfo.username || "صديق جديد";
+                name = friendInfo.first_name || friendInfo.username || fallbackName;
             }
             return {
                 name: name,
@@ -66,20 +69,20 @@ window.renderFriendsPage = async function(container) {
     
     // 1. رسم الواجهة الأساسية مع حالة "جاري التحميل..."
     container.innerHTML = `
-        <h3 style="color:#ffd700;">${tFunc('referralTitle') || 'دعوة الأصدقاء'}</h3>
-        <p style="color: #aaa; font-size: 0.85rem;">${tFunc('referralSub') || 'ادعُ أصدقاءك واكسب نقاط ZELO FC إضافية!'}</p>
+        <h3 style="color:#ffd700;">${tFunc('referralTitle') || 'Referral System'}</h3>
+        <p style="color: #aaa; font-size: 0.85rem;">${tFunc('referralSub') || 'Share your link!'}</p>
         
         <div style="background: #16161a; border: 1px dashed #334; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
             <p style="color:#0088cc; font-family:monospace; font-size:0.8rem; word-break:break-all; margin:0 0 12px 0;">${referralLink}</p>
             <div style="display: flex; gap: 10px; justify-content: center;">
-                <button onclick="window.copyToClipboard('${referralLink}')" style="flex:1; padding:10px; border-radius:8px; border:none; background:#4caf50; color:white; font-weight:bold; cursor:pointer;">${tFunc('btnCopy') || 'نسخ الرابط'}</button>
-                <button onclick="window.shareOnTelegram('${referralLink}')" style="flex:1; padding:10px; border-radius:8px; border:none; background:#0088cc; color:white; font-weight:bold; cursor:pointer;">${tFunc('btnShare') || 'مشاركة'}</button>
+                <button onclick="window.copyToClipboard('${referralLink}')" style="flex:1; padding:10px; border-radius:8px; border:none; background:#4caf50; color:white; font-weight:bold; cursor:pointer;">${tFunc('btnCopy') || 'Copy Link'}</button>
+                <button onclick="window.shareOnTelegram('${referralLink}')" style="flex:1; padding:10px; border-radius:8px; border:none; background:#0088cc; color:white; font-weight:bold; cursor:pointer;">${tFunc('btnShare') || 'Share'}</button>
             </div>
         </div>
 
-        <h4 style="color:#fff;" id="friends-count-title">${tFunc('friendsList') || 'قائمة الأصدقاء'} (⏳)</h4>
+        <h4 style="color:#fff;" id="friends-count-title">${tFunc('friendsList') || 'Joined Friends List'} (⏳)</h4>
         <div id="friends-list-container" style="text-align: center; padding: 20px;">
-            <span style="color: #888; font-size: 0.9rem;">جاري جلب بيانات الأصدقاء من السيرفر...</span>
+            <span style="color: #888; font-size: 0.9rem;">${tFunc('fetchingFriends') || 'Fetching friends data from server...'}</span>
         </div>
     `;
 
@@ -91,7 +94,7 @@ window.renderFriendsPage = async function(container) {
         const realFriends = await window.fetchFriendsFromDB(userState.userId);
         
         // تحديث العداد
-        friendsCountTitle.innerText = `${tFunc('friendsList') || 'قائمة الأصدقاء'} (${realFriends.length})`;
+        friendsCountTitle.innerText = `${tFunc('friendsList') || 'Joined Friends List'} (${realFriends.length})`;
 
         // 3. التحقق من وجود أصدقاء وعرضهم أو عرض الحالة الفارغة
         if (realFriends.length > 0) {
@@ -106,35 +109,36 @@ window.renderFriendsPage = async function(container) {
                     </div>
                     <div style="text-align: ${(typeof userState !== 'undefined' && userState.lang === 'ar') ? 'left' : 'right'};">
                         <span style="color: #4caf50; font-size: 0.85rem; font-weight: bold;">+${(friend.rewardPoints || 500)} ZELO</span>
-                        <br><small style="color: #888; font-size: 0.7rem;">${tFunc('invites') || 'دعوات:'} ${friend.referralsCount || 0}</small>
+                        <br><small style="color: #888; font-size: 0.7rem;">${tFunc('invites') || 'Invites:'} ${friend.referralsCount || 0}</small>
                     </div>
                 </div>
             `).join('');
         } else {
-            // حالة فارغة (Empty State)
+            // حالة فارغة (Empty State) - تم ربطها بالترجمة الآن
             friendsListContainer.innerHTML = `
                 <div style="background: rgba(255, 255, 255, 0.02); padding: 20px; border-radius: 12px; border: 1px solid #25252d;">
                     <span style="font-size: 2.5rem; display: block; margin-bottom: 10px;">🤝</span>
-                    <p style="color: #aaa; margin: 0; font-size: 0.9rem;">لم تقم بدعوة أي أصدقاء حتى الآن.<br>شارك رابطك لتبدأ بجمع نقاط ZELO FC!</p>
+                    <p style="color: #aaa; margin: 0; font-size: 0.9rem;">${tFunc('emptyFriendsState') || "You haven't invited any friends yet.<br>Share your link to start collecting ZELO FC points!"}</p>
                 </div>
             `;
         }
     } catch (error) {
         console.error("حدث خطأ أثناء تحميل بيانات الأصدقاء:", error);
-        friendsCountTitle.innerText = `${tFunc('friendsList') || 'قائمة الأصدقاء'} (0)`;
-        friendsListContainer.innerHTML = `<span style="color: #f44336; font-size: 0.9rem;">تعذر الاتصال بقاعدة البيانات. يرجى المحاولة لاحقاً.</span>`;
+        friendsCountTitle.innerText = `${tFunc('friendsList') || 'Joined Friends List'} (0)`;
+        // رسالة الخطأ تم ربطها بالترجمة أيضاً
+        friendsListContainer.innerHTML = `<span style="color: #f44336; font-size: 0.9rem;">${tFunc('dbConnectionError') || "Could not connect to the database. Please try again later."}</span>`;
     }
 };
 
 window.copyToClipboard = function(text) {
     navigator.clipboard.writeText(text).then(() => {
-        let alertMsg = typeof t === 'function' ? t('alertCopied') : 'تم نسخ الرابط بنجاح!';
+        let alertMsg = typeof t === 'function' ? t('alertCopied') : 'Link copied successfully!';
         alert(alertMsg);
     });
 };
 
 window.shareOnTelegram = function(link) {
-    const text = encodeURIComponent((typeof t === 'function' ? t('shareText') : 'انضم إلي في تطبيق Zelo Sport!'));
+    const text = encodeURIComponent((typeof t === 'function' ? t('shareText') : 'Choose your favorite club in ZELO FC and collect crypto rewards with me for free! 🏆'));
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`;
     if (typeof tg !== "undefined" && tg && tg.openTelegramLink) {
         tg.openTelegramLink(shareUrl); 
