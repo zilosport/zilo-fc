@@ -407,11 +407,9 @@ window.renderRankingScreen = async function(container) {
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div style="font-size: 1.2rem; font-weight: bold; color: ${rankColor}; width: 30px; text-align: center;">${rankBadge}</div>
                         
-                        <!-- استخدام onerror لعرض الصورة البديلة فوراً إذا كانت صورة تيليجرام معطلة -->
                         <img src="${avatar}" onerror="this.onerror=null; this.src='${defaultAvatar}';" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid ${isMe ? '#ffd700' : '#333'};">
                         
                         <div>
-                            <!-- تم إخفاء الـ ID والاكتفاء بعرض الاسم المستعار فقط -->
                             <h4 style="margin: 0; color: #fff; font-size: 1rem;">${aliasName} ${isMe ? `<span style="color:#ffd700; font-size:0.8rem;">${youText}</span>` : ''}</h4>
                         </div>
                     </div>
@@ -455,22 +453,29 @@ window.openRankingScreen = function() {
     }
 };
 
-window.openChallengesScreen = function() {
-    console.log("⚽ تم طلب فتح شاشة تحديات الأسبوع");
-    const contentDiv = document.getElementById("main-content");
-    if (contentDiv) {
-        if (typeof renderChallengesScreen === "function") {
-            renderChallengesScreen(contentDiv);
-        } else {
-            contentDiv.innerHTML = `
-                <div style="padding: 30px 20px; text-align: center; color: white;">
-                    <h2 style="font-size: 2rem; margin-bottom: 15px;">⚽ ${userState.lang === 'ar' ? 'تحديات الأسبوع' : 'Weekly Challenges'}</h2>
-                    <p style="color: #ccc; margin-bottom: 25px;">${userState.lang === 'ar' ? 'قريباً سيتم عرض التحديات هنا...' : 'Challenges coming soon...'}</p>
-                    <button onclick="showPage('home')" class="btn-action" style="margin-top: 20px;">
-                        ${userState.lang === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
-                    </button>
-                </div>
-            `;
+// ==========================================
+// ⚽ تهيئة دالة التحديات بأمان لمنع التعارض
+// ==========================================
+// نقوم بتعريف هذه الدالة كدالة احتياطية فقط في حال لم يتم تحميل ملف predictions_ranking.js
+// هذا يمنع ملف app.js من إلغاء أو حذف الكود الحقيقي الخاص بالمباريات والتوقعات عند تحميله لاحقاً.
+if (typeof window.openChallengesScreen !== 'function') {
+    window.openChallengesScreen = function() {
+        console.log("⚽ [احتياطي] تم طلب فتح شاشة تحديات الأسبوع (لم يتم تحميل الملف الرئيسي)");
+        const contentDiv = document.getElementById("main-content");
+        if (contentDiv) {
+            if (typeof renderChallengesScreen === "function") {
+                renderChallengesScreen(contentDiv);
+            } else {
+                contentDiv.innerHTML = `
+                    <div style="padding: 30px 20px; text-align: center; color: white;">
+                        <h2 style="font-size: 2rem; margin-bottom: 15px;">⚽ ${userState.lang === 'ar' ? 'تحديات الأسبوع' : 'Weekly Challenges'}</h2>
+                        <p style="color: #ccc; margin-bottom: 25px;">${userState.lang === 'ar' ? 'قريباً سيتم عرض التحديات هنا...' : 'Challenges coming soon...'}</p>
+                        <button onclick="showPage('home')" class="btn-action" style="margin-top: 20px;">
+                            ${userState.lang === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
+                        </button>
+                    </div>
+                `;
+            }
         }
-    }
-};
+    };
+}
