@@ -27,7 +27,7 @@ window.openChallengesScreen = async function() {
     const overlay = document.createElement('div');
     overlay.id = 'challenges-overlay';
     
-    // الشاشة الكاملة (خلفية صلبة غير شفافة)
+    // الشاشة الكاملة (خلفية صلبة داكنة غير شفافة تماماً)
     overlay.style.cssText = `
         position: fixed !important; 
         top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
@@ -188,7 +188,7 @@ window.closeChallengesScreen = function() {
 };
 
 // ---------------------------------------------------------
-// واجهة إدخال التوقع (Modal) 
+// واجهة إدخال التوقع (Modal) - خالية تماماً من القائمة المنسدلة
 // ---------------------------------------------------------
 window.showPredictionModal = function(matchId, team1, team2) {
     if (document.getElementById('prediction-modal')) return;
@@ -197,7 +197,7 @@ window.showPredictionModal = function(matchId, team1, team2) {
     const modal = document.createElement('div');
     modal.id = 'prediction-modal';
     
-    // (تم التعديل لإزالة الشفافية وإضافة تعتيم قوي للشاشة في الخلفية)
+    // واجهة غير شفافة صلبة مع تعتيم كامل للخلفية
     modal.style.cssText = `
         position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
         background: #1c1c22 !important; padding: 25px; border-radius: 20px;
@@ -207,7 +207,7 @@ window.showPredictionModal = function(matchId, team1, team2) {
         direction: ${isAr ? 'rtl' : 'ltr'}; box-sizing: border-box;
     `;
 
-    // تم إزالة قائمة (من سيفوز) بالكامل والاكتفاء بحقول الأهداف
+    // واجهة نظيفة وبسيطة تحتوي فقط على خانات إدخال الأهداف للفريقين
     modal.innerHTML = `
         <h3 style="margin:0 0 20px 0; text-align:center; color:var(--accent-gold, #fcb045);">${isAr ? 'أدخل توقعك للمباراة' : 'Enter your prediction'}</h3>
 
@@ -244,14 +244,14 @@ window.showPredictionModal = function(matchId, team1, team2) {
 };
 
 // ---------------------------------------------------------
-// دالة الإرسال (تستنتج الفائز تلقائياً)
+// دالة الإرسال (تستنتج الفائز والتعادل تلقائياً من الأهداف)
 // ---------------------------------------------------------
 window.submitPrediction = async function(matchId, team1, team2) {
     const score1 = document.getElementById('score-team1').value;
     const score2 = document.getElementById('score-team2').value;
     const isAr = userState.lang === 'ar';
     
-    // التحقق من إدخال كلا النتيجتين
+    // التحقق من أن المستخدم أدخل الأهداف للفريقين
     if (score1 === '' || score2 === '') {
         alert(isAr ? 'يرجى إدخال عدد الأهداف لكلا الفريقين' : 'Please enter the score for both teams');
         return;
@@ -260,7 +260,7 @@ window.submitPrediction = async function(matchId, team1, team2) {
     const t1Score = parseInt(score1);
     const t2Score = parseInt(score2);
 
-    // استنتاج الفائز تلقائياً
+    // 💡 الذكاء الاصطناعي: الكود يستنتج الفائز أو التعادل تلقائياً
     let autoWinner = 'draw';
     if (t1Score > t2Score) {
         autoWinner = team1;
