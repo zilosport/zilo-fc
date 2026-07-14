@@ -1,6 +1,6 @@
 /**
  * ملف: predictions_ranking.js
- * الوظيفة: جلب المباريات، وعرضها بشكل مباشر ونظيف، وإدارة التوقعات (نسخة مزودة بكاشف الأخطاء)
+ * الوظيفة: جلب المباريات، وعرضها بشكل مباشر ونظيف، وإدارة التوقعات (نسخة مزودة بكاشف الأخطاء والاتصال)
  */
 
 function getT(key) {
@@ -14,6 +14,13 @@ let globalPredictions = [];
 
 window.openChallengesScreen = async function() {
     if (document.getElementById('challenges-overlay')) return;
+
+    // ==========================================
+    // 🔴 مستشعرات فحص الاتصال والمتغيرات العامة:
+    // ==========================================
+    console.log("🔍 فحص الاتصال: supabaseClient هل هو موجود؟", typeof supabaseClient !== 'undefined');
+    console.log("👤 فحص المستخدم: userState.userId هل هو موجود؟", typeof userState !== 'undefined' ? userState.userId : 'userState غير معرّف');
+    // ==========================================
 
     const isAr = userState.lang === 'ar'; 
 
@@ -60,9 +67,6 @@ window.openChallengesScreen = async function() {
                 .select('*')
                 .order('match_date', { ascending: true });
 
-            // ==========================================
-            // 🔍 كود كشف الأخطاء الذي أضفناه هنا:
-            // ==========================================
             if (matchesError) {
                 console.error("❌ خطأ من Supabase (غالباً بسبب الـ RLS):", matchesError);
                 alert("حدث خطأ في صلاحيات قراءة المباريات، تحقق من الـ Console.");
@@ -78,11 +82,12 @@ window.openChallengesScreen = async function() {
                 
                 globalMatches = matchesData;
             }
-            // ==========================================
 
         } catch (err) {
             console.error("خطأ في جلب البيانات:", err);
         }
+    } else {
+        console.error("⛔ تم إلغاء جلب البيانات: تأكد من تعريف supabaseClient وأن userState.userId غير فارغ.");
     }
 
     // بعد جلب البيانات، نعرض المباريات فوراً
@@ -314,5 +319,5 @@ window.submitPrediction = async function(matchId, team1, team2) {
 };
 
 window.openPredictionHistoryScreen = function() {
-    // ... (نفس الكود السابق لم يتم تغييره)
+    // ...
 };
