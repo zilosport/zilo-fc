@@ -1,6 +1,6 @@
 /**
  * ملف: predictions_ranking.js
- * الوظيفة: جلب المباريات، وعرضها بشكل مباشر ونظيف، وإدارة التوقعات (نسخة مزودة بكاشف الأخطاء والاتصال)
+ * الوظيفة: جلب المباريات، وعرضها بشكل مباشر ونظيف، وإدارة التوقعات (نسخة مزودة بكاشف الأخطاء والاتصال وإصلاح الشفافية)
  */
 
 function getT(key) {
@@ -27,12 +27,13 @@ window.openChallengesScreen = async function() {
     const overlay = document.createElement('div');
     overlay.id = 'challenges-overlay';
     
-    // الشاشة الكاملة
+    // الشاشة الكاملة (تم التعديل لإزالة الشفافية وجعل اللون صلباً)
     overlay.style.cssText = `
         position: fixed !important; 
         top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
         width: 100vw !important; height: 100vh !important; 
-        background: var(--bg-dark, #121215) !important; z-index: 99999 !important; 
+        background: #121215 !important; 
+        z-index: 99999 !important; 
         padding: 20px; box-sizing: border-box; overflow-y: auto; color: white;
         direction: ${isAr ? 'rtl' : 'ltr'}; text-align: ${isAr ? 'right' : 'left'};
     `;
@@ -196,11 +197,13 @@ window.showPredictionModal = function(matchId, team1, team2) {
     const modal = document.createElement('div');
     modal.id = 'prediction-modal';
     
+    // (تم التعديل لإزالة الشفافية وإضافة تعتيم قوي للشاشة في الخلفية)
     modal.style.cssText = `
         position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
-        background: var(--bg-card, #1c1c22); padding: 25px; border-radius: 20px;
+        background: #1c1c22 !important; padding: 25px; border-radius: 20px;
         z-index: 100000 !important; width: 90%; max-width: 400px; color: white;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 0 0 100vw rgba(0,0,0,0.85), 0 10px 40px rgba(0,0,0,0.8) !important; 
+        border: 1px solid rgba(255,255,255,0.1);
         direction: ${isAr ? 'rtl' : 'ltr'}; box-sizing: border-box;
     `;
 
