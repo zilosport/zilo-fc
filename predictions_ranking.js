@@ -1,6 +1,6 @@
 /**
  * ملف: predictions_ranking.js
- * الوظيفة: جلب المباريات، وعرضها بشكل مباشر ونظيف، وإدارة التوقعات (نسخة مزودة بكاشف الأخطاء والاتصال وإصلاح الشفافية)
+ * الوظيفة: جلب المباريات، وعرضها بشكل مباشر ونظيف، وإدارة التوقعات (نسخة نهائية بدون القائمة المنسدلة)
  */
 
 function getT(key) {
@@ -27,7 +27,7 @@ window.openChallengesScreen = async function() {
     const overlay = document.createElement('div');
     overlay.id = 'challenges-overlay';
     
-    // الشاشة الكاملة (تم التعديل لإزالة الشفافية وجعل اللون صلباً)
+    // الشاشة الكاملة (خلفية صلبة غير شفافة)
     overlay.style.cssText = `
         position: fixed !important; 
         top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
@@ -207,18 +207,9 @@ window.showPredictionModal = function(matchId, team1, team2) {
         direction: ${isAr ? 'rtl' : 'ltr'}; box-sizing: border-box;
     `;
 
+    // تم إزالة قائمة (من سيفوز) بالكامل والاكتفاء بحقول الأهداف
     modal.innerHTML = `
         <h3 style="margin:0 0 20px 0; text-align:center; color:var(--accent-gold, #fcb045);">${isAr ? 'أدخل توقعك للمباراة' : 'Enter your prediction'}</h3>
-        
-        <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:8px; color:#ccc;">${getT('whoWillWin')}</label>
-            <select id="winner-select" style="width:100%; padding:12px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:white; box-sizing: border-box; direction: ${isAr ? 'rtl' : 'ltr'}; font-size:1rem;">
-                <option value="">${getT('selectWinner')}</option>
-                <option value="${team1}">${team1}</option>
-                <option value="${team2}">${team2}</option>
-                <option value="draw">${getT('drawMatch')}</option>
-            </select>
-        </div>
 
         <div style="background:rgba(0,0,0,0.2); padding:20px; border-radius:16px; margin-bottom:25px; border:1px solid rgba(255,255,255,0.05);">
             <div style="margin-bottom: 20px;">
@@ -252,20 +243,32 @@ window.showPredictionModal = function(matchId, team1, team2) {
     document.body.appendChild(modal);
 };
 
+// ---------------------------------------------------------
+// دالة الإرسال (تستنتج الفائز تلقائياً)
+// ---------------------------------------------------------
 window.submitPrediction = async function(matchId, team1, team2) {
-    const winner = document.getElementById('winner-select').value;
     const score1 = document.getElementById('score-team1').value;
     const score2 = document.getElementById('score-team2').value;
     const isAr = userState.lang === 'ar';
     
-    if (!winner || score1 === '' || score2 === '') {
-        alert(getT('validationError') || 'يرجى اختيار الفائز وإدخال النتيجة لكلا الفريقين');
+    // التحقق من إدخال كلا النتيجتين
+    if (score1 === '' || score2 === '') {
+        alert(isAr ? 'يرجى إدخال عدد الأهداف لكلا الفريقين' : 'Please enter the score for both teams');
         return;
     }
 
     const t1Score = parseInt(score1);
     const t2Score = parseInt(score2);
-    const finalPredictedScore = `${team1} ${t1Score} - ${t2Score} ${team2} | ${isAr ? 'الفائز:' : 'Winner:'} ${winner === 'draw' ? getT('drawMatch') : winner}`;
+
+    // استنتاج الفائز تلقائياً
+    let autoWinner = 'draw';
+    if (t1Score > t2Score) {
+        autoWinner = team1;
+    } else if (t2Score > t1Score) {
+        autoWinner = team2;
+    }
+
+    const finalPredictedScore = `${team1} ${t1Score} - ${t2Score} ${team2} | ${isAr ? 'الفائز:' : 'Winner:'} ${autoWinner === 'draw' ? (getT('drawMatch') || 'تعادل') : autoWinner}`;
     
     const submitBtn = document.getElementById('submit-prediction-btn');
     submitBtn.disabled = true;
@@ -303,7 +306,7 @@ window.submitPrediction = async function(matchId, team1, team2) {
                 alert("حدث خطأ في الاتصال. يرجى المحاولة لاحقاً.");
             }
             submitBtn.disabled = false;
-            submitBtn.innerText = isAr ? 'أرسل التخمين' : 'Submit Prediction';
+            submitBtn.innerText = isAr ? 'أرسل التخمين 🎯' : 'Submit Prediction 🎯';
             return;
         }
     }
