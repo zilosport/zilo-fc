@@ -1,6 +1,6 @@
 /**
  * ملف: predictions_ranking.js
- * الوظيفة: جلب المباريات، وعرضها بشكل مباشر ونظيف، وإدارة التوقعات (نسخة محمية من الأخطاء)
+ * الوظيفة: جلب المباريات، وعرضها بشكل مباشر ونظيف، وإدارة التوقعات (نسخة مزودة بكاشف الأخطاء)
  */
 
 function getT(key) {
@@ -60,9 +60,26 @@ window.openChallengesScreen = async function() {
                 .select('*')
                 .order('match_date', { ascending: true });
 
-            if (!matchesError && matchesData) {
+            // ==========================================
+            // 🔍 كود كشف الأخطاء الذي أضفناه هنا:
+            // ==========================================
+            if (matchesError) {
+                console.error("❌ خطأ من Supabase (غالباً بسبب الـ RLS):", matchesError);
+                alert("حدث خطأ في صلاحيات قراءة المباريات، تحقق من الـ Console.");
+            } else if (matchesData) {
+                console.log("🍏 عدد المباريات القادمة من قاعدة البيانات:", matchesData.length);
+                console.log("📄 تفاصيل المباريات:", matchesData);
+                
+                // تحقق سريع لمعرفة إذا كانت المشكلة في حقل الـ status
+                const hasNullStatus = matchesData.some(m => !m.status);
+                if (hasNullStatus) {
+                    console.warn("⚠️ تحذير: هناك مباريات بدون حالة (status فارغ)، ولن تظهر في التطبيق!");
+                }
+                
                 globalMatches = matchesData;
             }
+            // ==========================================
+
         } catch (err) {
             console.error("خطأ في جلب البيانات:", err);
         }
