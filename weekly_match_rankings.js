@@ -1,9 +1,18 @@
 /**
  * ملف: weekly_match_rankings.js
- * الوظيفة: شاشة الترتيب الكاملة (الثلاثة الأوائل + ترتيب المستخدم + سجل توقعاته وأخطائه)
+ * الوظيفة: شاشة الترتيب الكاملة (الثلاثة الأوائل + ترتيب المستخدم + سجل توقعاته وأخطائه + دعم الصور الشخصية)
  */
 
-// دالة لفتح شاشة الترتيب المنبثقة بحجم الشاشة الكاملة
+// دالة مساعدة لإنشاء الصورة الشخصية أو الحرف الأول
+const generateAvatar = (name, photoUrl, size = '50px') => {
+    if (photoUrl) {
+        return `<img src="${photoUrl}" style="width:${size}; height:${size}; border-radius:50%; object-fit:cover; border:2px solid var(--accent-gold, #fcb045); margin: 0 auto; display: block;">`;
+    } else {
+        const initial = name ? name.charAt(0).toUpperCase() : '👤';
+        return `<div style="width:${size}; height:${size}; border-radius:50%; background: linear-gradient(135deg, #833ab4, #fd1d1d); color:white; display:flex; align-items:center; justify-content:center; font-size:calc(${size} / 2.2); font-weight:bold; margin: 0 auto; border:2px solid var(--accent-gold, #fcb045);">${initial}</div>`;
+    }
+};
+
 window.openRankingScreen = function() {
     if (document.getElementById('ranking-full-screen')) return;
 
@@ -59,10 +68,11 @@ window.renderHomeRankingWidget = async function(containerId) {
     const isAr = userState.lang === 'ar'; 
 
     try {
-        // 1. جلب أول 3 لاعبين (المنصة)
+        // 1. جلب أول 3 لاعبين (تمت إضافة photo_url للاستعلام عن صورهم)
+        // ملاحظة: إذا لم يكن عمود photo_url موجوداً في الجدول، سيتجاهله الكود ويعرض الحرف الأول.
         const { data: top3 } = await supabaseClient
             .from('weekly_match_rankings')
-            .select('points_earned, users!inner(username)')
+            .select('points_earned, users!inner(username, photo_url)')
             .eq('is_eliminated', false)
             .eq('category', 'weekly') 
             .order('points_earned', { ascending: false })
@@ -103,9 +113,9 @@ window.renderHomeRankingWidget = async function(containerId) {
             <style>
                 .podium-container { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; margin-top: 20px; gap: 10px; }
                 .podium-card { background: var(--bg-card, #1c1c22); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; text-align: center; padding: 15px 5px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
-                .rank-1 { border-color: var(--accent-gold, #fcb045); background: rgba(252, 176, 69, 0.1); height: 160px; transform: translateY(-15px); }
-                .rank-2 { border-color: #c0c0c0; background: rgba(192, 192, 192, 0.1); height: 140px; }
-                .rank-3 { border-color: #cd7f32; background: rgba(205, 127, 50, 0.1); height: 130px; }
+                .rank-1 { border-color: var(--accent-gold, #fcb045); background: rgba(252, 176, 69, 0.1); height: 180px; transform: translateY(-15px); }
+                .rank-2 { border-color: #c0c0c0; background: rgba(192, 192, 192, 0.1); height: 150px; }
+                .rank-3 { border-color: #cd7f32; background: rgba(205, 127, 50, 0.1); height: 140px; }
                 .podium-name { font-size: 0.85rem; font-weight: bold; margin: 10px 0 5px 0; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
                 .podium-pts { font-size: 1.1rem; font-weight: bold; }
                 
@@ -113,7 +123,7 @@ window.renderHomeRankingWidget = async function(containerId) {
             </style>
         `;
 
-        // -- أ. قسم المنصة (الـ Top 3) --
+        // -- أ. قسم المنصة (الـ Top 3) مع إضافة الصور --
         if (top3 && top3.length > 0) {
             const secondPlace = top3[1];
             const firstPlace = top3[0];
@@ -123,7 +133,8 @@ window.renderHomeRankingWidget = async function(containerId) {
             if (secondPlace) {
                 html += `
                     <div class="podium-card rank-2">
-                        <div style="font-size: 2rem;">🥈</div>
+                        <div style="font-size: 1.5rem; margin-bottom: 5px;">🥈</div>
+                        ${generateAvatar(secondPlace.users.username, secondPlace.users.photo_url, '50px')}
                         <div class="podium-name">${secondPlace.users.username}</div>
                         <div class="podium-pts" style="color: #c0c0c0;">${secondPlace.points_earned}</div>
                     </div>`;
@@ -132,7 +143,8 @@ window.renderHomeRankingWidget = async function(containerId) {
             if (firstPlace) {
                 html += `
                     <div class="podium-card rank-1">
-                        <div style="font-size: 2.5rem;">👑</div>
+                        <div style="font-size: 2rem; margin-bottom: 5px;">👑</div>
+                        ${generateAvatar(firstPlace.users.username, firstPlace.users.photo_url, '65px')}
                         <div class="podium-name">${firstPlace.users.username}</div>
                         <div class="podium-pts" style="color: var(--accent-gold, #fcb045);">${firstPlace.points_earned}</div>
                     </div>`;
@@ -141,7 +153,8 @@ window.renderHomeRankingWidget = async function(containerId) {
             if (thirdPlace) {
                 html += `
                     <div class="podium-card rank-3">
-                        <div style="font-size: 1.8rem;">🥉</div>
+                        <div style="font-size: 1.5rem; margin-bottom: 5px;">🥉</div>
+                        ${generateAvatar(thirdPlace.users.username, thirdPlace.users.photo_url, '45px')}
                         <div class="podium-name">${thirdPlace.users.username}</div>
                         <div class="podium-pts" style="color: #cd7f32;">${thirdPlace.points_earned}</div>
                     </div>`;
@@ -152,7 +165,7 @@ window.renderHomeRankingWidget = async function(containerId) {
             html += `<div style="text-align:center; color:#666; padding: 30px;">${isAr ? 'لا توجد بيانات ترتيب حالياً' : 'No ranking data available'}</div>`;
         }
 
-        // -- ب. قسم بطاقة ترتيب المستخدم الحالي --
+        // -- ب. قسم بطاقة ترتيب المستخدم الحالي مع إضافة صورته --
         html += `
             <div class="my-rank-card">
                 <p style="margin: 0 0 10px 0; font-size: 0.95rem; color: rgba(255,255,255,0.9);">
@@ -162,8 +175,9 @@ window.renderHomeRankingWidget = async function(containerId) {
                     <div style="font-size: 2.5rem; font-weight: bold; color: #fff;">
                         #${myRank || (isAr ? '-' : '-')}
                     </div>
+                    ${generateAvatar(userState.username, userState.photoUrl, '60px')}
                     <div style="text-align: ${isAr ? 'right' : 'left'};">
-                        <div style="font-weight: bold; font-size: 1.2rem;">${userState.username}</div>
+                        <div style="font-weight: bold; font-size: 1.2rem;">${userState.username || 'User'}</div>
                         <div style="color: #fff; font-weight: bold; font-size: 1rem; margin-top: 3px; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 8px; display: inline-block;">
                             ${myData ? myData.points_earned : 0} ${isAr ? 'نقطة' : 'Pts'}
                         </div>
@@ -172,7 +186,7 @@ window.renderHomeRankingWidget = async function(containerId) {
             </div>
         `;
 
-        // -- ج. قسم سجل التوقعات والأخطاء (الجديد) --
+        // -- ج. قسم سجل التوقعات والأخطاء --
         let errorCount = 0;
         let historyHtml = '';
 
@@ -231,8 +245,16 @@ window.renderHomeRankingWidget = async function(containerId) {
 
     } catch (error) {
         console.error(isAr ? "خطأ في عرض الترتيب:" : "Error displaying ranking:", error);
-        container.innerHTML = `<div style="text-align:center; color: var(--accent-red, #fd1d1d); padding: 10px;">
-            ${isAr ? 'تعذر تحميل الترتيب.' : 'Failed to load ranking.'}
-        </div>`;
+        
+        // التحقق من أن الخطأ بسبب عدم وجود عمود الصورة
+        if (error.code === 'PGRST200' || error.message.includes('photo_url')) {
+             container.innerHTML = `<div style="text-align:center; color: var(--accent-gold); padding: 20px; background: rgba(252, 176, 69, 0.1); border-radius: 12px;">
+                ⚠️ <b>تنبيه للمطور:</b> يرجى إضافة عمود باسم <code>photo_url</code> (نوع TEXT) إلى جدول <code>users</code> في Supabase لكي تعمل استعلامات الصور.
+            </div>`;
+        } else {
+            container.innerHTML = `<div style="text-align:center; color: var(--accent-red, #fd1d1d); padding: 10px;">
+                ${isAr ? 'تعذر تحميل الترتيب.' : 'Failed to load ranking.'}
+            </div>`;
+        }
     }
 };
