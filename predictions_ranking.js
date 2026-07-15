@@ -1,6 +1,6 @@
 /**
  * ملف: predictions_ranking.js
- * الوظيفة: جلب المباريات، وعرضها بشكل مباشر ونظيف، وإدارة التوقعات (نسخة نهائية بدون القائمة المنسدلة)
+ * الوظيفة: جلب المباريات، وعرضها بشكل مباشر ونظيف، وإدارة التوقعات (نسخة نهائية ومحسنة)
  */
 
 function getT(key) {
@@ -15,24 +15,17 @@ let globalPredictions = [];
 window.openChallengesScreen = async function() {
     if (document.getElementById('challenges-overlay')) return;
 
-    // ==========================================
-    // 🔴 مستشعرات فحص الاتصال والمتغيرات العامة:
-    // ==========================================
-    console.log("🔍 فحص الاتصال: supabaseClient هل هو موجود؟", typeof supabaseClient !== 'undefined');
-    console.log("👤 فحص المستخدم: userState.userId هل هو موجود؟", typeof userState !== 'undefined' ? userState.userId : 'userState غير معرّف');
-    // ==========================================
-
     const isAr = userState.lang === 'ar'; 
 
     const overlay = document.createElement('div');
     overlay.id = 'challenges-overlay';
     
-    // الشاشة الكاملة (خلفية صلبة داكنة غير شفافة تماماً)
+    // الشاشة الكاملة
     overlay.style.cssText = `
         position: fixed !important; 
         top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
         width: 100vw !important; height: 100vh !important; 
-        background: #121215 !important; 
+        background: var(--bg-dark, #121215) !important; 
         z-index: 99999 !important; 
         padding: 20px; box-sizing: border-box; overflow-y: auto; color: white;
         direction: ${isAr ? 'rtl' : 'ltr'}; text-align: ${isAr ? 'right' : 'left'};
@@ -42,10 +35,10 @@ window.openChallengesScreen = async function() {
     // واجهة التحميل المؤقتة
     overlay.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
-            <h2 style="margin:0; color:#ffd700;">🏆 ${getT('weeklyChallenges')}</h2>
+            <h2 style="margin:0; color:var(--accent-gold, #ffd700);">🏆 ${getT('weeklyChallenges')}</h2>
             <button onclick="window.closeChallengesScreen()" style="background:none; border:none; color:white; font-size:1.8rem; cursor:pointer;">✕</button>
         </div>
-        <div style="text-align:center; color:#888; padding:50px;">⏳ جاري جلب المباريات...</div>
+        <div style="text-align:center; color:#888; padding:50px;">⏳ ${isAr ? 'جاري جلب المباريات...' : 'Loading matches...'}</div>
     `;
 
     if (!userState.predictedMatches) userState.predictedMatches = [];
@@ -68,27 +61,15 @@ window.openChallengesScreen = async function() {
                 .select('*')
                 .order('match_date', { ascending: true });
 
-            if (matchesError) {
-                console.error("❌ خطأ من Supabase (غالباً بسبب الـ RLS):", matchesError);
-                alert("حدث خطأ في صلاحيات قراءة المباريات، تحقق من الـ Console.");
-            } else if (matchesData) {
-                console.log("🍏 عدد المباريات القادمة من قاعدة البيانات:", matchesData.length);
-                console.log("📄 تفاصيل المباريات:", matchesData);
-                
-                // تحقق سريع لمعرفة إذا كانت المشكلة في حقل الـ status
-                const hasNullStatus = matchesData.some(m => !m.status);
-                if (hasNullStatus) {
-                    console.warn("⚠️ تحذير: هناك مباريات بدون حالة (status فارغ)، ولن تظهر في التطبيق!");
-                }
-                
+            if (matchesError) throw matchesError;
+
+            if (matchesData) {
                 globalMatches = matchesData;
             }
 
         } catch (err) {
             console.error("خطأ في جلب البيانات:", err);
         }
-    } else {
-        console.error("⛔ تم إلغاء جلب البيانات: تأكد من تعريف supabaseClient وأن userState.userId غير فارغ.");
     }
 
     // بعد جلب البيانات، نعرض المباريات فوراً
@@ -104,19 +85,40 @@ function renderMatchList(overlay, isAr) {
         <div id="matches-container">
     `;
 
-    // الحماية هنا: التحقق من وجود status قبل استخدام toUpperCase
-    const availableMatches = globalMatches.filter(m => m.status && m.status.toUpperCase() !== 'FINISHED');
+    // 1. فلترة المباريات وإخفاء المنتهية تماماً
+    const activeMatches = globalMatches.filter(m => {
+        const status = m.status ? m.status.toUpperCase().trim() : '';
+        return status !== 'FINISHED' && status !== 'انتهت' && status !== 'ENDED';
+    });
 
-    if (availableMatches.length === 0) {
-        html += `<div style="text-align:center; color:#888; padding:50px;">لا توجد مباريات متاحة للتوقع حالياً.</div>`;
+    if (activeMatches.length === 0) {
+        html += `<div style="text-align:center; color:#888; padding:50px;">${isAr ? 'لا توجد مباريات متاحة للتوقع حالياً.' : 'No matches available for prediction currently.'}</div>`;
     } else {
-        html += availableMatches.map(m => {
+        
+        // 2. فصل المباريات: المتاحة والجارية
+        const notStartedMatches = [];
+        const liveMatches = [];
+
+        activeMatches.forEach(m => {
             const matchDate = new Date(m.match_date);
             const now = new Date();
-            
-            // تحديد الحالة بشكل آمن
-            const safeStatus = m.status ? m.status.toUpperCase() : 'NOT_STARTED';
-            
+            const safeStatus = m.status ? m.status.toUpperCase().trim() : 'NOT_STARTED';
+            const isStarted = now >= matchDate || safeStatus === 'LIVE';
+
+            if (isStarted) {
+                liveMatches.push(m);
+            } else {
+                notStartedMatches.push(m);
+            }
+        });
+
+        // 3. ترتيب العرض: المتاحة أولاً في الأعلى، ثم الجارية
+        const sortedMatches = [...notStartedMatches, ...liveMatches];
+
+        html += sortedMatches.map(m => {
+            const matchDate = new Date(m.match_date);
+            const now = new Date();
+            const safeStatus = m.status ? m.status.toUpperCase().trim() : 'NOT_STARTED';
             const isStarted = now >= matchDate || safeStatus === 'LIVE'; 
             const hasPredicted = userState.predictedMatches.includes(m.id);
 
@@ -154,13 +156,13 @@ function renderMatchList(overlay, isAr) {
             }
 
             return `
-                <div class="card" style="position: relative; overflow: hidden; padding-top: 40px;">
+                <div class="card" style="position: relative; overflow: hidden; padding-top: 40px; margin-bottom: 15px; border-radius: 12px; background: var(--bg-card, #1c1c22); border: 1px solid rgba(255,255,255,0.05);">
                     <div style="position: absolute; top: 0; left: 0; width: 100%; background: rgba(255,255,255,0.05); padding: 8px 15px; box-sizing: border-box; display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <span style="font-size: 0.8rem; font-weight:bold; color:${statusColor};">حالة المباراة: ${statusText}</span>
+                        <span style="font-size: 0.8rem; font-weight:bold; color:${statusColor};">${isAr ? 'الحالة:' : 'Status:'} ${statusText}</span>
                         <span style="font-size: 0.8rem; color:#aaa;">📅 ${formattedDate} | 🕒 ${formattedTime}</span>
                     </div>
                     
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin: 15px 0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin: 15px;">
                         <div style="text-align:center; flex:1;">
                             <div style="font-weight:bold; font-size: 1.1rem; color:#fff;">${team1Name}</div>
                         </div>
@@ -170,7 +172,7 @@ function renderMatchList(overlay, isAr) {
                         </div>
                     </div>
                     
-                    <div id="btn-container-${m.id}">
+                    <div id="btn-container-${m.id}" style="padding: 0 15px 15px 15px;">
                         ${buttonHtml}
                     </div>
                 </div>
@@ -187,9 +189,6 @@ window.closeChallengesScreen = function() {
     if (overlay) overlay.remove();
 };
 
-// ---------------------------------------------------------
-// واجهة إدخال التوقع (Modal) - خالية تماماً من القائمة المنسدلة
-// ---------------------------------------------------------
 window.showPredictionModal = function(matchId, team1, team2) {
     if (document.getElementById('prediction-modal')) return;
 
@@ -197,7 +196,6 @@ window.showPredictionModal = function(matchId, team1, team2) {
     const modal = document.createElement('div');
     modal.id = 'prediction-modal';
     
-    // واجهة غير شفافة صلبة مع تعتيم كامل للخلفية
     modal.style.cssText = `
         position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
         background: #1c1c22 !important; padding: 25px; border-radius: 20px;
@@ -207,7 +205,6 @@ window.showPredictionModal = function(matchId, team1, team2) {
         direction: ${isAr ? 'rtl' : 'ltr'}; box-sizing: border-box;
     `;
 
-    // واجهة نظيفة وبسيطة تحتوي فقط على خانات إدخال الأهداف للفريقين
     modal.innerHTML = `
         <h3 style="margin:0 0 20px 0; text-align:center; color:var(--accent-gold, #fcb045);">${isAr ? 'أدخل توقعك للمباراة' : 'Enter your prediction'}</h3>
 
@@ -243,15 +240,11 @@ window.showPredictionModal = function(matchId, team1, team2) {
     document.body.appendChild(modal);
 };
 
-// ---------------------------------------------------------
-// دالة الإرسال (تستنتج الفائز والتعادل تلقائياً من الأهداف)
-// ---------------------------------------------------------
 window.submitPrediction = async function(matchId, team1, team2) {
     const score1 = document.getElementById('score-team1').value;
     const score2 = document.getElementById('score-team2').value;
     const isAr = userState.lang === 'ar';
     
-    // التحقق من أن المستخدم أدخل الأهداف للفريقين
     if (score1 === '' || score2 === '') {
         alert(isAr ? 'يرجى إدخال عدد الأهداف لكلا الفريقين' : 'Please enter the score for both teams');
         return;
@@ -260,7 +253,6 @@ window.submitPrediction = async function(matchId, team1, team2) {
     const t1Score = parseInt(score1);
     const t2Score = parseInt(score2);
 
-    // 💡 الذكاء الاصطناعي: الكود يستنتج الفائز أو التعادل تلقائياً
     let autoWinner = 'draw';
     if (t1Score > t2Score) {
         autoWinner = team1;
@@ -325,5 +317,5 @@ window.submitPrediction = async function(matchId, team1, team2) {
 };
 
 window.openPredictionHistoryScreen = function() {
-    // ...
+    // هذه الدالة جاهزة لتستدعي الكود الآخر الخاص بسجل التوقعات والترتيب
 };
