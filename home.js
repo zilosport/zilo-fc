@@ -1,15 +1,25 @@
 // ==========================================
-// 🏠 الصفحة الرئيسية (home.js) - نسخة الـ VIP المتوهجة والطافية
+// 🏠 الصفحة الرئيسية (home.js) - نسخة الـ VIP المتوهجة والطافية (تدعم الترجمة 100%)
 // ==========================================
 window.renderHomePage = async function(container) {
-    // رسالة تحميل مؤقتة حتى لا تظهر الصفحة فارغة أثناء جلب البيانات
-    container.innerHTML = `<div style="text-align:center; padding:50px; color:#888;">⏳ جاري تحميل بيانات ناديك...</div>`;
+    const isAr = userState.lang === 'ar';
+
+    // 🛡️ نظام حماية للترجمة: يضمن ظهور الكلمة باللغة الصحيحة دائماً حتى لو تأخر ملف data.js
+    const getSafeText = (key, fallbackAr, fallbackEn) => {
+        if (typeof i18n !== 'undefined' && i18n[userState.lang] && i18n[userState.lang][key]) {
+            return i18n[userState.lang][key];
+        }
+        return isAr ? fallbackAr : fallbackEn;
+    };
+
+    // رسالة تحميل مؤقتة مترجمة
+    container.innerHTML = `<div style="text-align:center; padding:50px; color:#888;">${isAr ? '⏳ جاري تحميل بيانات ناديك...' : '⏳ Loading your club data...'}</div>`;
 
     // 1. معالجة بيانات الأندية
     let selectedClubsData = userState.selectedClubs.map(id => {
         if (typeof allWorldCupCountriesClubs !== 'undefined') {
             for (const country in allWorldCupCountriesClubs) {
-                const foundClub = allWorldCupCountriesClubs[country].find(c => c.id === id);
+                const foundClub = allWorldCupCountriesClubs[country].find(c => String(c.id) === String(id));
                 if (foundClub) return foundClub;
             }
         }
@@ -25,8 +35,7 @@ window.renderHomePage = async function(container) {
 
     // 🚀 2. جلب عدد المشجعين والنقاط الحقيقية من Supabase
     if (typeof supabaseClient !== 'undefined' && selectedClubsData.length > 0) {
-        // نجلب فقط أرقام أندية المستخدم الحالي لتسريع العملية
-        const clubIds = selectedClubsData.map(c => c.id);
+        const clubIds = selectedClubsData.map(c => String(c.id));
         
         try {
             const { data: fansData, error } = await supabaseClient
@@ -39,14 +48,13 @@ window.renderHomePage = async function(container) {
                 let pointsMap = {};
                 
                 fansData.forEach(fan => {
-                    membersMap[fan.club_id] = (membersMap[fan.club_id] || 0) + 1; // زيادة عدد المشجعين
-                    pointsMap[fan.club_id] = (pointsMap[fan.club_id] || 0) + (fan.total_fan_points || 0); // جمع النقاط
+                    membersMap[fan.club_id] = (membersMap[fan.club_id] || 0) + 1; 
+                    pointsMap[fan.club_id] = (pointsMap[fan.club_id] || 0) + (fan.total_fan_points || 0); 
                 });
 
-                // حقن البيانات الحقيقية داخل كائن النادي
                 selectedClubsData.forEach(club => {
-                    club.members = membersMap[club.id] || 0;
-                    club.points = pointsMap[club.id] || 0;
+                    club.members = membersMap[String(club.id)] || 0;
+                    club.points = pointsMap[String(club.id)] || 0;
                 });
             }
         } catch (err) {
@@ -62,7 +70,7 @@ window.renderHomePage = async function(container) {
         `background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)), url('${primaryClub.logo}'); background-size: cover; background-position: center; border: 1px solid ${primaryClub.color || 'var(--accent-gold)'};`
         : 'background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05);';
 
-    // 3. بناء واجهة الأندية (تمت إضافة تأثير زجاجي خفيف لها)
+    // 3. بناء واجهة الأندية
     let clubsCardsHtml = selectedClubsData.map(club => `
         <div style="background: rgba(28, 28, 34, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; transition: transform 0.3s;">
             <div style="display: flex; align-items: center; gap: 15px;">
@@ -70,7 +78,7 @@ window.renderHomePage = async function(container) {
                 <div>
                     <h3 style="margin: 0; color: #fff; font-size: 1.2rem;">${typeof getClubName === "function" ? getClubName(club) : club.name} ${club.countryFlag}</h3>
                     <p style="margin: 5px 0 0 0; color: #10b981; font-size: 0.85rem; font-weight: bold;">
-                        👥 ${club.members ? club.members.toLocaleString() : '0'} ${userState.lang === 'ar' ? 'مشجع' : 'Fans'}
+                        👥 ${club.members ? club.members.toLocaleString() : '0'} ${isAr ? 'مشجع' : 'Fans'}
                     </p>
                 </div>
             </div>
@@ -82,17 +90,18 @@ window.renderHomePage = async function(container) {
         </div>
     `).join('');
 
-    // متغيرات للترجمة المباشرة للبطاقات
-    let titleWeeklyChallenges = typeof t === 'function' ? t('weeklyChallenges') : (userState.lang === 'ar' ? 'تحديات الأسبوع' : 'Weekly Challenges');
-    let textEuropeCups = typeof t === 'function' ? t('europeCups') : (userState.lang === 'ar' ? 'كؤوس أوروبا' : 'European Cups');
-    let textSpainCups = typeof t === 'function' ? t('spainCups') : (userState.lang === 'ar' ? 'كؤوس إسبانيا' : 'Spanish Cups');
-    let titleRanking = userState.lang === 'ar' ? 'ترتيب التحديات' : 'Challenges Ranking';
-    let textRankingDesc = userState.lang === 'ar' ? 'اكتشف المتصدرين وتعرف على ترتيبك' : 'Discover top players and your rank';
+    // تجهيز النصوص المترجمة بدقة فائقة باستخدام دالة الحماية
+    let titleWeeklyChallenges = getSafeText('weeklyChallenges', 'تحديات الأسبوع', 'Weekly Challenges');
+    let textEuropeCups = getSafeText('europeCups', 'كؤوس أوروبا', 'European Cups');
+    let textSpainCups = getSafeText('spainCups', 'كؤوس إسبانيا', 'Spanish Cups');
+    let titleRanking = isAr ? 'ترتيب التحديات' : 'Challenges Ranking';
+    let textRankingDesc = isAr ? 'اكتشف المتصدرين وتعرف على ترتيبك' : 'Discover top players and your rank';
+    let supportedClubsTitle = isAr ? 'أنديتك المفضلة:' : 'Your Supported Clubs:';
+    let loadingAlert = isAr ? '⏳ جاري التحميل...' : '⏳ Loading...';
 
-    // 4. تجميع الصفحة (مع إضافة ستايل الطفو والتوهج)
+    // 4. تجميع الصفحة (مع ستايل الطفو والتوهج)
     container.innerHTML = `
         <style>
-            /* حركات الطفو والتوهج لبطاقات الصفحة الرئيسية */
             @keyframes levitateCard {
                 0% { transform: translateY(0px); }
                 50% { transform: translateY(-6px); }
@@ -121,7 +130,7 @@ window.renderHomePage = async function(container) {
             <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.85rem; background: rgba(0,0,0,0.3); display: inline-block; padding: 2px 10px; border-radius: 10px;">ID: ${userState.userId}</p>
         </div>
       
-        <div id="challenges-card" class="floating-vip-card" onclick="if(typeof window.openChallengesScreen === 'function') { window.openChallengesScreen(); } else { alert(userState.lang === 'ar' ? '⏳ جاري التحميل...' : '⏳ Loading...'); }" style="cursor: pointer; background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255, 215, 0, 0.4); display: flex; align-items: center; gap: 15px;">
+        <div id="challenges-card" class="floating-vip-card" onclick="if(typeof window.openChallengesScreen === 'function') { window.openChallengesScreen(); } else { alert('${loadingAlert}'); }" style="cursor: pointer; background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255, 215, 0, 0.4); display: flex; align-items: center; gap: 15px;">
             <div style="font-size: 3rem; filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));">${primaryClub ? primaryClub.countryFlag : '⚽'}</div>
             <div>
                 <h3 style="color: #ffd700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${titleWeeklyChallenges}</h3>
@@ -129,7 +138,7 @@ window.renderHomePage = async function(container) {
             </div>
         </div>
 
-        <div id="ranking-card" class="floating-vip-card" onclick="if(typeof window.openRankingScreen === 'function') { window.openRankingScreen(); } else { alert(userState.lang === 'ar' ? '⏳ جاري التحميل...' : '⏳ Loading...'); }" style="cursor: pointer; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); padding: 20px; border-radius: 16px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 15px;">
+        <div id="ranking-card" class="floating-vip-card" onclick="if(typeof window.openRankingScreen === 'function') { window.openRankingScreen(); } else { alert('${loadingAlert}'); }" style="cursor: pointer; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); padding: 20px; border-radius: 16px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 15px;">
             <div style="font-size: 3rem; filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));">🏆</div>
             <div>
                 <h3 style="color: #fff; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${titleRanking}</h3>
@@ -137,7 +146,7 @@ window.renderHomePage = async function(container) {
             </div>
         </div>
 
-        <h4 style="color: #aaa; margin: 0 0 15px 0; font-size: 0.9rem; padding-right: 5px;">${userState.lang === 'ar' ? 'أنديتك المفضلة:' : 'Your Supported Clubs:'}</h4>
+        <h4 style="color: #aaa; margin: 0 0 15px 0; font-size: 0.9rem; padding-right: 5px;">${supportedClubsTitle}</h4>
         ${clubsCardsHtml}
     `;
 };
