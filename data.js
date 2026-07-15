@@ -1,5 +1,5 @@
 // ==========================================
-// 🚀 ملف البيانات (data.js) - Zelo Sport
+// 🚀 ملف البيانات والترجمة (data.js) - Zelo Sport
 // ==========================================
 
 const i18n = {
@@ -57,10 +57,18 @@ const i18n = {
         alertDisconnected: "تم قطع الاتصال بنجاح.",
 
         // ==========================================
-        // 🆕 الإضافات الجديدة (من الملفات الثلاثة)
+        // 🆕 الإضافات الجديدة (الخاصة بالتحديات والترتيب)
         // ==========================================
-        // 1. التحديات والتوقعات
         weeklyChallenges: "تحديات الأسبوع",
+        loadingMatches: "جاري جلب المباريات...",
+        noMatchesAvailable: "لا توجد مباريات متاحة للتوقع حالياً.",
+        matchStatus: "الحالة:",
+        statusNotStarted: "لم تبدأ بعد ⏳",
+        statusLive: "جارية الآن 🔴",
+        statusStarted: "انطلق التحدي ⏱️",
+        btnPredicted: "تم التوقع ✅",
+        btnClosed: "تم إغلاق التحدي 🔒",
+        btnPredictNow: "توقع النتيجة الآن 🎯",
         predictionsClosed: "❌ تم إغلاق التوقعات",
         predictScoreBtn: "🚀 تحدي النتيجة",
         predictMatchTitle: "توقع نتيجة المباراة",
@@ -71,11 +79,18 @@ const i18n = {
         confirmPrediction: "✅ تأكيد التوقع",
         cancelBtn: "إلغاء",
         validationError: "يرجى اختيار الفائز وكتابة النتيجة المتوقعة",
-        predictionSuccess: "✅ تم حفظ توقعك للمباراة بنجاح!\nالفائز: {winner}\nالنتيجة: {score}",
+        predictionSuccess: "تم حفظ توقعك للمباراة بنجاح! 🎯",
         spainCups: "كؤوس إسبانيا", 
-        europeCups: "كؤوس أوروبا", // تم تصحيحها هنا لتطابق الصورة
+        europeCups: "كؤوس أوروبا",
+        goalsLabel: "أهداف",
+        winnerLabel: "الفائز:",
+        enterPredictionTitle: "أدخل توقعك للمباراة",
+        submitPredictionBtn: "أرسل التخمين 🎯",
+        enterGoalsError: "يرجى إدخال عدد الأهداف لكلا الفريقين",
+        matchStartedError: "عذراً، لا يمكن تسجيل التوقع لأن المباراة بدأت بالفعل.",
+        connectionError: "حدث خطأ في الاتصال. يرجى المحاولة لاحقاً.",
 
-        // 2. الترتيب الأسبوعي
+        // الترتيب الأسبوعي
         fetchingRanking: "⏳ جاري جلب الترتيب...",
         noRankingData: "لا توجد بيانات ترتيب حالياً",
         userCurrentRank: "أنت حالياً في المركز:",
@@ -83,7 +98,7 @@ const i18n = {
         yourPoints: "نقاطك:",
         failedLoadRanking: "تعذر تحميل الترتيب.",
 
-        // 3. نصوص إضافية لقسم الأصدقاء
+        // نصوص إضافية لقسم الأصدقاء
         fetchingFriends: "جاري جلب بيانات الأصدقاء من السيرفر...",
         newFriend: "صديق جديد",
         emptyFriendsState: "لم تقم بدعوة أي أصدقاء حتى الآن.<br>شارك رابطك لتبدأ بجمع نقاط ZELO FC!",
@@ -143,10 +158,18 @@ const i18n = {
         alertDisconnected: "Disconnected successfully.",
 
         // ==========================================
-        // 🆕 New Additions (From the 3 files)
+        // 🆕 New Additions (Challenges & Rankings)
         // ==========================================
-        // 1. Challenges & Predictions
         weeklyChallenges: "Weekly Challenges",
+        loadingMatches: "Loading matches...",
+        noMatchesAvailable: "No matches available for prediction currently.",
+        matchStatus: "Status:",
+        statusNotStarted: "Not Started ⏳",
+        statusLive: "Live 🔴",
+        statusStarted: "Started ⏱️",
+        btnPredicted: "Predicted ✅",
+        btnClosed: "Predictions Closed 🔒",
+        btnPredictNow: "Predict Score 🎯",
         predictionsClosed: "❌ Predictions Closed",
         predictScoreBtn: "🚀 Predict Score",
         predictMatchTitle: "Predict Match Result",
@@ -157,11 +180,18 @@ const i18n = {
         confirmPrediction: "✅ Confirm",
         cancelBtn: "Cancel",
         validationError: "Please select a winner and enter the predicted score",
-        predictionSuccess: "✅ Your prediction has been saved successfully!\nWinner: {winner}\nScore: {score}",
+        predictionSuccess: "Your prediction has been saved successfully! 🎯",
         spainCups: "Spanish Cups", 
-        europeCups: "European Cups", // تم تصحيحها هنا لتطابق الصورة
+        europeCups: "European Cups",
+        goalsLabel: "Goals",
+        winnerLabel: "Winner:",
+        enterPredictionTitle: "Enter your prediction",
+        submitPredictionBtn: "Submit Prediction 🎯",
+        enterGoalsError: "Please enter the score for both teams",
+        matchStartedError: "Match has already started. Cannot submit prediction.",
+        connectionError: "Connection error. Please try again later.",
 
-        // 2. Weekly Rankings
+        // Weekly Rankings
         fetchingRanking: "⏳ Fetching ranking...",
         noRankingData: "No ranking data available",
         userCurrentRank: "You are currently ranked:",
@@ -169,7 +199,7 @@ const i18n = {
         yourPoints: "Your points:",
         failedLoadRanking: "Failed to load ranking.",
 
-        // 3. Additional Friends Strings
+        // Additional Friends Strings
         fetchingFriends: "Fetching friends data from server...",
         newFriend: "New Friend",
         emptyFriendsState: "You haven't invited any friends yet.<br>Share your link to start collecting ZELO FC points!",
@@ -178,7 +208,7 @@ const i18n = {
 };
 
 // ==========================================
-// 🛠️ التجميع التلقائي لجميع الأندية (بدون أخطاء)
+// 🛠️ التجميع التلقائي لجميع الأندية
 // ==========================================
 let clubsData = [];
 
