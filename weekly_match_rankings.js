@@ -8,7 +8,7 @@ const generateAvatar = (name, photoUrl, size = '50px') => {
     if (photoUrl) {
         return `<img src="${photoUrl}" style="width:${size}; height:${size}; border-radius:50%; object-fit:cover; border:2px solid var(--accent-gold, #fcb045); margin: 0 auto; display: block;">`;
     } else {
-        const initial = name ? name.charAt(0).toUpperCase() : '👤';
+        const initial = name ? String(name).charAt(0).toUpperCase() : '👤';
         return `<div style="width:${size}; height:${size}; border-radius:50%; background: linear-gradient(135deg, #833ab4, #fd1d1d); color:white; display:flex; align-items:center; justify-content:center; font-size:calc(${size} / 2.2); font-weight:bold; margin: 0 auto; border:2px solid var(--accent-gold, #fcb045);">${initial}</div>`;
     }
 };
@@ -64,19 +64,20 @@ window.renderHomeRankingWidget = async function(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const currentUserId = userState.userId; 
+    const currentUserId = userState.userId || userState.telegram_id; // تم تعديلها لتأمين قراءة المعرف
     const isAr = userState.lang === 'ar'; 
 
     try {
-        // 1. جلب أول 3 لاعبين (تمت إضافة photo_url للاستعلام عن صورهم)
-        // ملاحظة: إذا لم يكن عمود photo_url موجوداً في الجدول، سيتجاهله الكود ويعرض الحرف الأول.
-        const { data: top3 } = await supabaseClient
+        // 1. جلب أول 3 لاعبين (باستخدام select('*') حسب الاتفاق)
+        const { data: top3, error: top3Error } = await supabaseClient
             .from('weekly_match_rankings')
-            .select('points_earned, users!inner(username, photo_url)')
+            .select('*')
             .eq('is_eliminated', false)
             .eq('category', 'weekly') 
             .order('points_earned', { ascending: false })
             .limit(3);
+
+        if (top3Error) throw top3Error;
 
         // 2. جلب ترتيب المستخدم الحالي
         const { data: myRank } = await supabaseClient.rpc('get_user_rank', {
@@ -123,39 +124,46 @@ window.renderHomeRankingWidget = async function(containerId) {
             </style>
         `;
 
-        // -- أ. قسم المنصة (الـ Top 3) مع إضافة الصور --
+        // -- أ. قسم المنصة (الـ Top 3) --
         if (top3 && top3.length > 0) {
-            const secondPlace = top3[1];
             const firstPlace = top3[0];
+            const secondPlace = top3[1];
             const thirdPlace = top3[2];
 
             html += `<div class="podium-container">`;
+            
+            // المركز الثاني
             if (secondPlace) {
+                const name2 = secondPlace.username || secondPlace.telegram_id;
                 html += `
                     <div class="podium-card rank-2">
                         <div style="font-size: 1.5rem; margin-bottom: 5px;">🥈</div>
-                        ${generateAvatar(secondPlace.users.username, secondPlace.users.photo_url, '50px')}
-                        <div class="podium-name">${secondPlace.users.username}</div>
+                        ${generateAvatar(name2, secondPlace.photo_url, '50px')}
+                        <div class="podium-name">${name2}</div>
                         <div class="podium-pts" style="color: #c0c0c0;">${secondPlace.points_earned}</div>
                     </div>`;
             } else { html += `<div style="flex: 1;"></div>`; }
 
+            // المركز الأول
             if (firstPlace) {
+                const name1 = firstPlace.username || firstPlace.telegram_id;
                 html += `
                     <div class="podium-card rank-1">
                         <div style="font-size: 2rem; margin-bottom: 5px;">👑</div>
-                        ${generateAvatar(firstPlace.users.username, firstPlace.users.photo_url, '65px')}
-                        <div class="podium-name">${firstPlace.users.username}</div>
+                        ${generateAvatar(name1, firstPlace.photo_url, '65px')}
+                        <div class="podium-name">${name1}</div>
                         <div class="podium-pts" style="color: var(--accent-gold, #fcb045);">${firstPlace.points_earned}</div>
                     </div>`;
             }
 
+            // المركز الثالث
             if (thirdPlace) {
+                const name3 = thirdPlace.username || thirdPlace.telegram_id;
                 html += `
                     <div class="podium-card rank-3">
                         <div style="font-size: 1.5rem; margin-bottom: 5px;">🥉</div>
-                        ${generateAvatar(thirdPlace.users.username, thirdPlace.users.photo_url, '45px')}
-                        <div class="podium-name">${thirdPlace.users.username}</div>
+                        ${generateAvatar(name3, thirdPlace.photo_url, '45px')}
+                        <div class="podium-name">${name3}</div>
                         <div class="podium-pts" style="color: #cd7f32;">${thirdPlace.points_earned}</div>
                     </div>`;
             } else { html += `<div style="flex: 1;"></div>`; }
@@ -165,7 +173,7 @@ window.renderHomeRankingWidget = async function(containerId) {
             html += `<div style="text-align:center; color:#666; padding: 30px;">${isAr ? 'لا توجد بيانات ترتيب حالياً' : 'No ranking data available'}</div>`;
         }
 
-        // -- ب. قسم بطاقة ترتيب المستخدم الحالي مع إضافة صورته --
+        // -- ب. قسم بطاقة ترتيب المستخدم الحالي --
         html += `
             <div class="my-rank-card">
                 <p style="margin: 0 0 10px 0; font-size: 0.95rem; color: rgba(255,255,255,0.9);">
@@ -246,15 +254,8 @@ window.renderHomeRankingWidget = async function(containerId) {
     } catch (error) {
         console.error(isAr ? "خطأ في عرض الترتيب:" : "Error displaying ranking:", error);
         
-        // التحقق من أن الخطأ بسبب عدم وجود عمود الصورة
-        if (error.code === 'PGRST200' || error.message.includes('photo_url')) {
-             container.innerHTML = `<div style="text-align:center; color: var(--accent-gold); padding: 20px; background: rgba(252, 176, 69, 0.1); border-radius: 12px;">
-                ⚠️ <b>تنبيه للمطور:</b> يرجى إضافة عمود باسم <code>photo_url</code> (نوع TEXT) إلى جدول <code>users</code> في Supabase لكي تعمل استعلامات الصور.
-            </div>`;
-        } else {
-            container.innerHTML = `<div style="text-align:center; color: var(--accent-red, #fd1d1d); padding: 10px;">
-                ${isAr ? 'تعذر تحميل الترتيب.' : 'Failed to load ranking.'}
-            </div>`;
-        }
+        container.innerHTML = `<div style="text-align:center; color: var(--accent-red, #fd1d1d); padding: 10px;">
+            ${isAr ? 'تعذر تحميل الترتيب.' : 'Failed to load ranking.'}
+        </div>`;
     }
 };
