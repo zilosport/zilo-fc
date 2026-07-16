@@ -1,15 +1,15 @@
 // ==========================================
-// 🛠️ ملف قسم المهام (Tasks) - النسخة الحقيقية المربوطة بـ Supabase (بالتصميم الخرافي ✨)
+// 🛠️ ملف قسم المهام (Tasks) - النسخة الحقيقية المربوطة بـ Supabase (بالتصميم الجديد ✨)
 // ==========================================
 
 (function() {
-    // 1. قائمة المهام الافتراضية
+    // 1. قائمة المهام الافتراضية المحدثة باسم تطبيقك الرسمي
     window.defaultTasksData = [
-        { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zelo Sport on X", points: 500, completed: false, url: "https://x.com/Zelo_Sport" },
-        { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me/ZeloSport" },
-        { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com/@zelo_sport?si=4HLPUQ1jv51UTlkP" },
-        { id: "tg_group_ar", textAr: "الانضمام للمجموعة العربية", textEn: "Join Arabic Group", points: 300, completed: false, url: "https://t.me/ZeloSport_Arab" },
-        { id: "tg_group_en", textAr: "الانضمام للمجموعة الأجنبية", textEn: "Join Global Group", points: 300, completed: false, url: "https://t.me/ZeloSport_Global" }
+        { id: "x", textAr: "متابعة حساب Zero Zero Sport على X", textEn: "Follow Zero Zero Sport on X", points: 500, completed: false, url: "https://x.com/Zero_Zero_Sport" },
+        { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me/ZeroZeroSport" },
+        { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com/@zero_zero_sport?si=4HLPUQ1jv51UTlkP" },
+        { id: "tg_group_ar", textAr: "الانضمام للمجموعة العربية", textEn: "Join Arabic Group", points: 300, completed: false, url: "https://t.me/ZeroZeroSport_Arab" },
+        { id: "tg_group_en", textAr: "الانضمام للمجموعة الأجنبية", textEn: "Join Global Group", points: 300, completed: false, url: "https://t.me/ZeroZeroSport_Global" }
     ];
 
     // ==========================================
@@ -176,7 +176,7 @@
             <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 15px;">
                 <div style="text-align: ${(typeof userState !== 'undefined' && userState.lang === 'ar') ? 'right' : 'left'};">
                     <h5 style="margin: 0 0 5px 0; color: var(--text-main); font-size: 1rem;">${typeof getTaskName === "function" ? getTaskName(task) : (task.textAr || task.textEn)}</h5>
-                    <small style="color: var(--accent-gold); font-weight: 900; font-size: 0.9rem;">+ ${task.points} ZELO</small>
+                    <small style="color: var(--accent-gold); font-weight: 900; font-size: 0.9rem;">+ ${task.points} ZERO</small>
                 </div>
                 <button id="btn-task-${task.id}" 
                         class="${task.completed ? 'btn-secondary' : 'btn-action'}" 
@@ -189,7 +189,7 @@
 
         // رسم الواجهة الرئيسية للمهام والمكافأة اليومية
         container.innerHTML = `
-            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">${tFunc('tasksTitle') || 'Earn More ZELO'}</h3>
+            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">${tFunc('tasksTitle') || 'Earn More ZERO'}</h3>
             <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-bottom: 20px;">${tFunc('tasksSub') || 'Complete tasks to boost your balance!'}</p>
 
             <div class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 20px; margin-bottom: 25px; border-left: 4px solid var(--accent-orange);">
@@ -252,7 +252,7 @@
                     if (!response.alreadyDone) {
                         userState.points = (userState.points || 0) + points; 
                         const doneMsg = typeof t === "function" ? t('alertTaskDone') : 'تم إضافة النقاط بنجاح:';
-                        alert(`🎉 ${doneMsg} ${points} ZELO FC.`);
+                        alert(`🎉 ${doneMsg} ${points} ZERO FC.`);
                     }
 
                     if (typeof updateTopBar === "function") updateTopBar();
