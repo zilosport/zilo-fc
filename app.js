@@ -1,5 +1,5 @@
 // ==========================================
-// 🚀 تطبيق زيلو إف سي (ZELO FC) - الكود الأساسي (app.js) المحُدّث
+// 🚀 تطبيق زيلو إف سي (ZELO FC) - الكود الأساسي (app.js) المحُدّث والنهائي
 // ==========================================
 
 // 1. إعداد الاتصال بقاعدة بيانات Supabase
@@ -21,10 +21,10 @@ let userState = {
     walletAddress: null,
     walletBalance: "0.00",
     hasLoggedIn: false,
-    lang: "ar", // اللغة الافتراضية، سيتم تحديثها من قاعدة البيانات أو شاشة الدخول
+    lang: "ar", // اللغة الافتراضية
     referrals: [], 
     dailyCheckInClaimed: false,
-    pendingReferrer: null, // 💡 [جديد] لحفظ معرف الداعي مؤقتاً عند الدخول من رابط إحالة
+    pendingReferrer: null, 
     tasks: typeof window.defaultTasksData !== "undefined" ? window.defaultTasksData.map(task => ({...task})) : [] 
 };
 
@@ -44,12 +44,10 @@ function getTaskName(task) {
     return userState.lang === 'ar' ? task.textAr : task.textEn;
 }
 
-// 💡 دالة جديدة لتطبيق إعدادات اللغة على الواجهة بناءً على اختيار المستخدم
 function applyLanguageSettings() {
     document.documentElement.dir = userState.lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = userState.lang;
     
-    // تحديث نصوص القائمة السفلية إذا كانت موجودة
     const navItems = document.querySelectorAll('.nav-item span:not(.icon)');
     if (navItems.length >= 5) {
         navItems[0].innerText = t('navHome');
@@ -65,7 +63,6 @@ function applyLanguageSettings() {
 // ==========================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. استخراج بيانات تليجرام فوراً أو وضع بيانات وهمية للاختبار المحلي
     if (typeof window.Telegram !== "undefined" && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -81,15 +78,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 userState.photoUrl = tgUser.photo_url;
             }
             
-            // تحديد اللغة المبدئية من تليجرام (سيتم الكتابة فوقها إذا كان مسجلاً في قاعدة البيانات)
             if (tgUser.language_code && tgUser.language_code.startsWith('en')) {
                 userState.lang = 'en';
             }
 
-            // 🚀 [جديد] التقاط رابط الإحالة من تليجرام (start_param)
             if (tg.initDataUnsafe.start_param && tg.initDataUnsafe.start_param.startsWith('ref_')) {
                 const referrerId = tg.initDataUnsafe.start_param.replace('ref_', '');
-                // التأكد أن الشخص لا يحيل نفسه بطريق الخطأ
                 if (String(referrerId) !== String(userState.userId)) {
                     userState.pendingReferrer = referrerId;
                     console.log("🔗 تم الدخول عبر رابط إحالة من الصديق:", referrerId);
@@ -104,16 +98,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 2. تطبيق إعدادات اللغة المبدئية
     applyLanguageSettings();
-
-    // 3. تهيئة المحفظة وجلب البيانات
     initTonConnect();
     fetchDataAndRoute();
 });
 
 // ==========================================
-// 🔄 دالة تهيئة المحفظة (تم إصلاح حفظ البيانات)
+// 🔄 دالة تهيئة المحفظة
 // ==========================================
 function initTonConnect() {
     try {
@@ -129,7 +120,6 @@ function initTonConnect() {
                     userState.walletAddress = walletInfo.account.address;
                     userState.walletBalance = "0.00"; 
                     
-                    // 🚀 الإصلاح: الحفظ المباشر دون انتظار حالة hasLoggedIn
                     if (typeof window.saveWalletAddressToDB === "function") {
                         await window.saveWalletAddressToDB(walletInfo.account.address);
                     } else if (supabaseClient && userState.userId) {
@@ -144,7 +134,6 @@ function initTonConnect() {
                     userState.walletAddress = null;
                     userState.walletBalance = "0.00";
 
-                    // 🚀 الإصلاح: المسح المباشر من قاعدة البيانات عند الانفصال
                     if (typeof window.removeWalletAddressFromDB === "function") {
                         await window.removeWalletAddressFromDB();
                     } else if (supabaseClient && userState.userId) {
@@ -192,7 +181,6 @@ async function fetchDataAndRoute() {
             userState.points = data.points || 0;
             userState.selectedClubs = data.selected_clubs || [];
             
-            // 💡 جلب لغة المستخدم المحفوظة في قاعدة البيانات وتطبيقها
             userState.lang = data.lang || userState.lang;
             applyLanguageSettings();
 
@@ -203,11 +191,10 @@ async function fetchDataAndRoute() {
                 userState.walletConnected = true;
             }
 
-            // 🚀 [جديد] معالجة الإحالة فوراً إذا كان المستخدم مسجلاً بالفعل ولديه إحالة معلقة
             if (userState.pendingReferrer && typeof window.apiProcessReferral === "function") {
                 console.log("⚙️ جاري معالجة الإحالة المعلقة لصالح:", userState.pendingReferrer);
                 window.apiProcessReferral(userState.pendingReferrer, userState.userId);
-                userState.pendingReferrer = null; // تفريغ بعد التنفيذ لتجنب التكرار
+                userState.pendingReferrer = null; 
             }
 
         } else {
@@ -219,7 +206,6 @@ async function fetchDataAndRoute() {
         userState.hasLoggedIn = false; 
     }
 
-    // التوجيه النهائي
     if (!userState.hasLoggedIn || !userState.selectedClubs || userState.selectedClubs.length === 0) {
         triggerLoginScreen();
     } else {
@@ -234,7 +220,6 @@ async function fetchDataAndRoute() {
 function triggerLoginScreen() {
     console.log("🚪 [توجيه] محاولة فتح شاشة تسجيل الدخول...");
     
-    // التأكد من بقاء الأشرطة مخفية
     const topBar = document.getElementById('top-bar');
     const bottomNav = document.getElementById('bottom-nav');
     if(topBar) topBar.style.display = 'none';
@@ -267,7 +252,6 @@ async function updateTopBar() {
     const pointsEl = document.getElementById("points");
     const clubEl = document.getElementById("club");
     
-    // التحقق من الرصيد الحقيقي في جدول الترتيب وتحديثه
     if (typeof supabaseClient !== 'undefined' && supabaseClient !== null && userState.userId) {
         try {
             const { data } = await supabaseClient
@@ -335,111 +319,250 @@ function showPage(pageId) {
 }
 
 // ==========================================
-// 🏆 6. دالة جلب وعرض شاشة الترتيب الحقيقية من قاعدة البيانات
+// 🏆 6. دالة جلب وعرض شاشة الترتيب الشاملة
 // ==========================================
+
+// دالة مساعدة لإنشاء الصورة الشخصية 
+const generateAvatar = (name, photoUrl, size = '50px') => {
+    if (photoUrl) {
+        return `<img src="${photoUrl}" style="width:${size}; height:${size}; border-radius:50%; object-fit:cover; border:2px solid var(--accent-gold, #fcb045); margin: 0 auto; display: block;">`;
+    } else {
+        const initial = name ? String(name).charAt(0).toUpperCase() : '👤';
+        return `<div style="width:${size}; height:${size}; border-radius:50%; background: linear-gradient(135deg, #833ab4, #fd1d1d); color:white; display:flex; align-items:center; justify-content:center; font-size:calc(${size} / 2.2); font-weight:bold; margin: 0 auto; border:2px solid var(--accent-gold, #fcb045);">${initial}</div>`;
+    }
+};
+
 window.renderRankingScreen = async function(container) {
-    // 1. إظهار رسالة تحميل أثناء جلب البيانات
+    const isAr = userState.lang === 'ar'; 
+    const currentUserId = userState.userId;
+
     container.innerHTML = `<div style="text-align:center; padding:50px; color:#aaa;">
         <div style="font-size: 2rem; margin-bottom: 10px;">⏳</div>
-        ${userState.lang === 'ar' ? 'جاري جلب قائمة المتصدرين...' : 'Fetching leaderboard...'}
+        ${isAr ? 'جاري جلب قائمة المتصدرين وسجلك...' : 'Fetching leaderboard and history...'}
     </div>`;
 
     try {
-        // 2. سحب البيانات من جدول الترتيب (الأعلى نقاطاً أولاً)
+        // سحب الترتيب
         const { data: rankings, error } = await supabaseClient
             .from('weekly_match_rankings')
             .select('*')
-            .order('points_earned', { ascending: false }) // ترتيب تنازلي حسب النقاط
-            .limit(50); // جلب أعلى 50 لاعب
+            .eq('category', 'weekly')
+            .order('points_earned', { ascending: false })
+            .limit(50);
 
         if (error) throw error;
 
-        // في حال كان الجدول فارغاً
-        if (!rankings || rankings.length === 0) {
-            container.innerHTML = `
-                <div style="text-align:center; padding:50px; color:#fff;">
-                    <h2 style="font-size: 2rem; margin-bottom: 15px;">🏆 ${userState.lang === 'ar' ? 'الترتيب الأسبوعي' : 'Weekly Ranking'}</h2>
-                    <p style="color: #aaa;">${userState.lang === 'ar' ? 'لا توجد بيانات في الترتيب حالياً.' : 'No ranking data available yet.'}</p>
-                    <button onclick="showPage('home')" class="btn-secondary" style="margin-top: 20px;">
-                        ${userState.lang === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
-                    </button>
-                </div>`;
-            return;
+        // جلب ترتيب المستخدم الحالي
+        const { data: myRank } = await supabaseClient.rpc('get_user_rank', {
+            p_telegram_id: currentUserId,
+            p_category: 'weekly'
+        });
+
+        const { data: myData } = await supabaseClient
+            .from('weekly_match_rankings')
+            .select('points_earned')
+            .eq('telegram_id', currentUserId)
+            .eq('category', 'weekly')
+            .maybeSingle();
+
+        // سحب سجل التوقعات
+        const { data: predictions } = await supabaseClient
+            .from('match_predictions')
+            .select('*')
+            .eq('telegram_id', currentUserId)
+            .order('created_at', { ascending: false });
+
+        // سحب المباريات المرتبطة
+        let matches = [];
+        if (predictions && predictions.length > 0) {
+            const matchIds = predictions.map(p => p.match_id);
+            const { data: matchesData } = await supabaseClient
+                .from('matches')
+                .select('*')
+                .in('id', matchIds);
+            matches = matchesData || [];
         }
 
-        // 3. سحب أسماء وصور المستخدمين بناءً على الـ ID
-        const userIds = rankings.map(r => r.telegram_id);
-        const { data: usersData } = await supabaseClient
-            .from('users')
-            .select('telegram_id, username, photo_url')
-            .in('telegram_id', userIds);
-
-        let usersMap = {};
-        if (usersData) {
-            usersData.forEach(u => { usersMap[u.telegram_id] = u; });
-        }
-
-        // 4. رسم البطاقات الخاصة بكل لاعب
-        let listHtml = rankings.map((rank, index) => {
-            // تجهيز بيانات اللاعب (الاسم المستعار فقط)
-            let userInfo = usersMap[rank.telegram_id] || { username: userState.lang === 'ar' ? 'لاعب مجهول' : 'Unknown Player', photo_url: null };
-            let aliasName = userInfo.username;
+        // بناء الواجهة الشاملة
+        let html = `
+            <style>
+                .podium-container { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; margin-top: 20px; gap: 10px; }
+                .podium-card { background: var(--bg-card, #1c1c22); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; text-align: center; padding: 15px 5px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+                .rank-1 { border-color: var(--accent-gold, #fcb045); background: rgba(252, 176, 69, 0.1); height: 180px; transform: translateY(-15px); }
+                .rank-2 { border-color: #c0c0c0; background: rgba(192, 192, 192, 0.1); height: 150px; }
+                .rank-3 { border-color: #cd7f32; background: rgba(205, 127, 50, 0.1); height: 140px; }
+                .podium-name { font-size: 0.85rem; font-weight: bold; margin: 10px 0 5px 0; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; }
+                .podium-pts { font-size: 1.1rem; font-weight: bold; }
+                .my-rank-card { background: var(--gradient-primary, linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)); padding: 20px; border-radius: 16px; margin-top: 20px; text-align: center; box-shadow: 0 5px 15px rgba(253, 29, 29, 0.3); border: 1px solid rgba(255,255,255,0.2); }
+            </style>
             
-            // تجهيز الصورة البديلة في حال لم توجد صورة أو كانت معطلة
-            let defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(aliasName)}&background=25252d&color=fff`;
-            let avatar = userInfo.photo_url || defaultAvatar;
-            
-            // تمييز بطاقة المستخدم الحالي بلون مختلف
-            let isMe = String(rank.telegram_id) === String(userState.userId);
-            let cardStyle = isMe 
-                ? 'background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700;' 
-                : 'background: #1c1c22; border: 1px solid #25252d;';
-
-            // تحديد شكل المرتبة (أول 3 مراكز لهم كؤوس)
-            let rankBadge = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
-            let rankColor = index < 3 ? '#fff' : '#888';
-
-            let youText = userState.lang === 'ar' ? '(أنت)' : '(You)';
-            let pointsText = userState.lang === 'ar' ? 'نقطة' : 'Pts';
-
-            return `
-                <div style="${cardStyle} border-radius: 16px; padding: 15px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <div style="font-size: 1.2rem; font-weight: bold; color: ${rankColor}; width: 30px; text-align: center;">${rankBadge}</div>
-                        
-                        <img src="${avatar}" onerror="this.onerror=null; this.src='${defaultAvatar}';" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid ${isMe ? '#ffd700' : '#333'};">
-                        
-                        <div>
-                            <h4 style="margin: 0; color: #fff; font-size: 1rem;">${aliasName} ${isMe ? `<span style="color:#ffd700; font-size:0.8rem;">${youText}</span>` : ''}</h4>
-                        </div>
-                    </div>
-                    <div style="text-align: center; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 12px;">
-                        <div style="color: #ffd700; font-weight: bold; font-size: 1.1rem;">${rank.points_earned || 0}</div>
-                        <div style="color: #aaa; font-size: 0.7rem;">${pointsText}</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        // 5. عرض الصفحة بالكامل
-        container.innerHTML = `
             <div style="padding: 20px; padding-bottom: 80px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                    <h2 style="color: white; margin: 0; font-size: 1.5rem;">🏆 ${userState.lang === 'ar' ? 'ترتيب المتصدرين' : 'Leaderboard'}</h2>
+                    <h2 style="color: white; margin: 0; font-size: 1.5rem;">🏆 ${isAr ? 'ترتيب المتصدرين' : 'Leaderboard'}</h2>
                     <button onclick="showPage('home')" style="background: none; border: none; color: #aaa; font-size: 1.5rem; cursor: pointer;">✖</button>
                 </div>
-                ${listHtml}
+        `;
+
+        // المنصة Top 3
+        if (rankings && rankings.length > 0) {
+            const firstPlace = rankings[0];
+            const secondPlace = rankings[1];
+            const thirdPlace = rankings[2];
+
+            html += `<div class="podium-container">`;
+            
+            if (secondPlace) {
+                const name2 = secondPlace.username || 'ID: ' + String(secondPlace.telegram_id).slice(-4);
+                html += `
+                    <div class="podium-card rank-2">
+                        <div style="font-size: 1.5rem; margin-bottom: 5px;">🥈</div>
+                        ${generateAvatar(name2, null, '50px')}
+                        <div class="podium-name">${name2}</div>
+                        <div class="podium-pts" style="color: #c0c0c0;">${secondPlace.points_earned || 0}</div>
+                    </div>`;
+            } else { html += `<div style="flex: 1;"></div>`; }
+
+            if (firstPlace) {
+                const name1 = firstPlace.username || 'ID: ' + String(firstPlace.telegram_id).slice(-4);
+                html += `
+                    <div class="podium-card rank-1">
+                        <div style="font-size: 2rem; margin-bottom: 5px;">👑</div>
+                        ${generateAvatar(name1, null, '65px')}
+                        <div class="podium-name">${name1}</div>
+                        <div class="podium-pts" style="color: var(--accent-gold, #fcb045);">${firstPlace.points_earned || 0}</div>
+                    </div>`;
+            }
+
+            if (thirdPlace) {
+                const name3 = thirdPlace.username || 'ID: ' + String(thirdPlace.telegram_id).slice(-4);
+                html += `
+                    <div class="podium-card rank-3">
+                        <div style="font-size: 1.5rem; margin-bottom: 5px;">🥉</div>
+                        ${generateAvatar(name3, null, '45px')}
+                        <div class="podium-name">${name3}</div>
+                        <div class="podium-pts" style="color: #cd7f32;">${thirdPlace.points_earned || 0}</div>
+                    </div>`;
+            } else { html += `<div style="flex: 1;"></div>`; }
+
+            html += `</div>`;
+        }
+
+        // بطاقة المستخدم
+        html += `
+            <div class="my-rank-card">
+                <p style="margin: 0 0 10px 0; font-size: 0.95rem; color: rgba(255,255,255,0.9);">
+                    ${isAr ? 'ترتيبك الحالي في التحديات' : 'Your Current Rank'}
+                </p>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+                    <div style="font-size: 2.5rem; font-weight: bold; color: #fff;">
+                        #${myRank || (isAr ? '-' : '-')}
+                    </div>
+                    ${generateAvatar(userState.username, userState.photoUrl, '60px')}
+                    <div style="text-align: ${isAr ? 'right' : 'left'};">
+                        <div style="font-weight: bold; font-size: 1.2rem;">${userState.username || 'User'}</div>
+                        <div style="color: #fff; font-weight: bold; font-size: 1rem; margin-top: 3px; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 8px; display: inline-block;">
+                            ${myData ? myData.points_earned : 0} ${isAr ? 'نقطة' : 'Pts'}
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
+
+        // سجل التوقعات
+        let errorCount = 0;
+        let historyHtml = '';
+
+        if (predictions && predictions.length > 0) {
+            errorCount = predictions.filter(p => p.prediction_status === 'wrong').length;
+            
+            historyHtml = predictions.map(pred => {
+                const match = matches.find(m => m.id === pred.match_id);
+                if (!match) return ''; 
+
+                let statusUi = '';
+                let resultUi = '';
+
+                if (pred.prediction_status === 'correct') {
+                    statusUi = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; padding:5px 10px; border-radius:8px; font-weight:bold; font-size:0.85rem;">+3 ${isAr ? 'نقاط' : 'Pts'} ✅</span>`;
+                    resultUi = `<div style="color:#10b981; font-size:0.85rem; margin-top:8px;">${isAr ? 'النتيجة النهائية:' : 'Final Score:'} ${match.home_score} - ${match.away_score}</div>`;
+                } else if (pred.prediction_status === 'wrong') {
+                    statusUi = `<span style="background:rgba(253, 29, 29, 0.2); color:var(--accent-red, #fd1d1d); padding:5px 10px; border-radius:8px; font-weight:bold; font-size:0.85rem;">${isAr ? 'خطأ' : 'Wrong'} ❌</span>`;
+                    resultUi = `<div style="color:var(--accent-red, #fd1d1d); font-size:0.85rem; margin-top:8px;">${isAr ? 'النتيجة النهائية:' : 'Final Score:'} ${match.home_score} - ${match.away_score}</div>`;
+                } else {
+                    statusUi = `<span style="background:rgba(252, 176, 69, 0.2); color:var(--accent-gold, #fcb045); padding:5px 10px; border-radius:8px; font-weight:bold; font-size:0.85rem;">${isAr ? 'قيد الانتظار' : 'Pending'} ⏳</span>`;
+                }
+
+                return `
+                    <div style="background:var(--bg-card, #1c1c22); padding:15px; border-radius:12px; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:bold; font-size:1rem; margin-bottom:5px; color:#fff;">${match.team_a} vs ${match.team_b}</div>
+                            <div style="color:#aaa; font-size:0.9rem;">
+                                ${isAr ? 'توقعك:' : 'Prediction:'} <b style="color:#fff;">${pred.predicted_home} - ${pred.predicted_away}</b>
+                            </div>
+                            ${resultUi}
+                        </div>
+                        <div>${statusUi}</div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            historyHtml = `<div style="text-align:center; color:#888; padding:30px; background:var(--bg-card, #1c1c22); border-radius:12px; border: 1px solid rgba(255,255,255,0.05);">${isAr ? 'لم تقم بأي توقعات بعد.' : 'No predictions yet.'}</div>`;
+        }
+
+        html += `
+            <div style="margin-top: 35px; margin-bottom: 25px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin:0; color:#fff;">📜 ${isAr ? 'سجل توقعاتي' : 'My Predictions'}</h3>
+                    <div style="background:var(--bg-card, #1c1c22); padding:5px 12px; border-radius:20px; font-size:0.85rem; border:1px solid rgba(255,255,255,0.1);">
+                        <span style="color:#aaa;">${isAr ? 'الأخطاء:' : 'Errors:'}</span> 
+                        <span style="font-weight:bold; color:${errorCount >= 2 ? 'var(--accent-red, #fd1d1d)' : '#10b981'};">${errorCount} / 2</span>
+                    </div>
+                </div>
+                ${historyHtml}
+            </div>
+        `;
+
+        // باقي الترتيب
+        let leaderboardHtml = '';
+        if (rankings && rankings.length > 3) {
+            const restOfRankings = rankings.slice(3);
+            
+            leaderboardHtml = restOfRankings.map((rank, index) => {
+                let actualRank = index + 4;
+                let isMe = String(rank.telegram_id) === String(currentUserId);
+                let cardStyle = isMe ? 'background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700;' : 'background: #1c1c22; border: 1px solid #25252d;';
+                const alias = rank.username || 'ID: ' + String(rank.telegram_id).slice(-4);
+
+                return `
+                    <div style="${cardStyle} border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="font-size: 1.1rem; font-weight: bold; color: #888; width: 30px; text-align: center;">#${actualRank}</div>
+                            <div style="color: #fff; font-weight: bold; font-size: 0.95rem;">${alias} ${isMe ? `<span style="color:#ffd700; font-size:0.75rem;">(${isAr ? 'أنت' : 'You'})</span>` : ''}</div>
+                        </div>
+                        <div style="color: #ffd700; font-weight: bold; font-size: 1.1rem;">${rank.points_earned || 0} <span style="font-size:0.7rem; color:#aaa;">${isAr ? 'نقطة' : 'Pts'}</span></div>
+                    </div>
+                `;
+            }).join('');
+
+            html += `
+                <div style="margin-top: 30px;">
+                    <h3 style="margin:0 0 15px 0; color:#fff;">🌍 ${isAr ? 'باقي المتصدرين' : 'Other Players'}</h3>
+                    ${leaderboardHtml}
+                </div>
+            `;
+        }
+
+        html += `</div>`;
+        container.innerHTML = html;
 
     } catch (err) {
         console.error("❌ خطأ في جلب بيانات الترتيب:", err);
         container.innerHTML = `
             <div style="text-align:center; padding:50px; color:#ff4d4d;">
-                <h3>${userState.lang === 'ar' ? 'حدث خطأ!' : 'Error!'}</h3>
-                <p>${userState.lang === 'ar' ? 'لم نتمكن من جلب الترتيب، يرجى المحاولة لاحقاً.' : 'Could not fetch rankings, please try again later.'}</p>
+                <h3>${isAr ? 'حدث خطأ!' : 'Error!'}</h3>
+                <p>${isAr ? 'لم نتمكن من جلب الترتيب، يرجى المحاولة لاحقاً.' : 'Could not fetch rankings, please try again later.'}</p>
                 <button onclick="showPage('home')" class="btn-secondary" style="margin-top: 20px;">
-                    ${userState.lang === 'ar' ? 'عودة' : 'Back'}
+                    ${isAr ? 'عودة' : 'Back'}
                 </button>
             </div>`;
     }
@@ -454,13 +577,11 @@ window.openRankingScreen = function() {
 };
 
 // ==========================================
-// ⚽ تهيئة دالة التحديات بأمان لمنع التعارض
+// ⚽ تهيئة دالة التحديات بأمان
 // ==========================================
-// نقوم بتعريف هذه الدالة كدالة احتياطية فقط في حال لم يتم تحميل ملف predictions_ranking.js
-// هذا يمنع ملف app.js من إلغاء أو حذف الكود الحقيقي الخاص بالمباريات والتوقعات عند تحميله لاحقاً.
 if (typeof window.openChallengesScreen !== 'function') {
     window.openChallengesScreen = function() {
-        console.log("⚽ [احتياطي] تم طلب فتح شاشة تحديات الأسبوع (لم يتم تحميل الملف الرئيسي)");
+        console.log("⚽ [احتياطي] تم طلب فتح شاشة تحديات الأسبوع");
         const contentDiv = document.getElementById("main-content");
         if (contentDiv) {
             if (typeof renderChallengesScreen === "function") {
