@@ -1,6 +1,17 @@
 // ==========================================
 // 🏠 الصفحة الرئيسية (home.js) - نسخة الـ VIP المتوهجة والطافية (تدعم الترجمة 100%)
 // ==========================================
+
+// دالة فتح الموقع المدمجة (لكي تعمل من أي مكان في الرئيسية)
+window.openOfficialWebsite = window.openOfficialWebsite || function() {
+    const url = "https://zelo-sport-fc.github.io/zelo-fc-site/";
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+        window.Telegram.WebApp.openLink(url);
+    } else {
+        window.open(url, '_blank');
+    }
+};
+
 window.renderHomePage = async function(container) {
     const isAr = userState.lang === 'ar';
 
@@ -98,8 +109,9 @@ window.renderHomePage = async function(container) {
     let textRankingDesc = isAr ? 'اكتشف المتصدرين وتعرف على ترتيبك' : 'Discover top players and your rank';
     let supportedClubsTitle = isAr ? 'أنديتك المفضلة:' : 'Your Supported Clubs:';
     let loadingAlert = isAr ? '⏳ جاري التحميل...' : '⏳ Loading...';
+    let websiteBtnText = isAr ? 'الموقع الرسمي' : 'Official Site';
 
-    // 4. تجميع الصفحة (مع ستايل الطفو والتوهج)
+    // 4. تجميع الصفحة (مع ستايل الطفو والتوهج وزر الموقع الأنيق)
     container.innerHTML = `
         <style>
             @keyframes levitateCard {
@@ -122,9 +134,43 @@ window.renderHomePage = async function(container) {
                 transform: translateY(2px) scale(0.98);
                 box-shadow: 0 2px 10px rgba(253, 29, 29, 0.4) !important;
             }
+
+            /* 🌐 تصميم زر الموقع الزجاجي الأنيق */
+            .website-glass-btn {
+                position: absolute;
+                top: 15px;
+                ${isAr ? 'left: 15px;' : 'right: 15px;'}
+                background: rgba(0, 0, 0, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                padding: 6px 12px;
+                border-radius: 20px;
+                color: #fff;
+                font-size: 0.8rem;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                z-index: 10;
+            }
+            .website-glass-btn:hover, .website-glass-btn:active {
+                background: rgba(252, 176, 69, 0.25);
+                border-color: rgba(252, 176, 69, 0.6);
+                box-shadow: 0 0 15px rgba(252, 176, 69, 0.4);
+                transform: scale(1.05);
+            }
         </style>
 
-        <div class="profile-section" style="${profileBgStyle} padding: 25px 15px; border-radius: 16px; text-align: center; margin-bottom: 25px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
+        <!-- أضفنا position: relative هنا لكي نضع زر الموقع بداخله -->
+        <div class="profile-section" style="${profileBgStyle} position: relative; padding: 25px 15px; border-radius: 16px; text-align: center; margin-bottom: 25px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
+            
+            <!-- 🌐 زر الموقع الرسمي (مدمج في زاوية بطاقة المستخدم) -->
+            <button class="website-glass-btn" onclick="window.openOfficialWebsite()">
+                <span style="font-size: 1rem;">🌍</span> ${websiteBtnText}
+            </button>
+
             <img src="${avatarSrc}" style="width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--accent-gold, #fcb045); object-fit: cover; box-shadow: 0 0 15px rgba(252, 176, 69, 0.5);">
             <h3 style="margin: 12px 0 4px 0; color: #fff; font-size: 1.3rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${userState.username}</h3>
             <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.85rem; background: rgba(0,0,0,0.3); display: inline-block; padding: 2px 10px; border-radius: 10px;">ID: ${userState.userId}</p>
