@@ -1,13 +1,16 @@
 // ==========================================
-// 🛠️ ملف قسم المهام (Tasks) - النسخة الحقيقية المربوطة بـ Supabase (بالتصميم الجديد ✨)
+// 🛠️ ملف قسم المهام (Tasks) - النسخة الحقيقية المربوطة بـ Supabase
 // ==========================================
 
 (function() {
-    // 1. قائمة المهام الافتراضية المحدثة باسم تطبيقك الرسمي
     window.defaultTasksData = [
         { id: "x", textAr: "متابعة حساب Zero Zero Sport على X", textEn: "Follow Zero Zero Sport on X", points: 500, completed: false, url: "https://x.com/Zero_Zero_Sport" },
         { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me/ZeroZeroSport" },
         { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com/@zero_zero_sport?si=4HLPUQ1jv51UTlkP" },
+        
+        // 🎯 المهمة الجديدة: زيارة موقع الويب الرسمي بالتعبير المقترح وبنفس النظام
+        { id: "visit_website", textAr: "ألقِ نظرة على موقعنا الرسمي", textEn: "Visit our official website", points: 500, completed: false, url: "https://zelo-sport-fc.github.io/zelo-fc-site/" },
+        
         { id: "tg_group_ar", textAr: "الانضمام للمجموعة العربية", textEn: "Join Arabic Group", points: 300, completed: false, url: "https://t.me/ZeroZeroSport_Arab" },
         { id: "tg_group_en", textAr: "الانضمام للمجموعة الأجنبية", textEn: "Join Global Group", points: 300, completed: false, url: "https://t.me/ZeroZeroSport_Global" }
     ];
@@ -16,12 +19,10 @@
     // 🔄 دوال الاتصال بقاعدة البيانات (API Calls)
     // ==========================================
 
-    // أ. دالة إرسال تأكيد إتمام المهمة لـ Supabase
     async function apiVerifyTask(taskId, points) {
         if (!supabaseClient) return { success: false, message: "لا يوجد اتصال بقاعدة البيانات" };
         
         try {
-            // 1. تسجيل المهمة في جدول user_tasks
             const { error: taskError } = await supabaseClient
                 .from('user_tasks')
                 .insert([{ telegram_id: userState.userId, task_id: taskId, reward_points: points }]);
@@ -31,7 +32,6 @@
                 throw taskError;
             }
 
-            // 2. جلب النقاط الحالية لجدول المستخدمين
             let currentPoints = 0;
             const { data: userData, error: fetchError } = await supabaseClient
                 .from('users')
@@ -45,7 +45,6 @@
             const pointsToAdd = parseInt(points) || 0;
             const newPoints = currentPoints + pointsToAdd;
 
-            // 3. تحديث أو إنشاء السجل مباشرة في جدول المستخدمين (users)
             const { error: userUpsertError } = await supabaseClient
                 .from('users')
                 .upsert(
@@ -55,7 +54,6 @@
 
             if (userUpsertError) throw userUpsertError;
 
-            // 4. معالجة جدول الأندية (club_fans_rankings) بطريقة آمنة
             const { data: clubData, error: clubFetchError } = await supabaseClient
                 .from('club_fans_rankings')
                 .select('total_fan_points')
@@ -67,11 +65,7 @@
                     .update({ total_fan_points: newPoints })
                     .eq('telegram_id', userState.userId);
 
-                if (clubUpdateError) {
-                    console.error("❌ خطأ في تحديث نقاط النادي:", clubUpdateError);
-                }
-            } else {
-                console.warn("⚠️ المستخدم ليس لديه سجل في جدول الأندية بعد، تم تحديث نقاط users فقط.");
+                if (clubUpdateError) console.error("❌ خطأ في تحديث نقاط النادي:", clubUpdateError);
             }
 
             return { success: true, alreadyDone: false };
@@ -81,7 +75,6 @@
         }
     }
 
-    // ب. دالة طلب المكافأة اليومية من Supabase
     async function apiClaimDaily() {
         if (!supabaseClient) return { success: false };
         const dailyPoints = 200; 
@@ -110,7 +103,6 @@
         }
     }
 
-    // ج. دالة مزامنة المهام المكتملة من قاعدة البيانات عند فتح الصفحة
     async function syncTasksFromDB() {
         if (!supabaseClient || !userState.userId) return;
 
@@ -142,11 +134,7 @@
                 const now = new Date();
                 const diffHours = Math.abs(now.getTime() - lastClaim.getTime()) / 36e5;
                 
-                if (diffHours < 24) {
-                    userState.dailyCheckInClaimed = true;
-                } else {
-                    userState.dailyCheckInClaimed = false;
-                }
+                userState.dailyCheckInClaimed = (diffHours < 24);
             } else {
                 userState.dailyCheckInClaimed = false;
             }
@@ -156,7 +144,7 @@
     }
 
     // ==========================================
-    // 🎨 دوال واجهة المهام (تم التحديث لتطابق التصميم الجديد ✨)
+    // 🎨 دوال واجهة المهام
     // ==========================================
 
     window.renderTasksPage = async function(container) {
@@ -164,58 +152,48 @@
             userState.tasks = window.defaultTasksData.map(t => ({...t}));
         }
 
-        // واجهة التحميل بألوان النظام
-        container.innerHTML = `<div style="text-align:center; padding:50px; color: var(--text-main);">⏳ ${typeof t === "function" ? t('loadingTasks') || 'جاري تحميل المهام...' : 'جاري تحميل المهام...'}</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:50px; color: var(--text-main);">⏳ جاري تحميل المهام...</div>`;
 
         await syncTasksFromDB();
-        
-        let tFunc = typeof t === "function" ? t : (key) => key;
         const isAr = (typeof userState !== 'undefined' && userState.lang === 'ar');
 
-        // 🎯 تعديل ذكي: تحديد النصوص البديلة باللغة المناسبة تلقائياً
-        const fallbackTitle = isAr ? 'اضاعف رصيدك من ZERO' : 'Earn More ZERO';
-        const fallbackSub = isAr ? 'أكمل المهام اليومية لزيادة نقاطك ومكافآتك!' : 'Complete tasks to boost your balance!';
-
-        // رسم بطاقات المهام (باستخدام class="card" و class="btn-action")
         let tasksHtml = userState.tasks.map(task => `
             <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 15px;">
                 <div style="text-align: ${isAr ? 'right' : 'left'};">
-                    <h5 style="margin: 0 0 5px 0; color: var(--text-main); font-size: 1rem;">${typeof getTaskName === "function" ? getTaskName(task) : (isAr ? task.textAr : task.textEn)}</h5>
+                    <h5 style="margin: 0 0 5px 0; color: var(--text-main); font-size: 1rem;">${isAr ? task.textAr : task.textEn}</h5>
                     <small style="color: var(--accent-gold); font-weight: 900; font-size: 0.9rem;">+ ${task.points} ZERO</small>
                 </div>
                 <button id="btn-task-${task.id}" 
                         class="${task.completed ? 'btn-secondary' : 'btn-action'}" 
                         onclick="executeTask('${task.id}', '${task.url}', ${task.points})" 
                         ${task.completed ? 'disabled style="opacity: 0.5; cursor: not-allowed; padding: 10px 15px; font-size: 0.9rem; margin: 0;"' : 'style="padding: 10px 15px; font-size: 0.9rem; margin: 0;"'}>
-                    ${task.completed ? (tFunc('btnDone') || (isAr ? 'مكتمل' : 'Completed')) : (tFunc('btnGo') || (isAr ? 'انطلق' : 'Go'))}
+                    ${task.completed ? (isAr ? 'مكتمل' : 'Completed') : (isAr ? 'انطلق' : 'Go')}
                 </button>
             </div>
         `).join('');
 
-        // رسم الواجهة الرئيسية للمهام والمكافأة اليومية
         container.innerHTML = `
-            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">${tFunc('tasksTitle') || fallbackTitle}</h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-bottom: 20px;">${tFunc('tasksSub') || fallbackSub}</p>
+            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">${isAr ? 'ضاعف رصيدك' : 'Earn More ZERO'}</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-bottom: 20px;">${isAr ? 'أكمل المهام اليومية لزيادة نقاطك ومكافآتك!' : 'Complete tasks to boost your balance!'}</p>
 
             <div class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 20px; margin-bottom: 25px; border-left: 4px solid var(--accent-orange);">
                 <div style="text-align: ${isAr ? 'right' : 'left'};">
-                    <h4 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">🎁 ${tFunc('dailyCheckin') || (isAr ? 'المكافأة اليومية' : 'Daily Reward')}</h4>
-                    <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">${tFunc('dailyCheckinSub') || (isAr ? 'سجل دخولك يومياً لتحصل على مكافأتك' : 'Claim your daily free points')}</p>
+                    <h4 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">🎁 ${isAr ? 'المكافأة اليومية' : 'Daily Reward'}</h4>
+                    <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">${isAr ? 'سجل دخولك يومياً لتحصل على مكافأتك' : 'Claim your daily free points'}</p>
                 </div>
                 <button id="btn-daily-claim" 
                         class="${userState.dailyCheckInClaimed ? 'btn-secondary' : 'btn-action'}" 
                         onclick="claimDaily()" 
                         ${userState.dailyCheckInClaimed ? 'disabled style="opacity: 0.5; cursor: not-allowed; margin: 0; padding: 12px 20px;"' : 'style="margin: 0; padding: 12px 20px;"'}>
-                    ${userState.dailyCheckInClaimed ? (tFunc('btnClaimed') || (isAr ? 'تمت المطالبة' : 'Claimed')) : (tFunc('btnClaim') || (isAr ? 'مطالبة' : 'Claim'))}
+                    ${userState.dailyCheckInClaimed ? (isAr ? 'تمت المطالبة' : 'Claimed') : (isAr ? 'مطالبة' : 'Claim')}
                 </button>
             </div>
 
-            <h4 style="color: var(--text-main); margin-bottom: 15px; text-align: center;">${tFunc('currentTasks') || (isAr ? 'المهام الحالية' : 'Current Tasks')} 📋</h4>
+            <h4 style="color: var(--text-main); margin-bottom: 15px; text-align: center;">${isAr ? 'المهام الحالية' : 'Current Tasks'} 📋</h4>
             <div class="tasks-container">${tasksHtml}</div>
         `;
     };
 
-    // 🛡️ دالة تنفيذ المهمة (محمية ضد الضغط المزدوج)
     window.executeTask = async function(taskId, url, points) {
         const task = userState.tasks.find(t => t.id === taskId);
         const isAr = (typeof userState !== 'undefined' && userState.lang === 'ar');
@@ -235,7 +213,7 @@
                 window.open(url, '_blank');
             }
         } catch (e) {
-            console.error("خطأ في فتح الرابط، محاولة بديلة:", e);
+            console.error("خطأ في فتح الرابط:", e);
             window.open(url, '_blank');
         }
 
@@ -249,7 +227,6 @@
         setTimeout(async () => {
             try {
                 const response = await apiVerifyTask(taskId, points);
-                
                 task.isProcessing = false; 
 
                 if (response.success) {
@@ -257,16 +234,15 @@
                     
                     if (!response.alreadyDone) {
                         userState.points = (userState.points || 0) + points; 
-                        const doneMsg = typeof t === "function" ? t('alertTaskDone') : (isAr ? 'تم إضافة النقاط بنجاح:' : 'Points added successfully:');
-                        alert(`🎉 ${doneMsg} ${points} ZERO.`);
+                        alert(`🎉 ${isAr ? 'تم إضافة النقاط بنجاح:' : 'Points added successfully:'} ${points} ZERO.`);
                     }
 
                     if (typeof updateTopBar === "function") updateTopBar();
                     renderTasksPage(document.getElementById("main-content")); 
                 } else {
-                    alert(isAr ? "حدث خطأ أثناء حفظ المهمة، يرجى المحاولة لاحقاً." : "An error occurred while saving task, please try again.");
+                    alert(isAr ? "حدث خطأ أثناء حفظ المهمة، يرجى المحاولة لاحقاً." : "An error occurred, please try again.");
                     if (btn) {
-                        btn.innerHTML = typeof t === "function" ? t('btnGo') : (isAr ? 'انطلق' : 'Go');
+                        btn.innerHTML = isAr ? 'انطلق' : 'Go';
                         btn.disabled = false;
                         btn.style.opacity = "1";
                     }
@@ -275,7 +251,7 @@
                 console.error("خطأ في الاتصال:", error);
                 task.isProcessing = false; 
                 if (btn) {
-                    btn.innerHTML = typeof t === "function" ? t('btnGo') : (isAr ? 'انطلق' : 'Go');
+                    btn.innerHTML = isAr ? 'انطلق' : 'Go';
                     btn.disabled = false;
                     btn.style.opacity = "1";
                 }
@@ -283,7 +259,6 @@
         }, 4000); 
     };
 
-    // دالة المطالبة اليومية
     window.claimDaily = async function() {
         if (userState.dailyCheckInClaimed) return;
 
@@ -301,13 +276,13 @@
             if (response.success) {
                 userState.dailyCheckInClaimed = true;
                 userState.points = (userState.points || 0) + (response.pointsAdded || 200);
-                alert(typeof t === "function" ? t('alertDailyDone') : (isAr ? 'تم استلام المكافأة اليومية بنجاح!' : 'Daily reward claimed successfully!'));
+                alert(isAr ? 'تم استلام المكافأة اليومية بنجاح!' : 'Daily reward claimed successfully!');
                 if (typeof updateTopBar === "function") updateTopBar();
                 renderTasksPage(document.getElementById("main-content"));
             } else {
                 alert(isAr ? "لم تمر 24 ساعة على آخر تسجيل دخول أو حدث خطأ." : "Claim not ready yet or database error.");
                 if (btn) {
-                    btn.innerHTML = typeof t === "function" ? t('btnClaim') : (isAr ? 'مطالبة' : 'Claim');
+                    btn.innerHTML = isAr ? 'مطالبة' : 'Claim';
                     btn.disabled = false;
                     btn.style.opacity = "1";
                 }
@@ -316,7 +291,7 @@
             console.error("خطأ في الاتصال بالخادم:", error);
             alert(isAr ? "تعذر الاتصال بقاعدة البيانات." : "Could not connect to database.");
             if (btn) {
-                btn.innerHTML = typeof t === "function" ? t('btnClaim') : (isAr ? 'مطالبة' : 'Claim');
+                btn.innerHTML = isAr ? 'مطالبة' : 'Claim';
                 btn.disabled = false;
                 btn.style.opacity = "1";
             }
