@@ -19,9 +19,10 @@ window.fetchFriendsFromDB = async function(userId) {
     }
 
     try {
+        // تم التعديل: جلب total_commission بدلاً من reward_points
         const { data: referrals, error: refError } = await supabaseClient
             .from('referrals')
-            .select('referred_id, reward_points')
+            .select('referred_id, total_commission') 
             .eq('referrer_id', userId);
 
         if (refError) throw refError;
@@ -45,7 +46,8 @@ window.fetchFriendsFromDB = async function(userId) {
             }
             return {
                 name: name,
-                rewardPoints: ref.reward_points || 500,
+                // تم التعديل: استخدام حقل العمولة المستمرة
+                totalCommission: ref.total_commission || 0, 
                 referralsCount: 0 
             };
         });
@@ -57,21 +59,18 @@ window.fetchFriendsFromDB = async function(userId) {
     }
 };
 
-// دالة رسم الواجهة (تم التعديل لتتوافق مع التصميم الخرافي)
+// دالة رسم الواجهة 
 window.renderFriendsPage = async function(container) {
     const referralLink = window.generateReferralLink();
     let tFunc = typeof t === 'function' ? t : (key) => key;
     
-    // 1. رسم الواجهة الأساسية مع استخدام الفئات (Classes) الجديدة
     container.innerHTML = `
         <h3 style="color: var(--accent-gold); text-align: center;">${tFunc('referralTitle') || 'Referral System'}</h3>
         <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">${tFunc('referralSub') || 'Share your link!'}</p>
         
-        <!-- استخدام class="card" بدلاً من الألوان القديمة -->
         <div class="card" style="text-align: center; margin-bottom: 20px; padding: 20px;">
             <p style="color: var(--accent-orange); font-family:monospace; font-size:0.8rem; word-break:break-all; margin:0 0 15px 0;">${referralLink}</p>
             <div style="display: flex; gap: 10px; justify-content: center;">
-                <!-- استخدام class="btn-action" للأزرار -->
                 <button class="btn-action" onclick="window.copyToClipboard('${referralLink}')" style="margin-top: 0; padding: 12px; font-size: 0.9rem; flex: 1;">${tFunc('btnCopy') || 'Copy Link'}</button>
                 <button class="btn-secondary" onclick="window.shareOnTelegram('${referralLink}')" style="margin-top: 0; padding: 12px; font-size: 0.9rem; flex: 1; border-color: var(--accent-orange); color: var(--accent-gold);">${tFunc('btnShare') || 'Share'}</button>
             </div>
@@ -93,7 +92,6 @@ window.renderFriendsPage = async function(container) {
         if (realFriends.length > 0) {
             friendsListContainer.style.textAlign = (typeof userState !== 'undefined' && userState.lang === 'ar') ? 'right' : 'left';
             
-            // تحديث بطاقات الأصدقاء لتستخدم class="card"
             friendsListContainer.innerHTML = realFriends.map(friend => `
                 <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; margin-bottom: 12px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
@@ -101,7 +99,7 @@ window.renderFriendsPage = async function(container) {
                         <span style="color: var(--text-main); font-weight: bold; font-size: 1.1rem;">${friend.name}</span>
                     </div>
                     <div style="text-align: ${(typeof userState !== 'undefined' && userState.lang === 'ar') ? 'left' : 'right'};">
-                        <span style="color: var(--accent-gold); font-size: 0.95rem; font-weight: 900;">+${(friend.rewardPoints || 500)} ZELO</span>
+                        <span style="color: var(--accent-gold); font-size: 0.95rem; font-weight: 900;">+${friend.totalCommission} ZELO</span>
                         <br><small style="color: var(--text-muted); font-size: 0.75rem;">${tFunc('invites') || 'Invites:'} ${friend.referralsCount || 0}</small>
                     </div>
                 </div>
@@ -139,58 +137,26 @@ window.shareOnTelegram = function(link) {
 };
 
 // ==========================================
-// 🚀 دالة معالجة الإحالة
+// 🚀 دالة معالجة الإحالة (تم التحديث بالكامل)
 // ==========================================
 window.apiProcessReferral = async function(referrerId, newUserId) {
     if (!supabaseClient) return { success: false, message: "لا يوجد اتصال بقاعدة البيانات" };
-    const rewardPoints = 500; 
 
     try {
+        // تم التعديل: تسجيل الإحالة بعمولة مبدئية 0، وحذف النقاط الفورية
         const { error: refError } = await supabaseClient
             .from('referrals')
-            .insert([{ referrer_id: referrerId, referred_id: newUserId, reward_points: rewardPoints }]);
+            .insert([{ referrer_id: referrerId, referred_id: newUserId, total_commission: 0 }]);
 
         if (refError) {
             if (refError.code === '23505') return { success: true, alreadyProcessed: true }; 
             throw refError;
         }
 
-        let currentPoints = 0;
-        const { data: userData, error: fetchError } = await supabaseClient
-            .from('users')
-            .select('points')
-            .eq('telegram_id', referrerId);
+        // ملاحظة: تم مسح كود إضافة وإرسال النقاط القديم من هنا.
+        // الزيادة ستتم لاحقاً من خلال السيرفر عندما يلعب الصديق ويجمع النقاط.
 
-        if (!fetchError && userData && userData.length > 0) {
-            currentPoints = parseInt(userData[0].points) || 0;
-        }
-
-        const newTotalPoints = currentPoints + rewardPoints;
-
-        const { error: userUpsertError } = await supabaseClient
-            .from('users')
-            .upsert(
-                { telegram_id: referrerId, points: newTotalPoints },
-                { onConflict: 'telegram_id' }
-            );
-
-        if (userUpsertError) throw userUpsertError;
-
-        const { data: clubData, error: clubFetchError } = await supabaseClient
-            .from('club_fans_rankings')
-            .select('total_fan_points')
-            .eq('telegram_id', referrerId);
-
-        if (!clubFetchError && clubData && clubData.length > 0) {
-            const { error: clubUpdateError } = await supabaseClient
-                .from('club_fans_rankings')
-                .update({ total_fan_points: newTotalPoints })
-                .eq('telegram_id', referrerId);
-
-            if (clubUpdateError) console.error("❌ خطأ في تحديث نقاط نادي الداعي:", clubUpdateError);
-        }
-
-        return { success: true, pointsAdded: rewardPoints };
+        return { success: true, message: "تم تسجيل الإحالة بنجاح وبدء حساب العمولة!" };
 
     } catch (error) {
         console.error("❌ خطأ في عملية معالجة الإحالة:", error);
