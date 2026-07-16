@@ -81,38 +81,26 @@ function renderMatchList(overlay, isAr) {
         <div id="matches-container">
     `;
 
-    const activeMatches = globalMatches.filter(m => {
+    // 🎯 فلترة المباريات: الاحتفاظ فقط بالمباريات التي لم تبدأ بعد
+    const upcomingMatches = globalMatches.filter(m => {
         const status = m.status ? m.status.toUpperCase().trim() : '';
-        return status !== 'FINISHED' && status !== 'انتهت' && status !== 'ENDED';
+        return status === 'NOT_STARTED';
     });
 
-    if (activeMatches.length === 0) {
+    if (upcomingMatches.length === 0) {
         html += `<div style="text-align:center; color:#888; padding:50px;">${getT('noMatchesAvailable')}</div>`;
     } else {
-        
-        const notStartedMatches = [];
-        const liveMatches = [];
-
-        activeMatches.forEach(m => {
-            const matchDate = new Date(m.match_date);
-            const now = new Date();
-            const safeStatus = m.status ? m.status.toUpperCase().trim() : 'NOT_STARTED';
-            const isStarted = now >= matchDate || safeStatus === 'LIVE';
-
-            if (isStarted) {
-                liveMatches.push(m);
-            } else {
-                notStartedMatches.push(m);
-            }
-        });
-
-        const sortedMatches = [...notStartedMatches, ...liveMatches];
+        // ترتيب التحديات تصاعدياً حسب موعد اللعب (الأقرب فالأبعد)
+        const sortedMatches = upcomingMatches.sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
 
         html += sortedMatches.map(m => {
             const matchDate = new Date(m.match_date);
             const now = new Date();
-            const safeStatus = m.status ? m.status.toUpperCase().trim() : 'NOT_STARTED';
-            const isStarted = now >= matchDate || safeStatus === 'LIVE'; 
+            
+            // 🎯 إضافة 5 دقائق للوقت الحالي لإغلاق التوقع قبل بداية المباراة بـ 5 دقائق
+            now.setMinutes(now.getMinutes() + 5); 
+            const isStarted = now >= matchDate; 
+            
             const hasPredicted = userState.predictedMatches.includes(m.id);
 
             const team1Name = m.team_a;
@@ -123,14 +111,6 @@ function renderMatchList(overlay, isAr) {
 
             let statusText = getT('statusNotStarted');
             let statusColor = '#10b981';
-            
-            if (safeStatus === 'LIVE') {
-                statusText = getT('statusLive');
-                statusColor = '#fd1d1d';
-            } else if (isStarted) {
-                statusText = getT('statusStarted');
-                statusColor = '#fcb045';
-            }
 
             let buttonHtml = '';
             if (hasPredicted) {
@@ -138,6 +118,7 @@ function renderMatchList(overlay, isAr) {
                                 ${getT('btnPredicted')}
                               </button>`;
             } else if (isStarted) {
+                // تفعيل حالة "مغلق" إذا اقتربت المباراة (أقل من 5 دقائق)
                 buttonHtml = `<button disabled style="width:100%; padding:12px; background:rgba(255,255,255,0.05); color:#888; border:1px solid #333; border-radius:12px; font-size:0.95rem;">
                                 ${getT('btnClosed')}
                               </button>`;
