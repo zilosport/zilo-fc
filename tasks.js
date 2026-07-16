@@ -27,7 +27,6 @@
                 .insert([{ telegram_id: userState.userId, task_id: taskId, reward_points: points }]);
 
             if (taskError) {
-                // إذا كانت المهمة مسجلة مسبقاً (خطأ التكرار 23505) نعيد alreadyDone لكي لا تتضاعف النقاط
                 if (taskError.code === '23505') return { success: true, alreadyDone: true }; 
                 throw taskError;
             }
@@ -169,43 +168,49 @@
         container.innerHTML = `<div style="text-align:center; padding:50px; color: var(--text-main);">⏳ ${typeof t === "function" ? t('loadingTasks') || 'جاري تحميل المهام...' : 'جاري تحميل المهام...'}</div>`;
 
         await syncTasksFromDB();
+        
         let tFunc = typeof t === "function" ? t : (key) => key;
+        const isAr = (typeof userState !== 'undefined' && userState.lang === 'ar');
+
+        // 🎯 تعديل ذكي: تحديد النصوص البديلة باللغة المناسبة تلقائياً
+        const fallbackTitle = isAr ? 'اضاعف رصيدك من ZERO' : 'Earn More ZERO';
+        const fallbackSub = isAr ? 'أكمل المهام اليومية لزيادة نقاطك ومكافآتك!' : 'Complete tasks to boost your balance!';
 
         // رسم بطاقات المهام (باستخدام class="card" و class="btn-action")
         let tasksHtml = userState.tasks.map(task => `
             <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 15px;">
-                <div style="text-align: ${(typeof userState !== 'undefined' && userState.lang === 'ar') ? 'right' : 'left'};">
-                    <h5 style="margin: 0 0 5px 0; color: var(--text-main); font-size: 1rem;">${typeof getTaskName === "function" ? getTaskName(task) : (task.textAr || task.textEn)}</h5>
+                <div style="text-align: ${isAr ? 'right' : 'left'};">
+                    <h5 style="margin: 0 0 5px 0; color: var(--text-main); font-size: 1rem;">${typeof getTaskName === "function" ? getTaskName(task) : (isAr ? task.textAr : task.textEn)}</h5>
                     <small style="color: var(--accent-gold); font-weight: 900; font-size: 0.9rem;">+ ${task.points} ZERO</small>
                 </div>
                 <button id="btn-task-${task.id}" 
                         class="${task.completed ? 'btn-secondary' : 'btn-action'}" 
                         onclick="executeTask('${task.id}', '${task.url}', ${task.points})" 
                         ${task.completed ? 'disabled style="opacity: 0.5; cursor: not-allowed; padding: 10px 15px; font-size: 0.9rem; margin: 0;"' : 'style="padding: 10px 15px; font-size: 0.9rem; margin: 0;"'}>
-                    ${task.completed ? (tFunc('btnDone') || 'مكتمل') : (tFunc('btnGo') || 'انطلق')}
+                    ${task.completed ? (tFunc('btnDone') || (isAr ? 'مكتمل' : 'Completed')) : (tFunc('btnGo') || (isAr ? 'انطلق' : 'Go'))}
                 </button>
             </div>
         `).join('');
 
         // رسم الواجهة الرئيسية للمهام والمكافأة اليومية
         container.innerHTML = `
-            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">${tFunc('tasksTitle') || 'Earn More ZERO'}</h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-bottom: 20px;">${tFunc('tasksSub') || 'Complete tasks to boost your balance!'}</p>
+            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">${tFunc('tasksTitle') || fallbackTitle}</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-bottom: 20px;">${tFunc('tasksSub') || fallbackSub}</p>
 
             <div class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 20px; margin-bottom: 25px; border-left: 4px solid var(--accent-orange);">
-                <div style="text-align: ${(typeof userState !== 'undefined' && userState.lang === 'ar') ? 'right' : 'left'};">
-                    <h4 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">🎁 ${tFunc('dailyCheckin') || 'المكافأة اليومية'}</h4>
-                    <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">${tFunc('dailyCheckinSub') || 'سجل دخولك يومياً لتحصل على مكافأتك'}</p>
+                <div style="text-align: ${isAr ? 'right' : 'left'};">
+                    <h4 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">🎁 ${tFunc('dailyCheckin') || (isAr ? 'المكافأة اليومية' : 'Daily Reward')}</h4>
+                    <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">${tFunc('dailyCheckinSub') || (isAr ? 'سجل دخولك يومياً لتحصل على مكافأتك' : 'Claim your daily free points')}</p>
                 </div>
                 <button id="btn-daily-claim" 
                         class="${userState.dailyCheckInClaimed ? 'btn-secondary' : 'btn-action'}" 
                         onclick="claimDaily()" 
                         ${userState.dailyCheckInClaimed ? 'disabled style="opacity: 0.5; cursor: not-allowed; margin: 0; padding: 12px 20px;"' : 'style="margin: 0; padding: 12px 20px;"'}>
-                    ${userState.dailyCheckInClaimed ? (tFunc('btnClaimed') || 'تمت المطالبة') : (tFunc('btnClaim') || 'مطالبة')}
+                    ${userState.dailyCheckInClaimed ? (tFunc('btnClaimed') || (isAr ? 'تمت المطالبة' : 'Claimed')) : (tFunc('btnClaim') || (isAr ? 'مطالبة' : 'Claim'))}
                 </button>
             </div>
 
-            <h4 style="color: var(--text-main); margin-bottom: 15px; text-align: center;">${tFunc('currentTasks') || 'المهام الحالية'} 📋</h4>
+            <h4 style="color: var(--text-main); margin-bottom: 15px; text-align: center;">${tFunc('currentTasks') || (isAr ? 'المهام الحالية' : 'Current Tasks')} 📋</h4>
             <div class="tasks-container">${tasksHtml}</div>
         `;
     };
@@ -213,6 +218,7 @@
     // 🛡️ دالة تنفيذ المهمة (محمية ضد الضغط المزدوج)
     window.executeTask = async function(taskId, url, points) {
         const task = userState.tasks.find(t => t.id === taskId);
+        const isAr = (typeof userState !== 'undefined' && userState.lang === 'ar');
         
         if (!task || task.completed || task.isProcessing) return;
 
@@ -235,7 +241,7 @@
 
         const btn = document.getElementById(`btn-task-${taskId}`);
         if (btn) {
-            btn.innerHTML = "⏳ التحقق...";
+            btn.innerHTML = isAr ? "⏳ التحقق..." : "⏳ Verifying...";
             btn.disabled = true;
             btn.style.opacity = "0.7";
         }
@@ -251,16 +257,16 @@
                     
                     if (!response.alreadyDone) {
                         userState.points = (userState.points || 0) + points; 
-                        const doneMsg = typeof t === "function" ? t('alertTaskDone') : 'تم إضافة النقاط بنجاح:';
-                        alert(`🎉 ${doneMsg} ${points} ZERO FC.`);
+                        const doneMsg = typeof t === "function" ? t('alertTaskDone') : (isAr ? 'تم إضافة النقاط بنجاح:' : 'Points added successfully:');
+                        alert(`🎉 ${doneMsg} ${points} ZERO.`);
                     }
 
                     if (typeof updateTopBar === "function") updateTopBar();
                     renderTasksPage(document.getElementById("main-content")); 
                 } else {
-                    alert("حدث خطأ أثناء حفظ المهمة، يرجى المحاولة لاحقاً.");
+                    alert(isAr ? "حدث خطأ أثناء حفظ المهمة، يرجى المحاولة لاحقاً." : "An error occurred while saving task, please try again.");
                     if (btn) {
-                        btn.innerHTML = typeof t === "function" ? t('btnGo') : 'انطلق';
+                        btn.innerHTML = typeof t === "function" ? t('btnGo') : (isAr ? 'انطلق' : 'Go');
                         btn.disabled = false;
                         btn.style.opacity = "1";
                     }
@@ -269,7 +275,7 @@
                 console.error("خطأ في الاتصال:", error);
                 task.isProcessing = false; 
                 if (btn) {
-                    btn.innerHTML = typeof t === "function" ? t('btnGo') : 'انطلق';
+                    btn.innerHTML = typeof t === "function" ? t('btnGo') : (isAr ? 'انطلق' : 'Go');
                     btn.disabled = false;
                     btn.style.opacity = "1";
                 }
@@ -281,6 +287,7 @@
     window.claimDaily = async function() {
         if (userState.dailyCheckInClaimed) return;
 
+        const isAr = (typeof userState !== 'undefined' && userState.lang === 'ar');
         const btn = document.getElementById('btn-daily-claim');
         if (btn) {
             btn.innerHTML = "⏳";
@@ -294,22 +301,22 @@
             if (response.success) {
                 userState.dailyCheckInClaimed = true;
                 userState.points = (userState.points || 0) + (response.pointsAdded || 200);
-                alert(typeof t === "function" ? t('alertDailyDone') : 'تم استلام المكافأة اليومية بنجاح!');
+                alert(typeof t === "function" ? t('alertDailyDone') : (isAr ? 'تم استلام المكافأة اليومية بنجاح!' : 'Daily reward claimed successfully!'));
                 if (typeof updateTopBar === "function") updateTopBar();
                 renderTasksPage(document.getElementById("main-content"));
             } else {
-                alert("لم تمر 24 ساعة على آخر تسجيل دخول أو حدث خطأ.");
+                alert(isAr ? "لم تمر 24 ساعة على آخر تسجيل دخول أو حدث خطأ." : "Claim not ready yet or database error.");
                 if (btn) {
-                    btn.innerHTML = typeof t === "function" ? t('btnClaim') : 'مطالبة';
+                    btn.innerHTML = typeof t === "function" ? t('btnClaim') : (isAr ? 'مطالبة' : 'Claim');
                     btn.disabled = false;
                     btn.style.opacity = "1";
                 }
             }
         } catch (error) {
             console.error("خطأ في الاتصال بالخادم:", error);
-            alert("تعذر الاتصال بقاعدة البيانات.");
+            alert(isAr ? "تعذر الاتصال بقاعدة البيانات." : "Could not connect to database.");
             if (btn) {
-                btn.innerHTML = typeof t === "function" ? t('btnClaim') : 'مطالبة';
+                btn.innerHTML = typeof t === "function" ? t('btnClaim') : (isAr ? 'مطالبة' : 'Claim');
                 btn.disabled = false;
                 btn.style.opacity = "1";
             }
