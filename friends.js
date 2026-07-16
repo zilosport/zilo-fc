@@ -11,7 +11,7 @@ window.generateReferralLink = function() {
     return `https://t.me/Zelo_Sport_bot/app?startapp=ref_${cleanIdentifier}`;
 };
 
-// دالة غير متزامنة (Async) لجلب الأصدقاء من قاعدة بيانات Supabase
+// دالة غير متزامنة (Async) لجلب الأصدقاء من قاعدة بيانات Supabase واحتساب إحالاتهم
 window.fetchFriendsFromDB = async function(userId) {
     if (typeof supabaseClient === 'undefined') {
         console.error("❌ لم يتم العثور على اتصال بقاعدة البيانات (supabaseClient).");
@@ -19,7 +19,7 @@ window.fetchFriendsFromDB = async function(userId) {
     }
 
     try {
-        // تم التعديل: جلب total_commission بدلاً من reward_points
+        // 1. جلب الإحالات الخاصة بالمستخدم الحالي
         const { data: referrals, error: refError } = await supabaseClient
             .from('referrals')
             .select('referred_id, total_commission') 
@@ -29,6 +29,8 @@ window.fetchFriendsFromDB = async function(userId) {
         if (!referrals || referrals.length === 0) return [];
 
         const friendIds = referrals.map(r => r.referred_id);
+
+        // 2. جلب البيانات الشخصية للأصدقاء (الاسم والمعرف)
         const { data: users, error: usersError } = await supabaseClient
             .from('users')
             .select('telegram_id, username, first_name')
@@ -36,6 +38,22 @@ window.fetchFriendsFromDB = async function(userId) {
 
         if (usersError) throw usersError;
 
+        // 3. 🎯 التعديل الذكي: جلب عدد الأشخاص الذين قام كل صديق بدعوتهم
+        // نبحث في جدول الإحالات عن الإحالات التي قام بها هؤلاء الأصدقاء بأنفسهم
+        const { data: subReferrals, error: subRefError } = await supabaseClient
+            .from('referrals')
+            .select('referrer_id')
+            .in('referrer_id', friendIds);
+
+        // تجميع وحساب عدد الإحالات الفرعية لكل صديق
+        const inviteCounts = {};
+        if (!subRefError && subReferrals) {
+            subReferrals.forEach(r => {
+                inviteCounts[r.referrer_id] = (inviteCounts[r.referrer_id] || 0) + 1;
+            });
+        }
+
+        // 4. بناء القائمة النهائية ودمج البيانات الشخصية مع العمولات وعدد الإحالات الحقيقي
         const friendsList = referrals.map(ref => {
             const friendInfo = users.find(u => u.telegram_id === ref.referred_id);
             let fallbackName = typeof t === 'function' ? t('newFriend') : "New Friend";
@@ -46,9 +64,8 @@ window.fetchFriendsFromDB = async function(userId) {
             }
             return {
                 name: name,
-                // تم التعديل: استخدام حقل العمولة المستمرة
                 totalCommission: ref.total_commission || 0, 
-                referralsCount: 0 
+                referralsCount: inviteCounts[ref.referred_id] || 0 // 🎯 الآن أصبح الرقم ديناميكياً وحقيقياً من قاعدة البيانات!
             };
         });
 
@@ -100,7 +117,7 @@ window.renderFriendsPage = async function(container) {
                     </div>
                     <div style="text-align: ${(typeof userState !== 'undefined' && userState.lang === 'ar') ? 'left' : 'right'};">
                         <span style="color: var(--accent-gold); font-size: 0.95rem; font-weight: 900;">+${friend.totalCommission} ZELO</span>
-                        <br><small style="color: var(--text-muted); font-size: 0.75rem;">${tFunc('invites') || 'Invites:'} ${friend.referralsCount || 0}</small>
+                        <br><small style="color: var(--text-muted); font-size: 0.75rem;">${tFunc('invites') || 'Invites:'} ${friend.referralsCount}</small>
                     </div>
                 </div>
             `).join('');
@@ -108,7 +125,7 @@ window.renderFriendsPage = async function(container) {
             friendsListContainer.innerHTML = `
                 <div class="card" style="text-align: center; padding: 30px 20px;">
                     <span style="font-size: 3rem; display: block; margin-bottom: 15px;">🤝</span>
-                    <p style="color: var(--text-muted); margin: 0; font-size: 1rem; line-height: 1.5;">${tFunc('emptyFriendsState') || "You haven't invited any friends yet.<br>Share your link to start collecting ZELO FC points!"}</p>
+                    <p style="color: var(--text-muted); margin: 0; font-size: 1rem; line-height: 1.5;">${tFunc('emptyFriendsState') || "You haven't invited any friends yet.<br>Share your link to start collecting ZELO points!"}</p>
                 </div>
             `;
         }
@@ -137,13 +154,12 @@ window.shareOnTelegram = function(link) {
 };
 
 // ==========================================
-// 🚀 دالة معالجة الإحالة (تم التحديث بالكامل)
+// 🚀 دالة معالجة الإحالة 
 // ==========================================
 window.apiProcessReferral = async function(referrerId, newUserId) {
     if (!supabaseClient) return { success: false, message: "لا يوجد اتصال بقاعدة البيانات" };
 
     try {
-        // تم التعديل: تسجيل الإحالة بعمولة مبدئية 0، وحذف النقاط الفورية
         const { error: refError } = await supabaseClient
             .from('referrals')
             .insert([{ referrer_id: referrerId, referred_id: newUserId, total_commission: 0 }]);
@@ -152,9 +168,6 @@ window.apiProcessReferral = async function(referrerId, newUserId) {
             if (refError.code === '23505') return { success: true, alreadyProcessed: true }; 
             throw refError;
         }
-
-        // ملاحظة: تم مسح كود إضافة وإرسال النقاط القديم من هنا.
-        // الزيادة ستتم لاحقاً من خلال السيرفر عندما يلعب الصديق ويجمع النقاط.
 
         return { success: true, message: "تم تسجيل الإحالة بنجاح وبدء حساب العمولة!" };
 
