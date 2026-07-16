@@ -1,6 +1,6 @@
 /**
  * ملف: weekly_match_rankings.js
- * الوظيفة: شاشة الترتيب الكاملة (الثلاثة الأوائل + ترتيب المستخدم + سجل توقعاته وأخطائه + دعم الصور الشخصية)
+ * الوظيفة: شاشة الترتيب الكاملة (المنصة + ترتيب المستخدم + سجل التوقعات + الترتيب العام)
  */
 
 // دالة مساعدة لإنشاء الصورة الشخصية أو الحرف الأول
@@ -54,8 +54,6 @@ window.openRankingScreen = function() {
     `;
 
     document.body.appendChild(screen);
-
-    // استدعاء دالة جلب البيانات وعرضها داخل هذه الحاوية
     window.renderHomeRankingWidget('full-ranking-container');
 };
 
@@ -68,16 +66,16 @@ window.renderHomeRankingWidget = async function(containerId) {
     const isAr = userState.lang === 'ar'; 
 
     try {
-        // 1. جلب أول 3 لاعبين 
-        const { data: top3, error: top3Error } = await supabaseClient
+        // 1. جلب أول 50 لاعب للترتيب العام (من ضمنهم أول 3 للمنصة)
+        const { data: rankings, error: topError } = await supabaseClient
             .from('weekly_match_rankings')
             .select('*')
             .eq('is_eliminated', false)
             .eq('category', 'weekly') 
             .order('points_earned', { ascending: false })
-            .limit(3);
+            .limit(50);
 
-        if (top3Error) throw top3Error;
+        if (topError) throw topError;
 
         // 2. جلب ترتيب المستخدم الحالي
         const { data: myRank } = await supabaseClient.rpc('get_user_rank', {
@@ -96,9 +94,10 @@ window.renderHomeRankingWidget = async function(containerId) {
         const { data: predictions } = await supabaseClient
             .from('match_predictions')
             .select('*')
-            .eq('telegram_id', currentUserId);
+            .eq('telegram_id', currentUserId)
+            .order('created_at', { ascending: false });
 
-        // 4. جلب بيانات المباريات المرتبطة بهذه التوقعات فقط (تحسين الأداء)
+        // 4. جلب بيانات المباريات المرتبطة بهذه التوقعات
         let matches = [];
         if (predictions && predictions.length > 0) {
             const matchIds = predictions.map(p => p.match_id);
@@ -127,10 +126,10 @@ window.renderHomeRankingWidget = async function(containerId) {
         `;
 
         // -- أ. قسم المنصة (الـ Top 3) --
-        if (top3 && top3.length > 0) {
-            const firstPlace = top3[0];
-            const secondPlace = top3[1];
-            const thirdPlace = top3[2];
+        if (rankings && rankings.length > 0) {
+            const firstPlace = rankings[0];
+            const secondPlace = rankings[1];
+            const thirdPlace = rankings[2];
 
             html += `<div class="podium-container">`;
             
@@ -226,7 +225,7 @@ window.renderHomeRankingWidget = async function(containerId) {
                 return `
                     <div style="background:var(--bg-card, #1c1c22); padding:15px; border-radius:12px; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
                         <div>
-                            <div style="font-weight:bold; font-size:1rem; margin-bottom:5px;">${match.team_a} vs ${match.team_b}</div>
+                            <div style="font-weight:bold; font-size:1rem; margin-bottom:5px; color:#fff;">${match.team_a} vs ${match.team_b}</div>
                             <div style="color:#aaa; font-size:0.9rem;">
                                 ${isAr ? 'توقعك:' : 'Prediction:'} <b style="color:#fff;">${pred.predicted_home} - ${pred.predicted_away}</b>
                             </div>
@@ -237,12 +236,11 @@ window.renderHomeRankingWidget = async function(containerId) {
                 `;
             }).join('');
         } else {
-            historyHtml = `<div style="text-align:center; color:#888; padding:30px; background:var(--bg-card, #1c1c22); border-radius:12px; border: 1px solid rgba(255,255,255,0.05);">${isAr ? 'لم تقم بأي توقعات بعد.' : 'No predictions yet.'}</div>`;
+            historyHtml = `<div style="text-align:center; color:#888; padding:30px; background:rgba(255,255,255,0.02); border-radius:12px; border: 1px solid rgba(255,255,255,0.05);">${isAr ? 'لم تقم بأي توقعات بعد.' : 'No predictions yet.'}</div>`;
         }
 
-        // إضافة قسم السجل إلى الواجهة
         html += `
-            <div style="margin-top: 35px;">
+            <div style="margin-top: 35px; margin-bottom: 25px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <h3 style="margin:0; color:#fff;">📜 ${isAr ? 'سجل توقعاتي' : 'My Predictions'}</h3>
                     <div style="background:var(--bg-card, #1c1c22); padding:5px 12px; border-radius:20px; font-size:0.85rem; border:1px solid rgba(255,255,255,0.1);">
@@ -253,6 +251,36 @@ window.renderHomeRankingWidget = async function(containerId) {
                 ${historyHtml}
             </div>
         `;
+
+        // -- د. قسم باقي الترتيب العام (من المركز الرابع حتى الـ 50) --
+        let leaderboardHtml = '';
+        if (rankings && rankings.length > 3) {
+            const restOfRankings = rankings.slice(3); // أخذ ما بعد أول 3
+            
+            leaderboardHtml = restOfRankings.map((rank, index) => {
+                let actualRank = index + 4; // لأن أول 3 أخذوا المناصب الأولى
+                let isMe = String(rank.telegram_id) === String(currentUserId);
+                let cardStyle = isMe ? 'background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700;' : 'background: #1c1c22; border: 1px solid #25252d;';
+                const alias = rank.username || 'ID: ' + String(rank.telegram_id).slice(-4);
+
+                return `
+                    <div style="${cardStyle} border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="font-size: 1.1rem; font-weight: bold; color: #888; width: 30px; text-align: center;">#${actualRank}</div>
+                            <div style="color: #fff; font-weight: bold; font-size: 0.95rem;">${alias} ${isMe ? `<span style="color:#ffd700; font-size:0.75rem;">(${isAr ? 'أنت' : 'You'})</span>` : ''}</div>
+                        </div>
+                        <div style="color: #ffd700; font-weight: bold; font-size: 1.1rem;">${rank.points_earned || 0} <span style="font-size:0.7rem; color:#aaa;">${isAr ? 'نقطة' : 'Pts'}</span></div>
+                    </div>
+                `;
+            }).join('');
+
+            html += `
+                <div style="margin-top: 30px;">
+                    <h3 style="margin:0 0 15px 0; color:#fff;">🌍 ${isAr ? 'باقي المتصدرين' : 'Other Players'}</h3>
+                    ${leaderboardHtml}
+                </div>
+            `;
+        }
 
         container.innerHTML = html;
 
