@@ -7,10 +7,6 @@
         { id: "x", textAr: "متابعة حساب Zero Zero Sport على X", textEn: "Follow Zero Zero Sport on X", points: 500, completed: false, url: "https://x.com/Zero_Zero_Sport" },
         { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me/ZeroZeroSport" },
         { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com/@zero_zero_sport?si=4HLPUQ1jv51UTlkP" },
-        
-        // 🎯 المهمة الجديدة: زيارة موقع الويب الرسمي بالتعبير المقترح وبنفس النظام
-        { id: "visit_website", textAr: "ألقِ نظرة على موقعنا الرسمي", textEn: "Visit our official website", points: 500, completed: false, url: "https://zelo-sport-fc.github.io/zelo-fc-site/" },
-        
         { id: "tg_group_ar", textAr: "الانضمام للمجموعة العربية", textEn: "Join Arabic Group", points: 300, completed: false, url: "https://t.me/ZeroZeroSport_Arab" },
         { id: "tg_group_en", textAr: "الانضمام للمجموعة الأجنبية", textEn: "Join Global Group", points: 300, completed: false, url: "https://t.me/ZeroZeroSport_Global" }
     ];
@@ -172,6 +168,7 @@
             </div>
         `).join('');
 
+        // 🎯 تم إزالة كل المتغيرات الإنجليزية المزعجة هنا وكتابة النص الصافي مباشرة
         container.innerHTML = `
             <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">${isAr ? 'ضاعف رصيدك' : 'Earn More ZERO'}</h3>
             <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-bottom: 20px;">${isAr ? 'أكمل المهام اليومية لزيادة نقاطك ومكافآتك!' : 'Complete tasks to boost your balance!'}</p>
