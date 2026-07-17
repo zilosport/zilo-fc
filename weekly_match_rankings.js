@@ -75,17 +75,29 @@ window.renderHomeRankingWidget = async function(containerId) {
 
         if (topError) throw topError;
 
-        const { data: myRank } = await supabaseClient.rpc('get_user_rank', {
-            p_telegram_id: currentUserId,
-            p_category: 'weekly'
-        });
-
+        // تعديل: حساب الترتيب محلياً لتجنب مشكلة الـ RPC غير الموجودة
         const { data: myData } = await supabaseClient
             .from('weekly_match_rankings')
             .select('points_earned')
             .eq('telegram_id', currentUserId)
             .eq('category', 'weekly')
             .maybeSingle();
+
+        let myRank = '-';
+        if (myData && myData.points_earned !== undefined) {
+            const { count, error: countError } = await supabaseClient
+                .from('weekly_match_rankings')
+                .select('*', { count: 'exact', head: true })
+                .eq('is_eliminated', false)
+                .eq('category', 'weekly')
+                .gt('points_earned', myData.points_earned);
+            
+            if (!countError && count !== null) {
+                myRank = count + 1;
+            } else if (count === 0) {
+                myRank = 1;
+            }
+        }
 
         const { data: predictions } = await supabaseClient
             .from('match_predictions')
@@ -363,14 +375,13 @@ window.renderHomeRankingWidget = async function(containerId) {
             ? `<img src="${userState.photoUrl}" alt="User">` 
             : `${userInitial}`;
 
-        const displayRank = myRank || '-';
         const badgeClass = (myRank && myRank <= 3) ? 'badge-top' : 'badge-normal';
 
         html += `
             <div class="legendary-card">
                 <!-- شارة الترتيب البارزة (البطاقة الملونة) -->
                 <div class="legendary-rank-badge ${badgeClass}">
-                    #${displayRank}
+                    #${myRank}
                 </div>
 
                 <!-- الصورة الطافية خارج حدود البطاقة -->
