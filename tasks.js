@@ -3,12 +3,13 @@
 // ==========================================
 
 (function() {
+    // 1. تحديث الروابط والأسماء إلى Zelo Sport
     window.defaultTasksData = [
-        { id: "x", textAr: "متابعة حساب Zero Zero Sport على X", textEn: "Follow Zero Zero Sport on X", points: 500, completed: false, url: "https://x.com/Zero_Zero_Sport" },
-        { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me/ZeroZeroSport" },
-        { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://youtube.com/@zero_zero_sport?si=4HLPUQ1jv51UTlkP" },
-        { id: "tg_group_ar", textAr: "الانضمام للمجموعة العربية", textEn: "Join Arabic Group", points: 300, completed: false, url: "https://t.me/ZeroZeroSport_Arab" },
-        { id: "tg_group_en", textAr: "الانضمام للمجموعة الأجنبية", textEn: "Join Global Group", points: 300, completed: false, url: "https://t.me/ZeroZeroSport_Global" }
+        { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zelo Sport on X", points: 500, completed: false, url: "https://x.com/Zelo_Sport" },
+        { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me/ZeloSport" },
+        { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://www.youtube.com/@Zelo_Sport" },
+        { id: "tg_group_ar", textAr: "الانضمام للمجموعة العربية", textEn: "Join Arabic Group", points: 300, completed: false, url: "https://t.me/ZeloSport_Arab" },
+        { id: "tg_group_en", textAr: "الانضمام للمجموعة الأجنبية", textEn: "Join Global Group", points: 300, completed: false, url: "https://t.me/ZeloSport_Global" }
     ];
 
     // ==========================================
@@ -76,21 +77,42 @@
         const dailyPoints = 200; 
 
         try {
+            // حل المشكلة: جلب النقاط الحالية أولاً بدلاً من الاعتماد على RPC
+            let currentPoints = 0;
+            const { data: userData, error: fetchError } = await supabaseClient
+                .from('users')
+                .select('points')
+                .eq('telegram_id', userState.userId);
+
+            if (!fetchError && userData && userData.length > 0) {
+                currentPoints = parseInt(userData[0].points) || 0;
+            }
+
+            const newPoints = currentPoints + dailyPoints;
+
+            // تحديث النقاط ووقت المطالبة بطريقة مباشرة ومضمونة
             const { error: updateError } = await supabaseClient
                 .from('users')
-                .update({ last_daily_claim: new Date().toISOString() })
+                .update({ 
+                    points: newPoints,
+                    last_daily_claim: new Date().toISOString() 
+                })
                 .eq('telegram_id', userState.userId);
 
             if (updateError) throw updateError;
 
-            const { error: rpcError } = await supabaseClient.rpc('add_user_points', {
-                p_telegram_id: userState.userId,
-                p_amount: dailyPoints,
-                p_source: 'daily_claim',
-                p_description: 'مكافأة تسجيل الدخول اليومي'
-            });
+            // تحديث نقاط النادي أيضاً لضمان التزامن
+            const { data: clubData, error: clubFetchError } = await supabaseClient
+                .from('club_fans_rankings')
+                .select('total_fan_points')
+                .eq('telegram_id', userState.userId);
 
-            if (rpcError) throw rpcError;
+            if (!clubFetchError && clubData && clubData.length > 0) {
+                const { error: clubUpdateError } = await supabaseClient
+                    .from('club_fans_rankings')
+                    .update({ total_fan_points: newPoints })
+                    .eq('telegram_id', userState.userId);
+            }
 
             return { success: true, pointsAdded: dailyPoints };
         } catch (error) {
@@ -168,7 +190,6 @@
             </div>
         `).join('');
 
-        // 🎯 تم إزالة كل المتغيرات الإنجليزية المزعجة هنا وكتابة النص الصافي مباشرة
         container.innerHTML = `
             <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">${isAr ? 'ضاعف رصيدك' : 'Earn More ZERO'}</h3>
             <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-bottom: 20px;">${isAr ? 'أكمل المهام اليومية لزيادة نقاطك ومكافآتك!' : 'Complete tasks to boost your balance!'}</p>
