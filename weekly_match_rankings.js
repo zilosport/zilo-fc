@@ -14,7 +14,9 @@ const generateWeeklyAvatar = (name, photoUrl, size = '50px') => {
 };
 
 window.openRankingScreen = function() {
-    if (document.getElementById('ranking-full-screen')) return;
+    // ✅ التعديل هنا: حذف الشاشة القديمة وإعادة بنائها إن وجدت لتحديث البيانات والواجهة
+    const existingScreen = document.getElementById('ranking-full-screen');
+    if (existingScreen) existingScreen.remove();
 
     const isAr = userState.lang === 'ar';
     const title = isAr ? 'ترتيب التحديات' : 'Challenges Ranking';
