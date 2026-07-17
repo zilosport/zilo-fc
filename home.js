@@ -315,8 +315,8 @@ window.renderHomePage = async function(container) {
             <div style="color: #3b82f6; font-size: 1.5rem; opacity: 0.8;">${isAr ? '👈' : '👉'}</div>
         </div>
 
-        <!-- 🏆 لافتة الترتيب -->
-        <div id="ranking-card" class="action-banner banner-ranking" onclick="if(typeof window.openRankingScreen === 'function') { window.openRankingScreen(); } else { alert('${loadingAlert}'); }">
+        <!-- 🏆 لافتة الترتيب (تم التحديث هنا لاستدعاء الدالة الجديدة!) -->
+        <div id="ranking-card" class="action-banner banner-ranking" onclick="if(typeof window.openLegendaryRankingScreen === 'function') { window.openLegendaryRankingScreen(); } else { alert('${loadingAlert}'); }">
             <div class="banner-icon-wrapper" style="text-shadow: 0 0 15px rgba(253, 29, 29, 0.6);">
                 🔥
             </div>
