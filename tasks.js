@@ -316,7 +316,7 @@
                     
                     <div class="task-info" style="text-align: ${isAr ? 'right' : 'left'};">
                         <h5 style="margin: 0; color: #fff; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.3px;">${isAr ? task.textAr : task.textEn}</h5>
-                        <div class="task-points-badge">+ ${task.points} ZERO</div>
+                        <div class="task-points-badge">+ ${task.points} ZELO</div>
                     </div>
                     
                     <button id="btn-task-${task.id}" 
@@ -347,7 +347,7 @@
                         🎁 ${isAr ? 'صندوق المكافأة اليومية' : 'Daily Reward Chest'}
                     </h3>
                     <p style="margin: 0; font-size: 0.9rem; color: #ccc;">
-                        ${isAr ? 'سجل دخولك يومياً لتحصل على' : 'Check in daily to earn'} <b style="color:var(--accent-gold);">+200 ZERO</b>
+                        ${isAr ? 'سجل دخولك يومياً لتحصل على' : 'Check in daily to earn'} <b style="color:var(--accent-gold);">+200 ZELO</b>
                     </p>
                 </div>
                 
