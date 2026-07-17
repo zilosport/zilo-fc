@@ -1,6 +1,6 @@
 /**
  * ملف: weekly_match_rankings.js
- * الوظيفة: شاشة الترتيب الكاملة (المنصة + بطاقة اللاعب الشاملة + الترتيب العام)
+ * الوظيفة: شاشة الترتيب الكاملة (المنصة + بطاقة اللاعب الشاملة + سجل التوقعات + الترتيب العام)
  */
 
 // دالة مساعدة لإنشاء الصورة الشخصية أو الحرف الأول
@@ -94,9 +94,21 @@ window.renderHomeRankingWidget = async function(containerId) {
         const { data: predictions } = await supabaseClient
             .from('match_predictions')
             .select('*')
-            .eq('telegram_id', currentUserId);
+            .eq('telegram_id', currentUserId)
+            .order('created_at', { ascending: false });
 
-        // 🎯 تجهيز إحصائيات المستخدم قبل رسم البطاقة
+        // 4. جلب بيانات المباريات المرتبطة بهذه التوقعات لرسم السجل
+        let matches = [];
+        if (predictions && predictions.length > 0) {
+            const matchIds = predictions.map(p => p.match_id);
+            const { data: matchesData } = await supabaseClient
+                .from('matches')
+                .select('*')
+                .in('id', matchIds);
+            matches = matchesData || [];
+        }
+
+        // تجهيز إحصائيات المستخدم قبل رسم البطاقة
         let correctCount = 0;
         let wrongCount = 0;
         let pendingCount = 0;
@@ -182,7 +194,7 @@ window.renderHomeRankingWidget = async function(containerId) {
             html += `<div style="text-align:center; color:#666; padding: 30px;">${isAr ? 'لا توجد بيانات ترتيب حالياً' : 'No ranking data available'}</div>`;
         }
 
-        // -- ب. 🎯 التعديل الجديد: بطاقة اللاعب الشاملة المدمجة --
+        // -- ب. بطاقة اللاعب الشاملة المدمجة --
         html += `
             <div class="my-unified-card">
                 <p style="margin: 0 0 20px 0; font-size: 1.1rem; font-weight: bold; color: rgba(255,255,255,0.9); text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
@@ -208,21 +220,18 @@ window.renderHomeRankingWidget = async function(containerId) {
                 <!-- النصف السفلي: الإحصائيات الشاملة -->
                 <div style="display:flex; justify-content:space-around; align-items:center; text-align:center;">
                     
-                    <!-- التوقعات الصحيحة -->
                     <div>
                         <div style="font-size:1.5rem; margin-bottom:5px;">✅</div>
                         <div style="color:#10b981; font-weight:bold; font-size:1.5rem; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">${correctCount}</div>
                         <div style="color:rgba(255,255,255,0.85); font-size:0.9rem; margin-top:3px;">${isAr ? 'صحيح' : 'Correct'}</div>
                     </div>
                     
-                    <!-- التوقعات المعلقة (بالانتظار) -->
                     <div>
                         <div style="font-size:1.5rem; margin-bottom:5px;">⏳</div>
                         <div style="color:#fcb045; font-weight:bold; font-size:1.5rem; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">${pendingCount}</div>
                         <div style="color:rgba(255,255,255,0.85); font-size:0.9rem; margin-top:3px;">${isAr ? 'بالانتظار' : 'Pending'}</div>
                     </div>
                     
-                    <!-- التوقعات الخاطئة (مع إظهار الحد المسموح) -->
                     <div>
                         <div style="font-size:1.5rem; margin-bottom:5px;">❌</div>
                         <div style="color:${wrongCount >= 2 ? '#fd1d1d' : '#fff'}; font-weight:bold; font-size:1.5rem; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
@@ -234,7 +243,61 @@ window.renderHomeRankingWidget = async function(containerId) {
             </div>
         `;
 
-        // -- ج. قسم الترتيب العام (من المركز الرابع حتى الـ 50) --
+        // -- ج. استرجاع جدول سجل التوقعات (History Table) --
+        let historyHtml = '';
+        if (predictions && predictions.length > 0) {
+            // أخذ أحدث 10 توقعات فقط لعدم زحام الشاشة
+            const recentPredictions = predictions.slice(0, 10);
+            
+            historyHtml = recentPredictions.map(pred => {
+                const match = matches.find(m => m.id === pred.match_id);
+                if (!match) return ''; 
+
+                let statusUi = '';
+                let resultUi = '';
+
+                if (pred.prediction_status === 'correct') {
+                    statusUi = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; padding:5px 10px; border-radius:8px; font-weight:bold; font-size:0.85rem;">+3 ${isAr ? 'نقاط' : 'Pts'} ✅</span>`;
+                    resultUi = `<div style="color:#10b981; font-size:0.85rem; margin-top:8px;">${isAr ? 'النتيجة النهائية:' : 'Final Score:'} ${match.home_score} - ${match.away_score}</div>`;
+                } else if (pred.prediction_status === 'wrong') {
+                    statusUi = `<span style="background:rgba(253, 29, 29, 0.2); color:var(--accent-red, #fd1d1d); padding:5px 10px; border-radius:8px; font-weight:bold; font-size:0.85rem;">${isAr ? 'خطأ' : 'Wrong'} ❌</span>`;
+                    resultUi = `<div style="color:var(--accent-red, #fd1d1d); font-size:0.85rem; margin-top:8px;">${isAr ? 'النتيجة النهائية:' : 'Final Score:'} ${match.home_score} - ${match.away_score}</div>`;
+                } else {
+                    statusUi = `<span style="background:rgba(252, 176, 69, 0.2); color:var(--accent-gold, #fcb045); padding:5px 10px; border-radius:8px; font-weight:bold; font-size:0.85rem;">${isAr ? 'قيد الانتظار' : 'Pending'} ⏳</span>`;
+                }
+
+                return `
+                    <div style="background:var(--bg-card, #1c1c22); padding:15px; border-radius:12px; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:bold; font-size:1rem; margin-bottom:5px; color:#fff;">${match.team_a} vs ${match.team_b}</div>
+                            <div style="color:#aaa; font-size:0.9rem;">
+                                ${isAr ? 'توقعك:' : 'Prediction:'} <b style="color:#fff;">${pred.predicted_home} - ${pred.predicted_away}</b>
+                            </div>
+                            ${resultUi}
+                        </div>
+                        <div>${statusUi}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // رسالة توضيحية للمستخدم في حال كان لديه أكثر من 10 توقعات
+            if (predictions.length > 10) {
+                historyHtml += `<div style="text-align:center; color:#888; font-size: 0.85rem; margin-top: 15px; padding-bottom: 10px;">
+                    ${isAr ? 'عرض أحدث 10 توقعات فقط لسهولة التصفح' : 'Showing latest 10 predictions only'}
+                </div>`;
+            }
+        } else {
+            historyHtml = `<div style="text-align:center; color:#888; padding:30px; background:rgba(255,255,255,0.02); border-radius:12px; border: 1px solid rgba(255,255,255,0.05);">${isAr ? 'لم تقم بأي توقعات بعد.' : 'No predictions yet.'}</div>`;
+        }
+
+        html += `
+            <div style="margin-top: 25px; margin-bottom: 35px;">
+                <h3 style="margin:0 0 15px 0; color:#fff;">📜 ${isAr ? 'سجل التوقعات' : 'Prediction History'}</h3>
+                ${historyHtml}
+            </div>
+        `;
+
+        // -- د. قسم الترتيب العام (من المركز الرابع حتى الـ 50) --
         let leaderboardHtml = '';
         if (rankings && rankings.length > 3) {
             const restOfRankings = rankings.slice(3); 
