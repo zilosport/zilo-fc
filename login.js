@@ -1,5 +1,28 @@
+التصميم الزجاجي المتوهج (Glassmorphism) الذي أضفناه يبدو رائعاً، ومن الطبيعي أن ترغب في تطبيقه على صفحة تسجيل الدخول (login) أيضاً! 
+
+لقد قمت بإعادة صياغة ملف `login.js` بالكامل لتطبيق نفس الهوية البصرية الأسطورية التي استخدمناها في صفحة الأصدقاء والترتيب. تم استخدام تأثيرات `backdrop-filter`، إطارات متوهجة، أزرار تفاعلية زجاجية، وصناديق أنيقة.
+
+كما سأضيف لك أداة تفاعلية بسيطة هنا لتتمكن من رؤية وتجربة كيف يتم بناء هذا التأثير الزجاجي بشكل حي!
+
+<GenerateWidget title="مولد تأثير Glassmorphism" height="600px">
+{
+  "widgetSpec": {
+    "id": "glassmorphism-css-generator",
+    "height": "600px",
+    "prompt": "Objective: Create an interactive CSS glassmorphism generator.\nData State: initialValues: blur=12px, opacity=0.15, saturation=150%.\nStrategy: Standard Layout.\nLibraries: React or Vanilla JS.\nInputs:\n- Blur Amount (Slider: 0px to 40px)\n- Background Opacity (Slider: 0.0 to 1.0)\n- Saturation (Slider: 100% to 200%)\n- Show/Hide CSS Code (Button)\nBehavior: Render a visually distinct, colorful background pattern (e.g., using gradients or geometric shapes). Place a 'glass card' element over this background. As the user adjusts the sliders, update the inline CSS of the glass card (`backdrop-filter: blur() saturate()`, `background-color: rgba()`) in real-time. When the 'Show CSS' button is toggled, display the generated CSS snippet that produces the current effect."
+  }
+}
+</GenerateWidget>
+
+---
+
+### تحديث ملف `login.js` للنسخة الزجاجية الأسطورية
+
+انسخ الكود التالي واستبدله بالكامل في ملف `login.js`:
+
+```javascript
 // ==========================================
-// 📱 login.js - النسخة النهائية (بواجهة احترافية UI/UX) 🚀
+// 📱 login.js - النسخة الأسطورية الزجاجية المتوهجة (Glassmorphism UI/UX) 🚀
 // ==========================================
 
 window.tempSelectedClubs = window.tempSelectedClubs || [];
@@ -23,44 +46,70 @@ function getInjectableStyles() {
                 scroll-behavior: smooth;
                 padding-right: 5px;
             }
-            .smooth-scroll::-webkit-scrollbar {
-                width: 4px;
-            }
-            .smooth-scroll::-webkit-scrollbar-track {
-                background: transparent;
-            }
+            .smooth-scroll::-webkit-scrollbar { width: 4px; }
+            .smooth-scroll::-webkit-scrollbar-track { background: transparent; }
             .smooth-scroll::-webkit-scrollbar-thumb {
                 background: rgba(255, 255, 255, 0.15);
                 border-radius: 10px;
             }
 
             /* تأثير البطاقات الزجاجية والتفاعل عند الضغط */
-            .glass-card {
-                background: rgba(255, 255, 255, 0.04);
-                backdrop-filter: blur(12px);
-                -webkit-backdrop-filter: blur(12px);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 16px;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-                transition: all 0.25s ease;
+            .glass-card-elegant {
+                background: rgba(28, 28, 34, 0.6);
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 20px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+            }
+            .interactive-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+                border-color: rgba(252, 176, 69, 0.3);
             }
             .interactive-card:active {
                 transform: scale(0.97);
-                background: rgba(255, 255, 255, 0.08);
+                background: rgba(36, 36, 44, 0.8);
             }
 
             /* نبض زر التأكيد */
             .btn-pulse {
-                animation: pulseGlow 2s infinite;
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                animation: pulseGlowBtn 2s infinite;
+                transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s;
+                background: linear-gradient(135deg, #10b981, #059669);
             }
             .btn-pulse:active {
                 transform: translateX(-50%) scale(0.95) !important;
+                background: linear-gradient(135deg, #059669, #047857);
             }
-            @keyframes pulseGlow {
-                0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.6); }
-                70% { box-shadow: 0 0 0 12px rgba(76, 175, 80, 0); }
-                100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+            @keyframes pulseGlowBtn {
+                0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+                70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            }
+
+            /* تأثيرات أندية مختارة */
+            .club-selected {
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05)) !important;
+                border: 2px solid #10b981 !important;
+                box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.1);
+            }
+            
+            /* أزرار اللغة */
+            .lang-btn {
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.1);
+                padding: 12px 28px; border-radius: 30px; cursor: pointer;
+                color: white; font-weight: bold; font-size: 0.95rem;
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
+            }
+            .lang-btn-active {
+                background: linear-gradient(135deg, var(--accent-gold, #fcb045), #f59e0b);
+                border-color: transparent;
+                box-shadow: 0 4px 15px rgba(252, 176, 69, 0.4);
+                color: #121215;
             }
         </style>
     `;
@@ -76,46 +125,41 @@ function getDefaultLanguage() {
 
 // ====================== زر اختيار اللغة ======================
 function getLanguageSelector() {
+    const isAr = userState.lang === 'ar';
     return `
         <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;">
-            <div class="interactive-card" onclick="setLanguage('ar')" 
-                 style="background: ${userState.lang === 'ar' ? 'linear-gradient(135deg, #4caf50, #2e7d32)' : 'rgba(255,255,255,0.05)'}; 
-                        padding: 12px 28px; border-radius: 30px; cursor: pointer; 
-                        border: 1px solid ${userState.lang === 'ar' ? 'transparent' : 'rgba(255,255,255,0.1)'}; 
-                        color: white; font-weight: bold; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <div class="lang-btn ${isAr ? 'lang-btn-active' : ''}" onclick="setLanguage('ar')">
                 🇸🇦 العربية
             </div>
-            <div class="interactive-card" onclick="setLanguage('en')" 
-                 style="background: ${userState.lang === 'en' ? 'linear-gradient(135deg, #4caf50, #2e7d32)' : 'rgba(255,255,255,0.05)'}; 
-                        padding: 12px 28px; border-radius: 30px; cursor: pointer; 
-                        border: 1px solid ${userState.lang === 'en' ? 'transparent' : 'rgba(255,255,255,0.1)'}; 
-                        color: white; font-weight: bold; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <div class="lang-btn ${!isAr ? 'lang-btn-active' : ''}" onclick="setLanguage('en')">
                 🇬🇧 English
             </div>
         </div>
     `;
 }
 
-// ====================== صندوق التنبيه والتوضيح ======================
+// ====================== صندوق التنبيه والتوضيح (زجاجي) ======================
 function getTutorialBox() {
+    const isAr = userState.lang === 'ar';
     return `
-        <div class="glass-card" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.05)); 
-                    border: 1px solid rgba(255, 193, 7, 0.2); color: #ffeb9e; 
-                    padding: 18px 20px; margin-bottom: 30px; text-align: center; font-size: 0.95rem; line-height: 1.6;">
-            <strong style="font-size: 1.1rem; color: #ffc107;">
-                ${userState.lang === 'ar' ? '⚠️ كيفية التسجيل' : '⚠️ How to Register'}
-            </strong><br><br>
+        <div class="glass-card-elegant" style="background: linear-gradient(135deg, rgba(252, 176, 69, 0.08), rgba(255, 152, 0, 0.03)); 
+                    border: 1px solid rgba(252, 176, 69, 0.2); 
+                    padding: 20px; margin-bottom: 30px; text-align: center; font-size: 0.95rem; line-height: 1.6; border-radius: 20px;">
             
-            <span style="color: #e0e0e0;">
-                ${userState.lang === 'ar' 
+            <strong style="font-size: 1.15rem; color: var(--accent-gold, #fcb045); display: block; margin-bottom: 8px;">
+                ${isAr ? '⚠️ كيفية التسجيل' : '⚠️ How to Register'}
+            </strong>
+            
+            <span style="color: #e0e0e0; display: block; margin-bottom: 15px;">
+                ${isAr 
                     ? 'اختر نادي <strong style="color:#fff;">محلي</strong> ونادي <strong style="color:#fff;">عالمي</strong> (حد أقصى ناديين)' 
                     : 'Choose one <strong style="color:#fff;">Local</strong> club and one <strong style="color:#fff;">Global</strong> club (max 2)'}
-            </span><br><br>
+            </span>
             
-            <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" 
-               style="display: inline-block; background: rgba(77, 168, 218, 0.15); color: #4da8da; 
-                      padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; transition: background 0.3s;">
-                ${userState.lang === 'ar' ? 'شاهد الفيديو التعليمي 🎥' : 'Watch Tutorial Video 🎥'}
+            <a href="[https://www.youtube.com/watch?v=YOUR_VIDEO_ID](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)" target="_blank" 
+               style="display: inline-flex; align-items: center; gap: 8px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; 
+                      padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.3); transition: all 0.3s;">
+                <span style="font-size: 1.2rem;">🎥</span> ${isAr ? 'شاهد الفيديو التعليمي' : 'Watch Tutorial Video'}
             </a>
         </div>
     `;
@@ -144,13 +188,13 @@ window.setLanguage = async function(lang) {
 // ====================== زر التأكيد ======================
 function getFloatingButton() {
     if (window.tempSelectedClubs.length === 0) return '';
+    const isAr = userState.lang === 'ar';
     return `
         <div id="confirm-btn" class="btn-pulse" onclick="confirmLogin()" 
              style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
-                    background: linear-gradient(135deg, #4caf50, #2e7d32); color: white; 
-                    padding: 16px 35px; border-radius: 40px; font-weight: bold; font-size: 1.15rem; 
-                    cursor: pointer; z-index: 9999; width: 85%; text-align: center; border: 1px solid rgba(255,255,255,0.2);">
-            ${userState.lang === 'ar' ? `تأكيد واستمـرار (${window.tempSelectedClubs.length}/2) ✅` : `Confirm & Continue (${window.tempSelectedClubs.length}/2) ✅`}
+                    color: white; padding: 16px 35px; border-radius: 40px; font-weight: 900; font-size: 1.15rem; 
+                    cursor: pointer; z-index: 9999; width: 85%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+            ${isAr ? `تأكيد واستمـرار (${window.tempSelectedClubs.length}/2) ✅` : `Confirm & Continue (${window.tempSelectedClubs.length}/2) ✅`}
         </div>
     `;
 }
@@ -165,6 +209,7 @@ function renderLoginScreen() {
     if (!userState.lang) userState.lang = getDefaultLanguage();
 
     const mainContent = document.getElementById("main-content");
+    const isAr = userState.lang === 'ar';
 
     let countriesHtml = "";
 
@@ -178,16 +223,26 @@ function renderLoginScreen() {
             countryName = getCountryName(flag) || countryName;
         }
 
+        // حساب عدد الأندية المختارة من هذه الدولة
+        const selectedInThisCountry = clubsInCountry.filter(c => window.tempSelectedClubs.includes(String(c.id))).length;
+        const selectionBadge = selectedInThisCountry > 0 
+            ? `<span style="background: rgba(16, 185, 129, 0.2); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);">✓ ${selectedInThisCountry}</span>`
+            : '';
+
         countriesHtml += `
-            <div class="glass-card interactive-card" onclick="showClubsForCountry('${countryKey}')" 
+            <div class="glass-card-elegant interactive-card" onclick="showClubsForCountry('${countryKey}')" 
                  style="padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 14px;">
                 <div style="display: flex; align-items: center; gap: 16px;">
-                    <span style="font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${flag}</span>
-                    <h4 style="margin: 0; color: #fff; font-size: 1.15rem; letter-spacing: 0.5px;">${countryName}</h4>
+                    <span style="font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">${flag}</span>
+                    <h4 style="margin: 0; color: #fff; font-size: 1.15rem; font-weight: 800; letter-spacing: 0.5px;">${countryName}</h4>
+                    ${selectionBadge}
                 </div>
-                <span style="background: rgba(255,255,255,0.08); padding: 6px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; color: #00b4d8;">
-                    ${clubsInCountry.length} ⚽
-                </span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; color: var(--accent-gold, #fcb045); border: 1px solid rgba(255,255,255,0.1);">
+                        ${clubsInCountry.length} ⚽
+                    </span>
+                    <span style="color: #666; font-size: 1.2rem;">${isAr ? '👈' : '👉'}</span>
+                </div>
             </div>
         `;
     }
@@ -199,15 +254,17 @@ function renderLoginScreen() {
             ${getLanguageSelector()}
             ${getTutorialBox()}
 
-            <div style="font-size: 3.8rem; margin-bottom: 10px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));">🌍</div>
-            <h2 style="color: #fff; margin-bottom: 8px; font-weight: 800; font-size: 1.6rem;">
-                ${userState.lang === 'ar' ? 'اختر أنديتك المفضلة' : 'Choose Your Favorite Clubs'}
-            </h2>
-            <p style="color: #4caf50; font-size: 1.05rem; margin-bottom: 25px; opacity: 0.9;">
-                ${userState.lang === 'ar' ? 'نادي محلي + نادي عالمي (حد أقصى 2)' : '1 Local + 1 Global Club (Max 2)'}
-            </p>
+            <div style="margin-bottom: 25px;">
+                <div style="font-size: 4rem; margin-bottom: 10px; filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.3));">🌍</div>
+                <h2 style="color: #fff; margin-bottom: 8px; font-weight: 900; font-size: 1.7rem; text-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                    ${isAr ? 'اختر أنديتك المفضلة' : 'Choose Your Clubs'}
+                </h2>
+                <p style="color: var(--accent-gold, #fcb045); font-size: 1rem; margin-bottom: 0; font-weight: bold;">
+                    ${isAr ? 'نادي محلي + نادي عالمي (حد أقصى 2)' : '1 Local + 1 Global Club (Max 2)'}
+                </p>
+            </div>
 
-            <div class="smooth-scroll" style="display: flex; flex-direction: column; gap: 5px; height: 50vh;">
+            <div class="smooth-scroll" style="display: flex; flex-direction: column; height: 50vh; text-align: ${isAr ? 'right' : 'left'};">
                 ${countriesHtml}
             </div>
         </div>
@@ -221,13 +278,12 @@ window.showClubsForCountry = function(countryKey) {
     if (!clubs) return;
 
     const mainContent = document.getElementById("main-content");
+    const isAr = userState.lang === 'ar';
 
     let clubsHtml = clubs.map(club => {
         const stringClubId = String(club.id);
         const isSelected = window.tempSelectedClubs.some(id => String(id) === stringClubId);
-        
-        const borderStyle = isSelected ? 'border: 2px solid #4caf50;' : 'border: 1px solid rgba(255,255,255,0.08);';
-        const bgStyle = isSelected ? 'background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(76, 175, 80, 0.05));' : 'background: rgba(255, 255, 255, 0.04);';
+        const selectedClass = isSelected ? 'club-selected' : '';
 
         let clubName = club.name;
         if (typeof getClubName === 'function') {
@@ -235,14 +291,16 @@ window.showClubsForCountry = function(countryKey) {
         }
 
         return `
-            <div class="interactive-card" onclick="toggleClubSelection('${stringClubId}', '${countryKey}')" 
-                 style="${bgStyle} ${borderStyle} padding: 16px 20px; border-radius: 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(12px);">
+            <div class="glass-card-elegant interactive-card ${selectedClass}" onclick="toggleClubSelection('${stringClubId}', '${countryKey}')" 
+                 style="padding: 16px 20px; border-radius: 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
                 <div style="display: flex; align-items: center; gap: 18px;">
-                    <img src="${club.logo}" onerror="this.style.display='none'" style="width: 48px; height: 48px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));">
-                    <span style="color: #fff; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px;">${clubName}</span>
+                    <div style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.05);">
+                        <img src="${club.logo}" onerror="this.style.display='none'" style="width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));">
+                    </div>
+                    <span style="color: #fff; font-size: 1.15rem; font-weight: 800; letter-spacing: 0.5px;">${clubName}</span>
                 </div>
-                <div style="font-size: 1.6rem; transition: transform 0.3s ease;" class="${isSelected ? 'scale-up' : ''}">
-                    ${isSelected ? '✅' : '⭕'}
+                <div style="font-size: 1.5rem; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);" class="${isSelected ? 'scale-up' : ''}">
+                    ${isSelected ? '<span style="filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6));">✅</span>' : '<span style="opacity: 0.3;">⭕</span>'}
                 </div>
             </div>
         `;
@@ -258,17 +316,18 @@ window.showClubsForCountry = function(countryKey) {
         ${getInjectableStyles()}
         <div class="animate-screen" style="padding: 25px 15px; max-width: 500px; margin: 0 auto; padding-bottom: 120px;">
             <div onclick="renderLoginScreen()" 
-                 style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); color: #fff; padding: 10px 20px; border-radius: 30px; cursor: pointer; margin-bottom: 25px; font-weight: bold; transition: background 0.3s;">
-                <span style="font-size: 1.2rem;">${userState.lang === 'ar' ? '🔙' : '🔙'}</span>
-                ${userState.lang === 'ar' ? 'الرجـوع' : 'Back'}
+                 style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); color: #fff; padding: 10px 20px; border-radius: 30px; cursor: pointer; margin-bottom: 25px; font-weight: bold; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); transition: all 0.3s;">
+                <span style="font-size: 1.2rem;">${isAr ? '🔙' : '🔙'}</span>
+                ${isAr ? 'الرجوع للقائمة' : 'Back to list'}
             </div>
             
-            <div style="text-align: center; margin-bottom: 25px;">
-                <span style="font-size: 3rem; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));">${flag}</span>
-                <h2 style="color: #fff; margin-top: 10px; font-weight: 800; font-size: 1.5rem;">${countryName}</h2>
+            <div style="text-align: center; margin-bottom: 25px; background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0)); padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 3.5rem; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4));">${flag}</span>
+                <h2 style="color: #fff; margin: 10px 0 0 0; font-weight: 900; font-size: 1.6rem; letter-spacing: 1px;">${countryName}</h2>
+                <p style="color: #888; font-size: 0.9rem; margin: 5px 0 0 0; font-weight: bold;">${isAr ? 'اضغط على النادي لاختياره' : 'Tap a club to select it'}</p>
             </div>
             
-            <div class="smooth-scroll" style="display: flex; flex-direction: column; height: 50vh; padding-top: 5px;">
+            <div class="smooth-scroll" style="display: flex; flex-direction: column; height: 50vh; text-align: ${isAr ? 'right' : 'left'};">
                 ${clubsHtml}
             </div>
         </div>
