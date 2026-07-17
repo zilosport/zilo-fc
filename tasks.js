@@ -1,5 +1,5 @@
 // ==========================================
-// 🛠️ ملف قسم المهام (Tasks) - النسخة الحقيقية المربوطة بـ Supabase
+// 🛠️ ملف قسم المهام (Tasks) - النسخة الحقيقية المربوطة بـ Supabase (بتصميم أسطوري)
 // ==========================================
 
 (function() {
@@ -77,7 +77,6 @@
         const dailyPoints = 200; 
 
         try {
-            // حل المشكلة: جلب النقاط الحالية أولاً بدلاً من الاعتماد على RPC
             let currentPoints = 0;
             const { data: userData, error: fetchError } = await supabaseClient
                 .from('users')
@@ -90,7 +89,6 @@
 
             const newPoints = currentPoints + dailyPoints;
 
-            // تحديث النقاط ووقت المطالبة بطريقة مباشرة ومضمونة
             const { error: updateError } = await supabaseClient
                 .from('users')
                 .update({ 
@@ -101,7 +99,6 @@
 
             if (updateError) throw updateError;
 
-            // تحديث نقاط النادي أيضاً لضمان التزامن
             const { data: clubData, error: clubFetchError } = await supabaseClient
                 .from('club_fans_rankings')
                 .select('total_fan_points')
@@ -162,7 +159,7 @@
     }
 
     // ==========================================
-    // 🎨 دوال واجهة المهام
+    // 🎨 دوال واجهة المهام (التصميم الأسطوري الجديد)
     // ==========================================
 
     window.renderTasksPage = async function(container) {
@@ -170,45 +167,207 @@
             userState.tasks = window.defaultTasksData.map(t => ({...t}));
         }
 
-        container.innerHTML = `<div style="text-align:center; padding:50px; color: var(--text-main);">⏳ جاري تحميل المهام...</div>`;
+        // ستايلات التصميم الجديد المدمجة في الصفحة
+        const styles = `
+            <style>
+                @keyframes floatGlow {
+                    0% { box-shadow: 0 10px 30px rgba(252, 176, 69, 0.15), inset 0 0 15px rgba(253, 29, 29, 0.1); transform: translateY(0); }
+                    50% { box-shadow: 0 15px 40px rgba(253, 29, 29, 0.3), inset 0 0 25px rgba(252, 176, 69, 0.2); transform: translateY(-3px); }
+                    100% { box-shadow: 0 10px 30px rgba(252, 176, 69, 0.15), inset 0 0 15px rgba(253, 29, 29, 0.1); transform: translateY(0); }
+                }
+
+                .legendary-daily-card {
+                    background: linear-gradient(135deg, rgba(28, 28, 34, 0.9), rgba(22, 22, 30, 0.9));
+                    border: 2px solid rgba(252, 176, 69, 0.3);
+                    border-radius: 20px;
+                    padding: 22px;
+                    margin-bottom: 30px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    position: relative;
+                    overflow: hidden;
+                    animation: floatGlow 4s infinite alternate;
+                    backdrop-filter: blur(15px);
+                }
+
+                .legendary-daily-card::before {
+                    content: '';
+                    position: absolute;
+                    top: -50%; left: -50%; width: 200%; height: 200%;
+                    background: radial-gradient(circle at center, rgba(252, 176, 69, 0.15) 0%, transparent 60%);
+                    pointer-events: none;
+                }
+
+                .task-premium-card {
+                    background: rgba(26, 26, 34, 0.7);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 18px;
+                    padding: 16px;
+                    margin-bottom: 15px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    transition: transform 0.3s, box-shadow 0.3s;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .task-premium-card:hover {
+                    transform: translateY(-4px) scale(1.02);
+                }
+
+                .task-icon-box {
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.6rem;
+                    flex-shrink: 0;
+                    box-shadow: inset 0 2px 10px rgba(255,255,255,0.1);
+                }
+
+                /* تخصيص ألوان الأيقونات لكل منصة */
+                .icon-x { background: linear-gradient(135deg, #333, #000); border: 1px solid #555; color: white; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
+                .icon-tg { background: linear-gradient(135deg, #0088cc, #005580); border: 1px solid #00aaff; color: white; box-shadow: 0 0 15px rgba(0, 136, 204, 0.3); }
+                .icon-yt { background: linear-gradient(135deg, #ff0000, #990000); border: 1px solid #ff4444; color: white; box-shadow: 0 0 15px rgba(255, 0, 0, 0.3); }
+
+                .task-info {
+                    flex-grow: 1;
+                    padding: 0 15px;
+                }
+
+                .task-points-badge {
+                    display: inline-block;
+                    background: rgba(252, 176, 69, 0.15);
+                    color: var(--accent-gold);
+                    padding: 4px 10px;
+                    border-radius: 8px;
+                    font-size: 0.85rem;
+                    font-weight: 900;
+                    margin-top: 6px;
+                    border: 1px solid rgba(252, 176, 69, 0.3);
+                }
+
+                .btn-task-go {
+                    background: linear-gradient(90deg, #833ab4, #fd1d1d);
+                    color: white;
+                    border: none;
+                    padding: 10px 22px;
+                    border-radius: 20px;
+                    font-weight: bold;
+                    font-size: 0.95rem;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(253, 29, 29, 0.3);
+                    transition: all 0.3s ease;
+                }
+
+                .btn-task-go:hover {
+                    background: linear-gradient(90deg, #fd1d1d, #fcb045);
+                    box-shadow: 0 6px 20px rgba(252, 176, 69, 0.5);
+                    transform: scale(1.05);
+                }
+
+                .btn-task-done {
+                    background: rgba(255, 255, 255, 0.05);
+                    color: #888;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    padding: 10px 22px;
+                    border-radius: 20px;
+                    font-weight: bold;
+                    font-size: 0.95rem;
+                    cursor: not-allowed;
+                }
+            </style>
+        `;
+
+        container.innerHTML = styles + `<div style="text-align:center; padding:50px; color: var(--text-main);">⏳ جاري تحميل المهام...</div>`;
 
         await syncTasksFromDB();
         const isAr = (typeof userState !== 'undefined' && userState.lang === 'ar');
 
-        let tasksHtml = userState.tasks.map(task => `
-            <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 15px;">
-                <div style="text-align: ${isAr ? 'right' : 'left'};">
-                    <h5 style="margin: 0 0 5px 0; color: var(--text-main); font-size: 1rem;">${isAr ? task.textAr : task.textEn}</h5>
-                    <small style="color: var(--accent-gold); font-weight: 900; font-size: 0.9rem;">+ ${task.points} ZERO</small>
+        // بناء قائمة المهام بتصميمها الجديد
+        let tasksHtml = userState.tasks.map(task => {
+            // تحديد شكل الأيقونة واللون بناءً على نوع المهمة
+            let iconClass = 'icon-tg';
+            let iconSymbol = '✈️';
+            
+            if (task.id === 'x') {
+                iconClass = 'icon-x';
+                iconSymbol = '𝕏';
+            } else if (task.id === 'youtube') {
+                iconClass = 'icon-yt';
+                iconSymbol = '▶️';
+            }
+
+            // تحديد شكل الزر حسب حالة الاكتمال
+            const btnClass = task.completed ? 'btn-task-done' : 'btn-task-go';
+            const btnText = task.completed ? (isAr ? 'مكتمل ✅' : 'Done ✅') : (isAr ? 'انطلق 🚀' : 'Go 🚀');
+            const btnState = task.completed ? 'disabled' : '';
+
+            return `
+                <div class="task-premium-card" style="border-${isAr ? 'right' : 'left'}: 3px solid ${task.completed ? '#10b981' : 'transparent'};">
+                    <div class="task-icon-box ${iconClass}">
+                        ${iconSymbol}
+                    </div>
+                    
+                    <div class="task-info" style="text-align: ${isAr ? 'right' : 'left'};">
+                        <h5 style="margin: 0; color: #fff; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.3px;">${isAr ? task.textAr : task.textEn}</h5>
+                        <div class="task-points-badge">+ ${task.points} ZERO</div>
+                    </div>
+                    
+                    <button id="btn-task-${task.id}" 
+                            class="${btnClass}" 
+                            onclick="executeTask('${task.id}', '${task.url}', ${task.points})" 
+                            ${btnState}>
+                        ${btnText}
+                    </button>
                 </div>
-                <button id="btn-task-${task.id}" 
-                        class="${task.completed ? 'btn-secondary' : 'btn-action'}" 
-                        onclick="executeTask('${task.id}', '${task.url}', ${task.points})" 
-                        ${task.completed ? 'disabled style="opacity: 0.5; cursor: not-allowed; padding: 10px 15px; font-size: 0.9rem; margin: 0;"' : 'style="padding: 10px 15px; font-size: 0.9rem; margin: 0;"'}>
-                    ${task.completed ? (isAr ? 'مكتمل' : 'Completed') : (isAr ? 'انطلق' : 'Go')}
-                </button>
+            `;
+        }).join('');
+
+        // تجميع الهيكل النهائي للصفحة
+        container.innerHTML = styles + `
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: var(--accent-gold); margin: 0 0 5px 0; font-weight: 900; text-shadow: 0 2px 10px rgba(252, 176, 69, 0.4);">
+                    ${isAr ? 'مركز المكافآت' : 'Rewards Center'}
+                </h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+                    ${isAr ? 'أكمل المهام اليومية لزيادة ثروتك من نقاط زيلو!' : 'Complete tasks to boost your ZERO wealth!'}
+                </p>
             </div>
-        `).join('');
 
-        container.innerHTML = `
-            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">${isAr ? 'ضاعف رصيدك' : 'Earn More ZERO'}</h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-bottom: 20px;">${isAr ? 'أكمل المهام اليومية لزيادة نقاطك ومكافآتك!' : 'Complete tasks to boost your balance!'}</p>
-
-            <div class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 20px; margin-bottom: 25px; border-left: 4px solid var(--accent-orange);">
-                <div style="text-align: ${isAr ? 'right' : 'left'};">
-                    <h4 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">🎁 ${isAr ? 'المكافأة اليومية' : 'Daily Reward'}</h4>
-                    <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">${isAr ? 'سجل دخولك يومياً لتحصل على مكافأتك' : 'Claim your daily free points'}</p>
+            <!-- بطاقة المكافأة اليومية الأسطورية -->
+            <div class="legendary-daily-card">
+                <div style="text-align: ${isAr ? 'right' : 'left'}; z-index: 1;">
+                    <h3 style="margin: 0 0 5px 0; color: #fff; font-size: 1.3rem; font-weight: 900; display:flex; align-items:center; gap:8px;">
+                        🎁 ${isAr ? 'صندوق المكافأة اليومية' : 'Daily Reward Chest'}
+                    </h3>
+                    <p style="margin: 0; font-size: 0.9rem; color: #ccc;">
+                        ${isAr ? 'سجل دخولك يومياً لتحصل على' : 'Check in daily to earn'} <b style="color:var(--accent-gold);">+200 ZERO</b>
+                    </p>
                 </div>
+                
                 <button id="btn-daily-claim" 
-                        class="${userState.dailyCheckInClaimed ? 'btn-secondary' : 'btn-action'}" 
+                        class="${userState.dailyCheckInClaimed ? 'btn-task-done' : 'btn-task-go'}" 
+                        style="padding: 12px 25px; z-index: 1;"
                         onclick="claimDaily()" 
-                        ${userState.dailyCheckInClaimed ? 'disabled style="opacity: 0.5; cursor: not-allowed; margin: 0; padding: 12px 20px;"' : 'style="margin: 0; padding: 12px 20px;"'}>
-                    ${userState.dailyCheckInClaimed ? (isAr ? 'تمت المطالبة' : 'Claimed') : (isAr ? 'مطالبة' : 'Claim')}
+                        ${userState.dailyCheckInClaimed ? 'disabled' : ''}>
+                    ${userState.dailyCheckInClaimed ? (isAr ? 'استلمتها ✔️' : 'Claimed ✔️') : (isAr ? 'استلام الآن ✨' : 'Claim Now ✨')}
                 </button>
             </div>
 
-            <h4 style="color: var(--text-main); margin-bottom: 15px; text-align: center;">${isAr ? 'المهام الحالية' : 'Current Tasks'} 📋</h4>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom: 15px;">
+                <span style="font-size:1.2rem;">📋</span>
+                <h4 style="color: #fff; margin: 0; font-size: 1.15rem;">${isAr ? 'المهام المتاحة' : 'Available Tasks'}</h4>
+            </div>
+            
             <div class="tasks-container">${tasksHtml}</div>
+            
+            <div style="height: 20px;"></div>
         `;
     };
 
@@ -237,9 +396,9 @@
 
         const btn = document.getElementById(`btn-task-${taskId}`);
         if (btn) {
-            btn.innerHTML = isAr ? "⏳ التحقق..." : "⏳ Verifying...";
+            btn.innerHTML = isAr ? "⏳ جاري التحقق..." : "⏳ Verifying...";
+            btn.className = "btn-task-done"; // إعطاء شكل معطل مؤقتاً
             btn.disabled = true;
-            btn.style.opacity = "0.7";
         }
 
         setTimeout(async () => {
@@ -260,18 +419,18 @@
                 } else {
                     alert(isAr ? "حدث خطأ أثناء حفظ المهمة، يرجى المحاولة لاحقاً." : "An error occurred, please try again.");
                     if (btn) {
-                        btn.innerHTML = isAr ? 'انطلق' : 'Go';
+                        btn.innerHTML = isAr ? 'انطلق 🚀' : 'Go 🚀';
+                        btn.className = "btn-task-go";
                         btn.disabled = false;
-                        btn.style.opacity = "1";
                     }
                 }
             } catch (error) {
                 console.error("خطأ في الاتصال:", error);
                 task.isProcessing = false; 
                 if (btn) {
-                    btn.innerHTML = isAr ? 'انطلق' : 'Go';
+                    btn.innerHTML = isAr ? 'انطلق 🚀' : 'Go 🚀';
+                    btn.className = "btn-task-go";
                     btn.disabled = false;
-                    btn.style.opacity = "1";
                 }
             }
         }, 4000); 
@@ -283,9 +442,9 @@
         const isAr = (typeof userState !== 'undefined' && userState.lang === 'ar');
         const btn = document.getElementById('btn-daily-claim');
         if (btn) {
-            btn.innerHTML = "⏳";
+            btn.innerHTML = "⏳...";
+            btn.className = "btn-task-done";
             btn.disabled = true;
-            btn.style.opacity = "0.7";
         }
 
         try {
@@ -294,24 +453,24 @@
             if (response.success) {
                 userState.dailyCheckInClaimed = true;
                 userState.points = (userState.points || 0) + (response.pointsAdded || 200);
-                alert(isAr ? 'تم استلام المكافأة اليومية بنجاح!' : 'Daily reward claimed successfully!');
+                alert(isAr ? 'تم استلام المكافأة اليومية بنجاح! 🎁' : 'Daily reward claimed successfully! 🎁');
                 if (typeof updateTopBar === "function") updateTopBar();
                 renderTasksPage(document.getElementById("main-content"));
             } else {
                 alert(isAr ? "لم تمر 24 ساعة على آخر تسجيل دخول أو حدث خطأ." : "Claim not ready yet or database error.");
                 if (btn) {
-                    btn.innerHTML = isAr ? 'مطالبة' : 'Claim';
+                    btn.innerHTML = isAr ? 'استلام الآن ✨' : 'Claim Now ✨';
+                    btn.className = "btn-task-go";
                     btn.disabled = false;
-                    btn.style.opacity = "1";
                 }
             }
         } catch (error) {
             console.error("خطأ في الاتصال بالخادم:", error);
             alert(isAr ? "تعذر الاتصال بقاعدة البيانات." : "Could not connect to database.");
             if (btn) {
-                btn.innerHTML = isAr ? 'مطالبة' : 'Claim';
+                btn.innerHTML = isAr ? 'استلام الآن ✨' : 'Claim Now ✨';
+                btn.className = "btn-task-go";
                 btn.disabled = false;
-                btn.style.opacity = "1";
             }
         }
     };
