@@ -203,9 +203,13 @@ window.renderHomeRankingWidget = async function(containerId) {
         let historyHtml = '';
 
         if (predictions && predictions.length > 0) {
+            // حساب الأخطاء من جميع بيانات الأسبوع لكي لا يتأثر النظام
             errorCount = predictions.filter(p => p.prediction_status === 'wrong').length;
             
-            historyHtml = predictions.map(pred => {
+            // 🎯 التعديل الجذري: أخذ أحدث 10 توقعات فقط لعرضها في الواجهة لتسريع الهاتف وتخفيف الزحام
+            const recentPredictions = predictions.slice(0, 10);
+            
+            historyHtml = recentPredictions.map(pred => {
                 const match = matches.find(m => m.id === pred.match_id);
                 if (!match) return ''; 
 
@@ -235,6 +239,14 @@ window.renderHomeRankingWidget = async function(containerId) {
                     </div>
                 `;
             }).join('');
+
+            // رسالة توضيحية للمستخدم في حال كان لديه أكثر من 10 توقعات
+            if (predictions.length > 10) {
+                historyHtml += `<div style="text-align:center; color:#888; font-size: 0.85rem; margin-top: 15px; padding-bottom: 10px;">
+                    ${isAr ? 'عرض أحدث 10 توقعات فقط لسهولة التصفح' : 'Showing latest 10 predictions only'}
+                </div>`;
+            }
+
         } else {
             historyHtml = `<div style="text-align:center; color:#888; padding:30px; background:rgba(255,255,255,0.02); border-radius:12px; border: 1px solid rgba(255,255,255,0.05);">${isAr ? 'لم تقم بأي توقعات بعد.' : 'No predictions yet.'}</div>`;
         }
