@@ -3,8 +3,8 @@
  * الوظيفة: شاشة الترتيب الكاملة (المنصة + البطاقة الأسطورية الشاملة + سجل التوقعات + الترتيب العام)
  */
 
-// دالة مساعدة للمنصة فقط (لا تؤثر على البطاقة الأسطورية)
-const generateAvatar = (name, photoUrl, size = '50px') => {
+// دالة مساعدة للمنصة فقط (تم تغيير الاسم لتجنب التضارب)
+const generateWeeklyAvatar = (name, photoUrl, size = '50px') => {
     if (photoUrl) {
         return `<img src="${photoUrl}" style="width:${size}; height:${size}; border-radius:50%; object-fit:cover; border:2px solid var(--accent-gold, #fcb045); margin: 0 auto; display: block; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">`;
     } else {
@@ -324,7 +324,7 @@ window.renderHomeRankingWidget = async function(containerId) {
                 html += `
                     <div class="podium-card rank-2">
                         <div style="font-size: 1.5rem; margin-bottom: 5px;">🥈</div>
-                        ${generateAvatar(name2, secondPlace.photo_url, '50px')}
+                        ${generateWeeklyAvatar(name2, secondPlace.photo_url, '50px')}
                         <div class="podium-name">${name2}</div>
                         <div class="podium-pts" style="color: #c0c0c0;">${secondPlace.points_earned}</div>
                     </div>`;
@@ -335,7 +335,7 @@ window.renderHomeRankingWidget = async function(containerId) {
                 html += `
                     <div class="podium-card rank-1">
                         <div style="font-size: 2rem; margin-bottom: 5px;">👑</div>
-                        ${generateAvatar(name1, firstPlace.photo_url, '65px')}
+                        ${generateWeeklyAvatar(name1, firstPlace.photo_url, '65px')}
                         <div class="podium-name">${name1}</div>
                         <div class="podium-pts" style="color: var(--accent-gold, #fcb045);">${firstPlace.points_earned}</div>
                     </div>`;
@@ -346,7 +346,7 @@ window.renderHomeRankingWidget = async function(containerId) {
                 html += `
                     <div class="podium-card rank-3">
                         <div style="font-size: 1.5rem; margin-bottom: 5px;">🥉</div>
-                        ${generateAvatar(name3, thirdPlace.photo_url, '45px')}
+                        ${generateWeeklyAvatar(name3, thirdPlace.photo_url, '45px')}
                         <div class="podium-name">${name3}</div>
                         <div class="podium-pts" style="color: #cd7f32;">${thirdPlace.points_earned}</div>
                     </div>`;
