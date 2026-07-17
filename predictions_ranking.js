@@ -54,7 +54,7 @@ window.openChallengesScreen = async function() {
                 userState.predictedMatches = predData.map(p => p.match_id);
             }
 
-            // 🎯 التعديل هنا: جلب المباريات باستثناء المنتهية لتسريع أداء التطبيق
+            // جلب المباريات باستثناء المنتهية لتسريع أداء التطبيق
             const { data: matchesData, error: matchesError } = await supabaseClient
                 .from('matches')
                 .select('*')
@@ -84,10 +84,24 @@ function renderMatchList(overlay, isAr) {
         <div id="matches-container">
     `;
 
-    // 🎯 فلترة المباريات: الاحتفاظ فقط بالمباريات التي لم تبدأ بعد
+    // 🎯 التعديل الجذري لحل مشكلة المباريات القديمة العالقة
     const upcomingMatches = globalMatches.filter(m => {
         const status = m.status ? m.status.toUpperCase().trim() : '';
-        return status === 'NOT_STARTED';
+        
+        // أولاً: يجب أن تكون المباراة غير منتهية
+        if (status !== 'NOT_STARTED') return false;
+
+        // ثانياً: نحسب هل مر عليها وقت طويل؟
+        const matchDate = new Date(m.match_date);
+        const now = new Date();
+        const hoursPassed = (now - matchDate) / (1000 * 60 * 60);
+
+        // إذا مر على موعد انطلاقها أكثر من 4 ساعات وما زالت معلقة، نخفيها تماماً
+        if (hoursPassed > 4) {
+            return false;
+        }
+
+        return true;
     });
 
     if (upcomingMatches.length === 0) {
@@ -100,7 +114,7 @@ function renderMatchList(overlay, isAr) {
             const matchDate = new Date(m.match_date);
             const now = new Date();
             
-            // 🎯 إضافة 5 دقائق للوقت الحالي لإغلاق التوقع قبل بداية المباراة بـ 5 دقائق
+            // إضافة 5 دقائق للوقت الحالي لإغلاق التوقع قبل بداية المباراة بـ 5 دقائق
             now.setMinutes(now.getMinutes() + 5); 
             const isStarted = now >= matchDate; 
             
@@ -121,7 +135,7 @@ function renderMatchList(overlay, isAr) {
                                 ${getT('btnPredicted')}
                               </button>`;
             } else if (isStarted) {
-                // تفعيل حالة "مغلق" إذا اقتربت المباراة (أقل من 5 دقائق)
+                // تفعيل حالة "مغلق" إذا اقتربت المباراة (أقل من 5 دقائق) أو بدأت
                 buttonHtml = `<button disabled style="width:100%; padding:12px; background:rgba(255,255,255,0.05); color:#888; border:1px solid #333; border-radius:12px; font-size:0.95rem;">
                                 ${getT('btnClosed')}
                               </button>`;
