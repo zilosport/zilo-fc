@@ -1,26 +1,3 @@
-التصميم الزجاجي المتوهج (Glassmorphism) الذي أضفناه يبدو رائعاً، ومن الطبيعي أن ترغب في تطبيقه على صفحة تسجيل الدخول (login) أيضاً! 
-
-لقد قمت بإعادة صياغة ملف `login.js` بالكامل لتطبيق نفس الهوية البصرية الأسطورية التي استخدمناها في صفحة الأصدقاء والترتيب. تم استخدام تأثيرات `backdrop-filter`، إطارات متوهجة، أزرار تفاعلية زجاجية، وصناديق أنيقة.
-
-كما سأضيف لك أداة تفاعلية بسيطة هنا لتتمكن من رؤية وتجربة كيف يتم بناء هذا التأثير الزجاجي بشكل حي!
-
-<GenerateWidget title="مولد تأثير Glassmorphism" height="600px">
-{
-  "widgetSpec": {
-    "id": "glassmorphism-css-generator",
-    "height": "600px",
-    "prompt": "Objective: Create an interactive CSS glassmorphism generator.\nData State: initialValues: blur=12px, opacity=0.15, saturation=150%.\nStrategy: Standard Layout.\nLibraries: React or Vanilla JS.\nInputs:\n- Blur Amount (Slider: 0px to 40px)\n- Background Opacity (Slider: 0.0 to 1.0)\n- Saturation (Slider: 100% to 200%)\n- Show/Hide CSS Code (Button)\nBehavior: Render a visually distinct, colorful background pattern (e.g., using gradients or geometric shapes). Place a 'glass card' element over this background. As the user adjusts the sliders, update the inline CSS of the glass card (`backdrop-filter: blur() saturate()`, `background-color: rgba()`) in real-time. When the 'Show CSS' button is toggled, display the generated CSS snippet that produces the current effect."
-  }
-}
-</GenerateWidget>
-
----
-
-### تحديث ملف `login.js` للنسخة الزجاجية الأسطورية
-
-انسخ الكود التالي واستبدله بالكامل في ملف `login.js`:
-
-```javascript
 // ==========================================
 // 📱 login.js - النسخة الأسطورية الزجاجية المتوهجة (Glassmorphism UI/UX) 🚀
 // ==========================================
@@ -156,7 +133,7 @@ function getTutorialBox() {
                     : 'Choose one <strong style="color:#fff;">Local</strong> club and one <strong style="color:#fff;">Global</strong> club (max 2)'}
             </span>
             
-            <a href="[https://www.youtube.com/watch?v=YOUR_VIDEO_ID](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)" target="_blank" 
+            <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" 
                style="display: inline-flex; align-items: center; gap: 8px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; 
                       padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.3); transition: all 0.3s;">
                 <span style="font-size: 1.2rem;">🎥</span> ${isAr ? 'شاهد الفيديو التعليمي' : 'Watch Tutorial Video'}
@@ -200,7 +177,7 @@ function getFloatingButton() {
 }
 
 // ====================== الشاشة الرئيسية للتسجيل ======================
-function renderLoginScreen() {
+window.renderLoginScreen = function() {
     const topBar = document.getElementById('top-bar');
     const bottomNav = document.getElementById('bottom-nav');
     if (topBar) topBar.style.display = 'none';
@@ -270,7 +247,7 @@ function renderLoginScreen() {
         </div>
         ${getFloatingButton()}
     `;
-}
+};
 
 // ====================== عرض الأندية داخل الدولة ======================
 window.showClubsForCountry = function(countryKey) {
