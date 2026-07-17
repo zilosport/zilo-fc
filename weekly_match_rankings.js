@@ -3,8 +3,8 @@
  * الوظيفة: شاشة الترتيب الكاملة (المنصة + البطاقة الأسطورية الشاملة + سجل التوقعات + الترتيب العام)
  */
 
-// دالة مساعدة للمنصة فقط (تم تغيير الاسم لتجنب التضارب)
-const generateWeeklyAvatar = (name, photoUrl, size = '50px') => {
+// دالة مساعدة للمنصة فقط (لا تؤثر على البطاقة الأسطورية)
+const generateAvatar = (name, photoUrl, size = '50px') => {
     if (photoUrl) {
         return `<img src="${photoUrl}" style="width:${size}; height:${size}; border-radius:50%; object-fit:cover; border:2px solid var(--accent-gold, #fcb045); margin: 0 auto; display: block; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">`;
     } else {
@@ -13,11 +13,8 @@ const generateWeeklyAvatar = (name, photoUrl, size = '50px') => {
     }
 };
 
-// قم بتغيير هذا السطر
-window.openLegendaryRankingScreen = function() {
-    const existingScreen = document.getElementById('ranking-full-screen');
-    if (existingScreen) existingScreen.remove();
-    // ... باقي الكود كما هو
+window.openRankingScreen = function() {
+    if (document.getElementById('ranking-full-screen')) return;
 
     const isAr = userState.lang === 'ar';
     const title = isAr ? 'ترتيب التحديات' : 'Challenges Ranking';
@@ -78,29 +75,17 @@ window.renderHomeRankingWidget = async function(containerId) {
 
         if (topError) throw topError;
 
-        // حساب الترتيب محلياً لتجنب الأخطاء
+        const { data: myRank } = await supabaseClient.rpc('get_user_rank', {
+            p_telegram_id: currentUserId,
+            p_category: 'weekly'
+        });
+
         const { data: myData } = await supabaseClient
             .from('weekly_match_rankings')
             .select('points_earned')
             .eq('telegram_id', currentUserId)
             .eq('category', 'weekly')
             .maybeSingle();
-
-        let myRank = '-';
-        if (myData && myData.points_earned !== undefined) {
-            const { count, error: countError } = await supabaseClient
-                .from('weekly_match_rankings')
-                .select('*', { count: 'exact', head: true })
-                .eq('is_eliminated', false)
-                .eq('category', 'weekly')
-                .gt('points_earned', myData.points_earned);
-            
-            if (!countError && count !== null) {
-                myRank = count + 1;
-            } else if (count === 0) {
-                myRank = 1;
-            }
-        }
 
         const { data: predictions } = await supabaseClient
             .from('match_predictions')
@@ -339,7 +324,7 @@ window.renderHomeRankingWidget = async function(containerId) {
                 html += `
                     <div class="podium-card rank-2">
                         <div style="font-size: 1.5rem; margin-bottom: 5px;">🥈</div>
-                        ${generateWeeklyAvatar(name2, secondPlace.photo_url, '50px')}
+                        ${generateAvatar(name2, secondPlace.photo_url, '50px')}
                         <div class="podium-name">${name2}</div>
                         <div class="podium-pts" style="color: #c0c0c0;">${secondPlace.points_earned}</div>
                     </div>`;
@@ -350,7 +335,7 @@ window.renderHomeRankingWidget = async function(containerId) {
                 html += `
                     <div class="podium-card rank-1">
                         <div style="font-size: 2rem; margin-bottom: 5px;">👑</div>
-                        ${generateWeeklyAvatar(name1, firstPlace.photo_url, '65px')}
+                        ${generateAvatar(name1, firstPlace.photo_url, '65px')}
                         <div class="podium-name">${name1}</div>
                         <div class="podium-pts" style="color: var(--accent-gold, #fcb045);">${firstPlace.points_earned}</div>
                     </div>`;
@@ -361,7 +346,7 @@ window.renderHomeRankingWidget = async function(containerId) {
                 html += `
                     <div class="podium-card rank-3">
                         <div style="font-size: 1.5rem; margin-bottom: 5px;">🥉</div>
-                        ${generateWeeklyAvatar(name3, thirdPlace.photo_url, '45px')}
+                        ${generateAvatar(name3, thirdPlace.photo_url, '45px')}
                         <div class="podium-name">${name3}</div>
                         <div class="podium-pts" style="color: #cd7f32;">${thirdPlace.points_earned}</div>
                     </div>`;
@@ -378,13 +363,14 @@ window.renderHomeRankingWidget = async function(containerId) {
             ? `<img src="${userState.photoUrl}" alt="User">` 
             : `${userInitial}`;
 
+        const displayRank = myRank || '-';
         const badgeClass = (myRank && myRank <= 3) ? 'badge-top' : 'badge-normal';
 
         html += `
             <div class="legendary-card">
                 <!-- شارة الترتيب البارزة (البطاقة الملونة) -->
                 <div class="legendary-rank-badge ${badgeClass}">
-                    #${myRank}
+                    #${displayRank}
                 </div>
 
                 <!-- الصورة الطافية خارج حدود البطاقة -->
@@ -487,6 +473,7 @@ window.renderHomeRankingWidget = async function(containerId) {
             historyHtml = `<div style="text-align:center; color:#888; padding:40px; background:rgba(255,255,255,0.02); border-radius:16px; border: 1px solid rgba(255,255,255,0.03); font-size:1.1rem;">${isAr ? 'لم تقم بأي توقعات بعد.' : 'No predictions yet.'}</div>`;
         }
 
+        // تمت إضافة الـ ID هنا ليتم التمرير إليه عند ضغط الزر
         html += `
             <div id="predictions-history-section" style="margin-top: 10px; margin-bottom: 40px; scroll-margin-top: 25px;">
                 <h3 style="margin:0 0 20px 0; color:#fff; font-size: 1.3rem; font-weight: 800;">📜 ${isAr ? 'سجل التوقعات' : 'Prediction History'}</h3>
