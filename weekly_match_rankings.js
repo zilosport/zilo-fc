@@ -1,9 +1,9 @@
 /**
  * ملف: weekly_match_rankings.js
- * الوظيفة: شاشة الترتيب الكاملة (المنصة + البطاقة الاحترافية الشاملة + سجل التوقعات + الترتيب العام)
+ * الوظيفة: شاشة الترتيب الكاملة (المنصة + البطاقة الأسطورية الشاملة + سجل التوقعات + الترتيب العام)
  */
 
-// دالة مساعدة لإنشاء الصورة الشخصية أو الحرف الأول
+// دالة مساعدة للمنصة فقط (لا تؤثر على البطاقة الأسطورية)
 const generateAvatar = (name, photoUrl, size = '50px') => {
     if (photoUrl) {
         return `<img src="${photoUrl}" style="width:${size}; height:${size}; border-radius:50%; object-fit:cover; border:2px solid var(--accent-gold, #fcb045); margin: 0 auto; display: block; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">`;
@@ -30,7 +30,7 @@ window.openRankingScreen = function() {
         bottom: 0 !important;
         width: 100vw !important; 
         height: 100vh !important; 
-        background: var(--bg-dark, #121215) !important; 
+        background: var(--bg-dark, #0d0d12) !important; /* خلفية داكنة جداً لإبراز الألوان */
         z-index: 99999 !important; 
         padding: 20px; 
         box-sizing: border-box; 
@@ -42,7 +42,7 @@ window.openRankingScreen = function() {
 
     screen.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
-            <h2 style="margin:0; color:var(--accent-gold, #fcb045); font-weight: 800; letter-spacing: 0.5px;">🏆 ${title}</h2>
+            <h2 style="margin:0; color:var(--accent-gold, #fcb045); font-weight: 900; letter-spacing: 0.5px;">🏆 ${title}</h2>
             <button onclick="document.getElementById('ranking-full-screen').remove()" style="background:none; border:none; color:white; font-size:1.8rem; cursor:pointer; transition: 0.2s;">✕</button>
         </div>
         <div id="full-ranking-container">
@@ -115,7 +115,151 @@ window.renderHomeRankingWidget = async function(containerId) {
 
         let html = `
             <style>
-                /* تنسيق المنصة */
+                /* ====== تأثيرات الحركة ====== */
+                @keyframes floatAvatar {
+                    0% { transform: translate(-50%, 0px); }
+                    50% { transform: translate(-50%, -8px); }
+                    100% { transform: translate(-50%, 0px); }
+                }
+                @keyframes glowPulse {
+                    0% { box-shadow: 0 0 15px rgba(252, 176, 69, 0.4), inset 0 0 10px rgba(252, 176, 69, 0.1); }
+                    50% { box-shadow: 0 0 30px rgba(253, 29, 29, 0.6), inset 0 0 20px rgba(253, 29, 29, 0.2); }
+                    100% { box-shadow: 0 0 15px rgba(252, 176, 69, 0.4), inset 0 0 10px rgba(252, 176, 69, 0.1); }
+                }
+
+                /* ====== البطاقة الأسطورية للمستخدم ====== */
+                .legendary-card {
+                    position: relative;
+                    background: rgba(22, 22, 30, 0.6);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    border-radius: 25px;
+                    padding: 65px 20px 25px 20px; /* مساحة علوية ضخمة للصورة البارزة */
+                    margin: 70px 0 40px 0; /* مساحة خارجية للطفو */
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 2px 15px rgba(255,255,255,0.02);
+                    text-align: center;
+                }
+                
+                /* توهج خلفي يعطي طابع السحر والفخامة */
+                .legendary-card::before {
+                    content: '';
+                    position: absolute;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: radial-gradient(circle at 50% 0%, rgba(131, 58, 180, 0.15) 0%, transparent 60%);
+                    border-radius: 25px;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+
+                /* تصميم الصورة الشخصية الطافية (Out of the box) */
+                .legendary-avatar-wrapper {
+                    position: absolute;
+                    top: -55px; /* رفع الصورة خارج البطاقة */
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 100px;
+                    height: 100px;
+                    border-radius: 50%;
+                    padding: 4px;
+                    background: linear-gradient(135deg, #fcb045, #fd1d1d, #833ab4);
+                    animation: floatAvatar 4s ease-in-out infinite, glowPulse 3s infinite;
+                    z-index: 2;
+                }
+
+                .legendary-avatar-inner {
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 50%;
+                    background: #111;
+                    overflow: hidden;
+                    border: 3px solid #16161e; /* لون البطاقة لعمل فصل بصري */
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 2.5rem;
+                    font-weight: bold;
+                }
+
+                .legendary-avatar-inner img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+
+                /* شريط الترتيب المتداخل مع الصورة */
+                .legendary-rank {
+                    position: absolute;
+                    bottom: -15px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: linear-gradient(90deg, #ffd700, #ff8c00);
+                    color: #000;
+                    font-weight: 900;
+                    font-size: 1.1rem;
+                    padding: 4px 22px;
+                    border-radius: 20px;
+                    border: 2px solid #16161e;
+                    box-shadow: 0 5px 15px rgba(255, 140, 0, 0.5);
+                    letter-spacing: 1px;
+                    z-index: 3;
+                    white-space: nowrap;
+                }
+
+                /* نصوص البطاقة */
+                .legendary-name {
+                    position: relative;
+                    z-index: 1;
+                    font-size: 1.6rem;
+                    font-weight: 900;
+                    color: #fff;
+                    margin-bottom: 8px;
+                    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+                    letter-spacing: 0.5px;
+                }
+
+                .legendary-points {
+                    position: relative;
+                    z-index: 1;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: rgba(0, 0, 0, 0.3);
+                    padding: 8px 20px;
+                    border-radius: 12px;
+                    border: 1px solid rgba(255, 215, 0, 0.2);
+                    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+                }
+
+                /* شبكة الإحصائيات الفخمة */
+                .legendary-stats-grid {
+                    position: relative;
+                    z-index: 1;
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 12px;
+                    margin-top: 30px;
+                }
+
+                .legendary-stat-box {
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: 16px;
+                    padding: 15px 5px;
+                    border: 1px solid rgba(255, 255, 255, 0.03);
+                    backdrop-filter: blur(10px);
+                    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                
+                .legendary-stat-box:hover {
+                    transform: translateY(-5px) scale(1.02);
+                }
+
+                .stat-correct { border-bottom: 3px solid #10b981; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.05); }
+                .stat-pending { border-bottom: 3px solid #fcb045; box-shadow: 0 10px 20px rgba(252, 176, 69, 0.05); }
+                .stat-wrong   { border-bottom: 3px solid #fd1d1d; box-shadow: 0 10px 20px rgba(253, 29, 29, 0.05); }
+
+                /* باقي التنسيقات (المنصة) */
                 .podium-container { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; margin-top: 20px; gap: 10px; }
                 .podium-card { background: var(--bg-card, #1c1c22); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; text-align: center; padding: 15px 5px; flex: 1; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
                 .rank-1 { border-color: var(--accent-gold, #fcb045); background: linear-gradient(180deg, rgba(252, 176, 69, 0.15) 0%, rgba(28, 28, 34, 1) 100%); height: 180px; transform: translateY(-15px); }
@@ -123,93 +267,6 @@ window.renderHomeRankingWidget = async function(containerId) {
                 .rank-3 { border-color: #cd7f32; background: linear-gradient(180deg, rgba(205, 127, 50, 0.1) 0%, rgba(28, 28, 34, 1) 100%); height: 140px; }
                 .podium-name { font-size: 0.85rem; font-weight: bold; margin: 10px 0 5px 0; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; }
                 .podium-pts { font-size: 1.2rem; font-weight: 900; }
-                
-                /* تنسيق البطاقة الاحترافية الشاملة الجديدة */
-                .pro-unified-card {
-                    background: linear-gradient(145deg, #22222c 0%, #15151a 100%);
-                    border-radius: 24px;
-                    padding: 25px;
-                    margin: 25px 0 35px 0;
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
-                    position: relative;
-                    overflow: hidden;
-                }
-                
-                /* توهج خلفي يعطي طابع الفخامة */
-                .pro-unified-card::before {
-                    content: '';
-                    position: absolute;
-                    top: -50px;
-                    ${isAr ? 'left: -50px;' : 'right: -50px;'}
-                    width: 200px;
-                    height: 200px;
-                    background: radial-gradient(circle, rgba(252, 176, 69, 0.15) 0%, transparent 70%);
-                    border-radius: 50%;
-                    pointer-events: none;
-                }
-
-                .pro-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 25px;
-                }
-
-                .pro-user-info {
-                    display: flex;
-                    align-items: center;
-                    gap: 18px;
-                    position: relative;
-                    z-index: 1;
-                }
-
-                .pro-rank-badge {
-                    position: absolute;
-                    bottom: -5px;
-                    ${isAr ? 'right: -5px;' : 'left: -5px;'}
-                    background: var(--accent-gold, #fcb045);
-                    color: #000;
-                    font-weight: 900;
-                    font-size: 0.9rem;
-                    padding: 4px 10px;
-                    border-radius: 12px;
-                    border: 2px solid #15151a;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-                }
-
-                .pro-stats-grid {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 15px;
-                    background: rgba(0, 0, 0, 0.25);
-                    padding: 20px;
-                    border-radius: 18px;
-                    border: 1px solid rgba(255, 255, 255, 0.03);
-                    position: relative;
-                    z-index: 1;
-                }
-
-                .stat-box {
-                    text-align: center;
-                    padding: 10px 5px;
-                    border-radius: 12px;
-                    background: rgba(255, 255, 255, 0.02);
-                    transition: transform 0.2s;
-                }
-
-                .stat-value {
-                    font-size: 1.8rem;
-                    font-weight: 900;
-                    margin: 8px 0 4px 0;
-                    letter-spacing: 1px;
-                }
-                
-                .stat-label {
-                    font-size: 0.85rem;
-                    color: rgba(255, 255, 255, 0.6);
-                    font-weight: 600;
-                }
             </style>
         `;
 
@@ -259,61 +316,60 @@ window.renderHomeRankingWidget = async function(containerId) {
             html += `<div style="text-align:center; color:#666; padding: 30px;">${isAr ? 'لا توجد بيانات ترتيب حالياً' : 'No ranking data available'}</div>`;
         }
 
-        // -- 2. البطاقة الشاملة الاحترافية (تم تكبيرها وتحسين تصميمها بشكل جذري) --
+        // -- 2. البطاقة الأسطورية الشاملة (النسخة الخرافية والخارجة عن المألوف) --
+        const userInitial = userState.username ? String(userState.username).charAt(0).toUpperCase() : '👤';
+        const userImageHtml = userState.photoUrl 
+            ? `<img src="${userState.photoUrl}" alt="User">` 
+            : `${userInitial}`;
+
         html += `
-            <div class="pro-unified-card">
-                <!-- عنوان البطاقة -->
-                <div style="text-align: center; margin-bottom: 20px; font-size: 1.15rem; font-weight: 800; color: rgba(255,255,255,0.9); text-transform: uppercase; letter-spacing: 1px;">
-                    ${isAr ? 'بطاقتك الأسبوعية' : 'Your Weekly Card'}
+            <div class="legendary-card">
+                <!-- الصورة الطافية خارج حدود البطاقة وشريط الترتيب -->
+                <div class="legendary-avatar-wrapper">
+                    <div class="legendary-avatar-inner">
+                        ${userImageHtml}
+                    </div>
+                    <div class="legendary-rank">
+                        #${myRank || '-'}
+                    </div>
                 </div>
                 
-                <!-- معلومات المستخدم والنقاط -->
-                <div class="pro-header">
-                    <div class="pro-user-info">
-                        <div style="position: relative;">
-                            ${generateAvatar(userState.username, userState.photoUrl, '75px')}
-                            <div class="pro-rank-badge">#${myRank || '-'}</div>
-                        </div>
-                        <div>
-                            <div style="font-weight: 800; font-size: 1.4rem; color: #fff; margin-bottom: 4px;">${userState.username || 'User'}</div>
-                            <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(252, 176, 69, 0.15); padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(252, 176, 69, 0.3);">
-                                <span style="font-size: 1.1rem;">🏆</span>
-                                <span style="color: var(--accent-gold, #fcb045); font-weight: 900; font-size: 1.2rem;">${myData ? myData.points_earned : 0}</span>
-                                <span style="color: rgba(255,255,255,0.7); font-size: 0.9rem; font-weight: 600;">${isAr ? 'نقطة' : 'Pts'}</span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- الاسم والنقاط -->
+                <div class="legendary-name">${userState.username || 'User'}</div>
+                <div class="legendary-points">
+                    <span style="font-size: 1.2rem;">🏆</span>
+                    <span style="color: var(--accent-gold, #fcb045); font-weight: 900; font-size: 1.3rem;">${myData ? myData.points_earned : 0}</span>
+                    <span style="color: rgba(255,255,255,0.6); font-size: 0.85rem; font-weight: bold; text-transform: uppercase;">${isAr ? 'نقطة' : 'Pts'}</span>
                 </div>
 
-                <!-- شبكة الإحصائيات (الصح، الخطأ، الانتظار) -->
-                <div class="pro-stats-grid">
-                    <div class="stat-box" style="box-shadow: inset 0 -3px 0 rgba(16, 185, 129, 0.3);">
-                        <div style="font-size: 1.6rem;">✅</div>
-                        <div class="stat-value" style="color: #10b981; text-shadow: 0 0 15px rgba(16, 185, 129, 0.4);">${correctCount}</div>
-                        <div class="stat-label">${isAr ? 'إجابة صحيحة' : 'Correct'}</div>
+                <!-- شبكة الإحصائيات المضيئة -->
+                <div class="legendary-stats-grid">
+                    <div class="legendary-stat-box stat-correct">
+                        <div style="font-size: 1.6rem; margin-bottom: 5px; text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);">✅</div>
+                        <div style="color: #10b981; font-size: 1.5rem; font-weight: 900;">${correctCount}</div>
+                        <div style="color: rgba(255,255,255,0.5); font-size: 0.8rem; font-weight: bold; margin-top: 2px;">${isAr ? 'صحيح' : 'Correct'}</div>
                     </div>
                     
-                    <div class="stat-box" style="box-shadow: inset 0 -3px 0 rgba(252, 176, 69, 0.3);">
-                        <div style="font-size: 1.6rem;">⏳</div>
-                        <div class="stat-value" style="color: #fcb045; text-shadow: 0 0 15px rgba(252, 176, 69, 0.4);">${pendingCount}</div>
-                        <div class="stat-label">${isAr ? 'قيد الانتظار' : 'Pending'}</div>
+                    <div class="legendary-stat-box stat-pending">
+                        <div style="font-size: 1.6rem; margin-bottom: 5px; text-shadow: 0 0 10px rgba(252, 176, 69, 0.5);">⏳</div>
+                        <div style="color: #fcb045; font-size: 1.5rem; font-weight: 900;">${pendingCount}</div>
+                        <div style="color: rgba(255,255,255,0.5); font-size: 0.8rem; font-weight: bold; margin-top: 2px;">${isAr ? 'انتظار' : 'Pending'}</div>
                     </div>
                     
-                    <div class="stat-box" style="box-shadow: inset 0 -3px 0 rgba(253, 29, 29, 0.3);">
-                        <div style="font-size: 1.6rem;">❌</div>
-                        <div class="stat-value" style="color: ${wrongCount >= 2 ? '#fd1d1d' : '#fff'}; text-shadow: 0 0 15px rgba(253, 29, 29, 0.4);">
-                            ${wrongCount} <span style="font-size: 1rem; color: rgba(255,255,255,0.4);">/ 2</span>
+                    <div class="legendary-stat-box stat-wrong">
+                        <div style="font-size: 1.6rem; margin-bottom: 5px; text-shadow: 0 0 10px rgba(253, 29, 29, 0.5);">❌</div>
+                        <div style="color: ${wrongCount >= 2 ? '#fd1d1d' : '#fff'}; font-size: 1.5rem; font-weight: 900;">
+                            ${wrongCount} <span style="font-size: 0.9rem; color: rgba(255,255,255,0.3);">/ 2</span>
                         </div>
-                        <div class="stat-label">${isAr ? 'إجابة خاطئة' : 'Wrong'}</div>
+                        <div style="color: rgba(255,255,255,0.5); font-size: 0.8rem; font-weight: bold; margin-top: 2px;">${isAr ? 'أخطاء' : 'Wrong'}</div>
                     </div>
                 </div>
             </div>
         `;
 
-        // -- 3. سجل التوقعات (تمت إعادته إلى 10 عناصر كما طلبت، مع التصميم المحسن) --
+        // -- 3. سجل التوقعات --
         let historyHtml = '';
         if (predictions && predictions.length > 0) {
-            // إعادة العدد إلى 10
             const recentPredictions = predictions.slice(0, 10); 
             
             historyHtml = recentPredictions.map(pred => {
