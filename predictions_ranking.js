@@ -43,6 +43,7 @@ window.openChallengesScreen = async function() {
 
     if (typeof supabaseClient !== 'undefined' && userState.userId) {
         try {
+            // جلب توقعات المستخدم
             const { data: predData } = await supabaseClient
                 .from('match_predictions')
                 .select('*')
@@ -53,9 +54,11 @@ window.openChallengesScreen = async function() {
                 userState.predictedMatches = predData.map(p => p.match_id);
             }
 
+            // 🎯 التعديل هنا: جلب المباريات باستثناء المنتهية لتسريع أداء التطبيق
             const { data: matchesData, error: matchesError } = await supabaseClient
                 .from('matches')
                 .select('*')
+                .neq('status', 'FINISHED') 
                 .order('match_date', { ascending: true });
 
             if (matchesError) throw matchesError;
