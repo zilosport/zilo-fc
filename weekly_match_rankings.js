@@ -13,8 +13,11 @@ const generateAvatar = (name, photoUrl, size = '50px') => {
     }
 };
 
-window.openRankingScreen = function() {
-    if (document.getElementById('ranking-full-screen')) return;
+// ✅ تم تغيير اسم الدالة هنا لتجنب أي تضارب مع الملف القديم
+window.openLegendaryRankingScreen = function() {
+    // ✅ تم تعديل هذا السطر ليقوم بحذف الواجهة القديمة إن وجدت بدلاً من إيقاف العمل
+    const existingScreen = document.getElementById('ranking-full-screen');
+    if (existingScreen) existingScreen.remove();
 
     const isAr = userState.lang === 'ar';
     const title = isAr ? 'ترتيب التحديات' : 'Challenges Ranking';
