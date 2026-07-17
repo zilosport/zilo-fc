@@ -13,10 +13,11 @@ const generateWeeklyAvatar = (name, photoUrl, size = '50px') => {
     }
 };
 
-window.openRankingScreen = function() {
-    // ✅ التعديل هنا: حذف الشاشة القديمة وإعادة بنائها إن وجدت لتحديث البيانات والواجهة
+// قم بتغيير هذا السطر
+window.openLegendaryRankingScreen = function() {
     const existingScreen = document.getElementById('ranking-full-screen');
     if (existingScreen) existingScreen.remove();
+    // ... باقي الكود كما هو
 
     const isAr = userState.lang === 'ar';
     const title = isAr ? 'ترتيب التحديات' : 'Challenges Ranking';
