@@ -1,5 +1,5 @@
 // ==========================================
-// 👥 ملف قسم الأصدقاء (Friends) - (مربوط بـ Supabase 🚀)
+// 👥 ملف قسم الأصدقاء (Friends) - نسخة الـ VIP المتوهجة (مربوط بـ Supabase 🚀)
 // ==========================================
 
 // دالة لتوليد رابط إحالة حقيقي ومخصص لكل مستخدم
@@ -74,41 +74,141 @@ window.fetchFriendsFromDB = async function(userId) {
     }
 };
 
-// دالة رسم الواجهة 
+// دالة رسم الواجهة الأسطورية
 window.renderFriendsPage = async function(container) {
     const referralLink = window.generateReferralLink();
     let tFunc = typeof t === 'function' ? t : (key) => key;
     const isAr = (typeof userState !== 'undefined' && userState.lang === 'ar');
 
-    // نصوص توضيحية ذكية لنظام العمولة المستمرة (10%) تظهر حسب اللغة
-    const commissionTitle = isAr ? '🎁 نظام الأرباح والعمولة المستمرة (10%)' : '🎁 10% Continuous Commission System';
+    // نصوص توضيحية ذكية لنظام العمولة
+    const commissionTitle = isAr ? '🎁 نظام الأرباح والعمولة المستمرة (10%)' : '🎁 10% Continuous Commission';
     const commissionDesc = isAr 
-        ? 'شارك رابط الإحالة الخاص بك مع أصدقائك، وستحصل تلقائياً وبشكل مستمر على عمولة بنسبة 10% من رصيد النقاط التي يجمعونها أثناء لعبهم وتوقعهم للمباريات في التطبيق!' 
-        : 'Share your referral link with friends, and earn a lifetime 10% commission from all the points they collect while predicting matches and playing in the app!';
+        ? 'شارك رابط الإحالة الخاص بك، وستحصل تلقائياً وبشكل مستمر على عمولة بنسبة <b style="color:#fcb045;">10%</b> من رصيد النقاط التي يجمعونها أثناء لعبهم!' 
+        : 'Share your link, and earn a lifetime <b style="color:#fcb045;">10%</b> commission from all the points they collect while playing!';
 
-    // تنسيق الشريط الجانبي حسب لغة واجهة المستخدم ليكون متناسقاً هندسياً
-    const borderStyle = isAr ? 'border-right: 4px solid var(--accent-gold);' : 'border-left: 4px solid var(--accent-gold);';
-    
+    const borderSide = isAr ? 'border-right' : 'border-left';
+
     container.innerHTML = `
-        <h3 style="color: var(--accent-gold); text-align: center;">${tFunc('referralTitle') || (isAr ? 'نظام الإحالة والدعوات' : 'Referral System')}</h3>
-        <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-bottom: 20px;">${tFunc('referralSub') || (isAr ? 'انشر رابطك وابدأ في جني الأرباح حية!' : 'Share your link and earn live rewards!')}</p>
+        <style>
+            /* ====== التأثيرات والبطاقات الزجاجية لقسم الأصدقاء ====== */
+            .glass-info-card {
+                background: linear-gradient(135deg, rgba(252, 176, 69, 0.08), rgba(28, 28, 34, 0.8));
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+                border: 1px solid rgba(252, 176, 69, 0.2);
+                border-radius: 20px;
+                padding: 22px;
+                margin-bottom: 25px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 2px 15px rgba(252, 176, 69, 0.05);
+                ${borderSide}: 5px solid var(--accent-gold, #fcb045);
+            }
+
+            .glass-link-card {
+                background: rgba(28, 28, 34, 0.6);
+                backdrop-filter: blur(15px);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 20px;
+                padding: 25px 20px;
+                margin-bottom: 30px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+                text-align: center;
+            }
+
+            .link-text-box {
+                background: rgba(0, 0, 0, 0.5);
+                color: var(--accent-gold, #fcb045);
+                font-family: monospace;
+                font-size: 0.85rem;
+                padding: 15px;
+                border-radius: 12px;
+                word-break: break-all;
+                border: 1px dashed rgba(252, 176, 69, 0.4);
+                margin-bottom: 20px;
+                box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+            }
+
+            .btn-glass-secondary {
+                background: rgba(255, 255, 255, 0.05);
+                color: var(--accent-gold, #fcb045);
+                border: 1px solid rgba(252, 176, 69, 0.3);
+                backdrop-filter: blur(10px);
+                padding: 14px; 
+                border-radius: 14px;
+                font-weight: 900; 
+                font-size: 0.95rem;
+                cursor: pointer; 
+                flex: 1; 
+                transition: all 0.3s;
+            }
+            .btn-glass-secondary:hover {
+                background: rgba(252, 176, 69, 0.15);
+                box-shadow: 0 0 15px rgba(252, 176, 69, 0.2);
+                transform: translateY(-2px);
+            }
+            .btn-glass-secondary:active { transform: scale(0.95); }
+
+            .glass-friend-row {
+                display: flex; justify-content: space-between; align-items: center;
+                background: rgba(28, 28, 34, 0.5);
+                backdrop-filter: blur(12px);
+                padding: 16px 20px; margin-bottom: 12px;
+                border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);
+                transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+            }
+            .glass-friend-row:hover {
+                background: rgba(40, 40, 50, 0.8);
+                transform: translateY(-3px) scale(1.02);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+                border-color: rgba(252, 176, 69, 0.2);
+            }
+
+            .empty-state-glass {
+                text-align: center; padding: 40px 20px;
+                background: rgba(255,255,255,0.02);
+                border-radius: 20px; border: 1px dashed rgba(255,255,255,0.1);
+            }
+        </style>
+
+        <div style="text-align: center; margin-bottom: 25px;">
+            <h2 style="color: var(--accent-gold, #fcb045); margin: 0 0 5px 0; font-size: 1.8rem; font-weight: 900; text-shadow: 0 4px 15px rgba(252, 176, 69, 0.4);">
+                🤝 ${tFunc('referralTitle') || (isAr ? 'نظام الدعوات' : 'Referral System')}
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; font-weight: bold;">
+                ${tFunc('referralSub') || (isAr ? 'انشر رابطك وابدأ في جني الأرباح حية!' : 'Share your link and earn live rewards!')}
+            </p>
+        </div>
         
-        <div class="card" style="padding: 15px 20px; margin-bottom: 20px; background: rgba(252, 176, 69, 0.03); ${borderStyle} text-align: ${isAr ? 'right' : 'left'};">
-            <h4 style="margin: 0 0 8px 0; color: var(--accent-gold); font-size: 1.05rem; font-weight: bold;">${commissionTitle}</h4>
-            <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">${commissionDesc}</p>
+        <!-- بطاقة شرح العمولة الزجاجية -->
+        <div class="glass-info-card" style="text-align: ${isAr ? 'right' : 'left'};">
+            <h4 style="margin: 0 0 10px 0; color: #fff; font-size: 1.15rem; font-weight: 900; letter-spacing: 0.5px;">${commissionTitle}</h4>
+            <p style="margin: 0; color: #aaa; font-size: 0.9rem; line-height: 1.6;">${commissionDesc}</p>
         </div>
 
-        <div class="card" style="text-align: center; margin-bottom: 20px; padding: 20px;">
-            <p style="color: var(--accent-orange); font-family:monospace; font-size:0.8rem; word-break:break-all; margin:0 0 15px 0;">${referralLink}</p>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button class="btn-action" onclick="window.copyToClipboard('${referralLink}')" style="margin-top: 0; padding: 12px; font-size: 0.9rem; flex: 1;">${tFunc('btnCopy') || (isAr ? 'نسخ الرابط' : 'Copy Link')}</button>
-                <button class="btn-secondary" onclick="window.shareOnTelegram('${referralLink}')" style="margin-top: 0; padding: 12px; font-size: 0.9rem; flex: 1; border-color: var(--accent-orange); color: var(--accent-gold);">${tFunc('btnShare') || (isAr ? 'مشاركة' : 'Share')}</button>
+        <!-- صندوق رابط الإحالة الزجاجي -->
+        <div class="glass-link-card">
+            <div class="link-text-box" id="ref-link-box">${referralLink}</div>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button class="btn-action" onclick="window.copyToClipboard('${referralLink}')" style="margin-top: 0; flex: 1;">
+                    📋 ${tFunc('btnCopy') || (isAr ? 'نسخ الرابط' : 'Copy Link')}
+                </button>
+                <button class="btn-glass-secondary" onclick="window.shareOnTelegram('${referralLink}')">
+                    🚀 ${tFunc('btnShare') || (isAr ? 'مشاركة' : 'Share')}
+                </button>
             </div>
         </div>
 
-        <h4 style="color: var(--text-main);" id="friends-count-title">${tFunc('friendsList') || (isAr ? 'قائمة الأصدقاء المنضمين' : 'Joined Friends List')} (⏳)</h4>
-        <div id="friends-list-container" style="text-align: center; padding: 10px 0;">
-            <span style="color: var(--text-muted); font-size: 0.9rem;">${tFunc('fetchingFriends') || (isAr ? 'جاري جلب بيانات الأصدقاء من السيرفر...' : 'Fetching friends data from server...')}</span>
+        <!-- قائمة الأصدقاء -->
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+            <span style="font-size: 1.2rem;">👥</span>
+            <h4 style="color: #fff; margin: 0; font-size: 1.15rem; font-weight: 800;" id="friends-count-title">
+                ${tFunc('friendsList') || (isAr ? 'قائمة الأصدقاء المنضمين' : 'Joined Friends List')} (⏳)
+            </h4>
+        </div>
+        
+        <div id="friends-list-container" style="text-align: center; padding-bottom: 30px;">
+            <div style="padding: 40px; color: var(--accent-gold); font-weight: 900; animation: pulseGlowIcon 1.5s infinite;">
+                ${tFunc('fetchingFriends') || (isAr ? '⏳ جاري جلب الأبطال...' : '⏳ Fetching heroes...')}
+            </div>
         </div>
     `;
 
@@ -117,41 +217,62 @@ window.renderFriendsPage = async function(container) {
 
     try {
         const realFriends = await window.fetchFriendsFromDB(userState.userId);
-        friendsCountTitle.innerText = `${tFunc('friendsList') || (isAr ? 'قائمة الأصدقاء المنضمين' : 'Joined Friends List')} (${realFriends.length})`;
+        friendsCountTitle.innerText = `${tFunc('friendsList') || (isAr ? 'قائمة الأصدقاء' : 'Joined Friends')} (${realFriends.length})`;
 
         if (realFriends.length > 0) {
             friendsListContainer.style.textAlign = isAr ? 'right' : 'left';
             
             friendsListContainer.innerHTML = realFriends.map(friend => `
-                <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; margin-bottom: 12px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 1.5rem;">👤</span>
-                        <span style="color: var(--text-main); font-weight: bold; font-size: 1.1rem;">${friend.name}</span>
+                <div class="glass-friend-row">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="background: rgba(255,255,255,0.1); width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; border: 1px solid rgba(255,255,255,0.05);">
+                            👤
+                        </div>
+                        <div>
+                            <div style="color: #fff; font-weight: 900; font-size: 1.1rem; letter-spacing: 0.5px;">${friend.name}</div>
+                            <div style="color: #94a3b8; font-size: 0.8rem; font-weight: bold; margin-top: 4px;">
+                                ${tFunc('invites') || (isAr ? 'قام بدعوة:' : 'Invited:')} <span style="color:#fff;">${friend.referralsCount}</span>
+                            </div>
+                        </div>
                     </div>
                     <div style="text-align: ${isAr ? 'left' : 'right'};">
-                        <span style="color: var(--accent-gold); font-size: 0.95rem; font-weight: 900;">+${friend.totalCommission} ZELO</span>
-                        <br><small style="color: var(--text-muted); font-size: 0.75rem;">${tFunc('invites') || (isAr ? 'دعوات الصديق:' : 'Invites:')} ${friend.referralsCount}</small>
+                        <div style="color: var(--accent-gold, #fcb045); font-size: 1.15rem; font-weight: 900; font-family: monospace; text-shadow: 0 0 10px rgba(252, 176, 69, 0.4);">
+                            +${(friend.totalCommission || 0).toLocaleString()} 🏆
+                        </div>
+                        <div style="color: #10b981; font-size: 0.75rem; font-weight: bold; margin-top: 4px;">
+                            ${isAr ? 'عمولة مكتسبة' : 'Commission'}
+                        </div>
                     </div>
                 </div>
             `).join('');
         } else {
             friendsListContainer.innerHTML = `
-                <div class="card" style="text-align: center; padding: 30px 20px;">
-                    <span style="font-size: 3rem; display: block; margin-bottom: 15px;">🤝</span>
-                    <p style="color: var(--text-muted); margin: 0; font-size: 1rem; line-height: 1.5;">${tFunc('emptyFriendsState') || (isAr ? 'لم تقم بدعوة أي أصدقاء حتى الآن.<br>انشر رابطك الخاص لتفعيل عمولتك المستمرة وتبدأ بجمع نقاط ZELO!' : "You haven't invited any friends yet.<br>Share your link to start collecting ZELO points!")}</p>
+                <div class="empty-state-glass">
+                    <span style="font-size: 3.5rem; display: block; margin-bottom: 15px; opacity: 0.8;">🤝</span>
+                    <p style="color: #aaa; margin: 0; font-size: 1rem; line-height: 1.6; font-weight: bold;">
+                        ${tFunc('emptyFriendsState') || (isAr ? 'لم تقم بدعوة أي أصدقاء حتى الآن.<br>انشر رابطك لتفعيل عمولتك المستمرة!' : "You haven't invited any friends yet.<br>Share your link to activate your commission!")}
+                    </p>
                 </div>
             `;
         }
     } catch (error) {
         console.error("حدث خطأ أثناء تحميل بيانات الأصدقاء:", error);
         friendsCountTitle.innerText = `${tFunc('friendsList') || (isAr ? 'قائمة الأصدقاء المنضمين' : 'Joined Friends List')} (0)`;
-        friendsListContainer.innerHTML = `<span style="color: var(--accent-red); font-size: 0.9rem;">${tFunc('dbConnectionError') || (isAr ? 'فشل الاتصال بقاعدة البيانات. يرجى المحاولة لاحقاً.' : "Could not connect to the database. Please try again later.")}</span>`;
+        friendsListContainer.innerHTML = `<div class="empty-state-glass"><span style="color: #fd1d1d; font-size: 0.95rem; font-weight: bold;">${tFunc('dbConnectionError') || (isAr ? '❌ فشل الاتصال. يرجى المحاولة لاحقاً.' : "❌ Connection failed. Please try again.")}</span></div>`;
     }
 };
 
 window.copyToClipboard = function(text) {
     navigator.clipboard.writeText(text).then(() => {
-        let alertMsg = typeof t === 'function' ? t('alertCopied') : (userState.lang === 'ar' ? 'تم نسخ الرابط بنجاح!' : 'Link copied successfully!');
+        let alertMsg = typeof t === 'function' ? t('alertCopied') : (userState.lang === 'ar' ? 'تم نسخ الرابط بنجاح! 📋' : 'Link copied successfully! 📋');
+        
+        // تأثير وميض خفيف لصندوق الرابط عند النسخ
+        const linkBox = document.getElementById('ref-link-box');
+        if(linkBox) {
+            linkBox.style.background = 'rgba(252, 176, 69, 0.3)';
+            setTimeout(() => { linkBox.style.background = 'rgba(0, 0, 0, 0.5)'; }, 300);
+        }
+        
         alert(alertMsg);
     });
 };
