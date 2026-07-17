@@ -75,7 +75,7 @@ window.renderHomeRankingWidget = async function(containerId) {
 
         if (topError) throw topError;
 
-        // تعديل: حساب الترتيب محلياً لتجنب مشكلة الـ RPC غير الموجودة
+        // حساب الترتيب محلياً لتجنب الأخطاء
         const { data: myData } = await supabaseClient
             .from('weekly_match_rankings')
             .select('points_earned')
@@ -484,7 +484,6 @@ window.renderHomeRankingWidget = async function(containerId) {
             historyHtml = `<div style="text-align:center; color:#888; padding:40px; background:rgba(255,255,255,0.02); border-radius:16px; border: 1px solid rgba(255,255,255,0.03); font-size:1.1rem;">${isAr ? 'لم تقم بأي توقعات بعد.' : 'No predictions yet.'}</div>`;
         }
 
-        // تمت إضافة الـ ID هنا ليتم التمرير إليه عند ضغط الزر
         html += `
             <div id="predictions-history-section" style="margin-top: 10px; margin-bottom: 40px; scroll-margin-top: 25px;">
                 <h3 style="margin:0 0 20px 0; color:#fff; font-size: 1.3rem; font-weight: 800;">📜 ${isAr ? 'سجل التوقعات' : 'Prediction History'}</h3>
