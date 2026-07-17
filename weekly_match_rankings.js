@@ -3,8 +3,8 @@
  * الوظيفة: شاشة الترتيب الكاملة (المنصة + البطاقة الأسطورية الشاملة + سجل التوقعات + الترتيب العام)
  */
 
-// دالة مساعدة للمنصة فقط (لا تؤثر على البطاقة الأسطورية)
-const generateAvatar = (name, photoUrl, size = '50px') => {
+// ✅ تم تغيير الاسم هنا لتجنب التضارب مع الملف القديم
+const generateLegendaryAvatar = (name, photoUrl, size = '50px') => {
     if (photoUrl) {
         return `<img src="${photoUrl}" style="width:${size}; height:${size}; border-radius:50%; object-fit:cover; border:2px solid var(--accent-gold, #fcb045); margin: 0 auto; display: block; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">`;
     } else {
@@ -13,9 +13,7 @@ const generateAvatar = (name, photoUrl, size = '50px') => {
     }
 };
 
-// ✅ تم تغيير اسم الدالة هنا لتجنب أي تضارب مع الملف القديم
 window.openLegendaryRankingScreen = function() {
-    // ✅ تم تعديل هذا السطر ليقوم بحذف الواجهة القديمة إن وجدت بدلاً من إيقاف العمل
     const existingScreen = document.getElementById('ranking-full-screen');
     if (existingScreen) existingScreen.remove();
 
@@ -327,7 +325,7 @@ window.renderHomeRankingWidget = async function(containerId) {
                 html += `
                     <div class="podium-card rank-2">
                         <div style="font-size: 1.5rem; margin-bottom: 5px;">🥈</div>
-                        ${generateAvatar(name2, secondPlace.photo_url, '50px')}
+                        ${generateLegendaryAvatar(name2, secondPlace.photo_url, '50px')}
                         <div class="podium-name">${name2}</div>
                         <div class="podium-pts" style="color: #c0c0c0;">${secondPlace.points_earned}</div>
                     </div>`;
@@ -338,7 +336,7 @@ window.renderHomeRankingWidget = async function(containerId) {
                 html += `
                     <div class="podium-card rank-1">
                         <div style="font-size: 2rem; margin-bottom: 5px;">👑</div>
-                        ${generateAvatar(name1, firstPlace.photo_url, '65px')}
+                        ${generateLegendaryAvatar(name1, firstPlace.photo_url, '65px')}
                         <div class="podium-name">${name1}</div>
                         <div class="podium-pts" style="color: var(--accent-gold, #fcb045);">${firstPlace.points_earned}</div>
                     </div>`;
@@ -349,7 +347,7 @@ window.renderHomeRankingWidget = async function(containerId) {
                 html += `
                     <div class="podium-card rank-3">
                         <div style="font-size: 1.5rem; margin-bottom: 5px;">🥉</div>
-                        ${generateAvatar(name3, thirdPlace.photo_url, '45px')}
+                        ${generateLegendaryAvatar(name3, thirdPlace.photo_url, '45px')}
                         <div class="podium-name">${name3}</div>
                         <div class="podium-pts" style="color: #cd7f32;">${thirdPlace.points_earned}</div>
                     </div>`;
@@ -476,7 +474,6 @@ window.renderHomeRankingWidget = async function(containerId) {
             historyHtml = `<div style="text-align:center; color:#888; padding:40px; background:rgba(255,255,255,0.02); border-radius:16px; border: 1px solid rgba(255,255,255,0.03); font-size:1.1rem;">${isAr ? 'لم تقم بأي توقعات بعد.' : 'No predictions yet.'}</div>`;
         }
 
-        // تمت إضافة الـ ID هنا ليتم التمرير إليه عند ضغط الزر
         html += `
             <div id="predictions-history-section" style="margin-top: 10px; margin-bottom: 40px; scroll-margin-top: 25px;">
                 <h3 style="margin:0 0 20px 0; color:#fff; font-size: 1.3rem; font-weight: 800;">📜 ${isAr ? 'سجل التوقعات' : 'Prediction History'}</h3>
