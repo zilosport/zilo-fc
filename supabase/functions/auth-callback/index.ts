@@ -46,8 +46,9 @@ serve(async (req) => {
       twitter_username: userData.data.username 
     }).eq("telegram_id", state)
 
+    // التعديل هنا: إضافة charset=utf-8
     return new Response("<html><body style='text-align:center; padding-top:50px;'><h1>✅ تم ربط حساب X بنجاح!</h1></body></html>", {
-      headers: { "Content-Type": "text/html" }
+      headers: { "Content-Type": "text/html; charset=utf-8" }
     })
 
   } catch (error) {
