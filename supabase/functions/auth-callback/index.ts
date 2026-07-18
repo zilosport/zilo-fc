@@ -7,10 +7,7 @@ serve(async (req) => {
   const state = url.searchParams.get("state") 
 
   if (!code) {
-    return new Response(JSON.stringify({ error: "لا يوجد كود" }), {
-      status: 400,
-      headers: new Headers({ "Content-Type": "application/json; charset=utf-8" })
-    })
+    return new Response("لا يوجد كود", { status: 400 })
   }
 
   const TWITTER_CLIENT_ID = Deno.env.get("TWITTER_CLIENT_ID")
@@ -46,32 +43,15 @@ serve(async (req) => {
       twitter_username: userData.data.username 
     }).eq("telegram_id", state)
 
-    const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="ar" dir="rtl">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>نجاح الربط</title>
-    </head>
-    <body style="text-align:center; padding-top:50px; font-family:sans-serif;">
-      <h1>🌟 تم ربط حساب X بنجاح يا خميس! 🌟</h1>
-    </body>
-    </html>
-    `;
-
-    // التعديل الحاسم هنا: إجبار السيرفر على قراءة الملف كـ HTML و UTF-8
-    return new Response(htmlContent, {
+    // التعديل الجذري: إرسال نص مباشر نظيف ومشفّر بالعربية بدون أي أكواد HTML
+    return new Response("✅ تم ربط حساب X بنجاح! يمكنك الآن إغلاق هذه الصفحة والعودة إلى تيليجرام.", {
       status: 200,
       headers: new Headers({
-        "Content-Type": "text/html; charset=utf-8"
+        "Content-Type": "text/plain; charset=utf-8"
       })
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: new Headers({ "Content-Type": "application/json; charset=utf-8" })
-    })
+    return new Response(error.message, { status: 500 })
   }
 })
