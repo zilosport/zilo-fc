@@ -488,7 +488,8 @@
         
         const state = userState.userId || 'unknown';
 
-        const authUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=users.read%20tweet.read&state=${state}&code_challenge=challenge&code_challenge_method=plain`;
+        // تمت إضافة الصلاحيات الشاملة هنا (like.read و follows.read) 
+        const authUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=users.read%20tweet.read%20like.read%20follows.read&state=${state}&code_challenge=challenge&code_challenge_method=plain`;
 
         const btn = document.getElementById(`btn-task-${taskId}`);
         if (btn) {
