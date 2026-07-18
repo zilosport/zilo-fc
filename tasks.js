@@ -3,8 +3,9 @@
 // ==========================================
 
 (function() {
-    // 1. تحديث الروابط والأسماء إلى Zelo Sport
+    // 1. تحديث الروابط والأسماء إلى Zelo Sport مع إضافة مهمة ربط X
     window.defaultTasksData = [
+        { id: "connect_x", textAr: "ربط حسابك في منصة X (مهمة خاصة)", textEn: "Connect X Account (VIP)", points: 1000, completed: false, url: "#" },
         { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zelo Sport on X", points: 500, completed: false, url: "https://x.com/Zelo_Sport" },
         { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me/ZeloSport" },
         { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://www.youtube.com/@Zelo_Sport" },
@@ -167,7 +168,6 @@
             userState.tasks = window.defaultTasksData.map(t => ({...t}));
         }
 
-        // ستايلات التصميم الجديد المدمجة في الصفحة
         const styles = `
             <style>
                 @keyframes floatGlow {
@@ -230,7 +230,6 @@
                     box-shadow: inset 0 2px 10px rgba(255,255,255,0.1);
                 }
 
-                /* تخصيص ألوان الأيقونات لكل منصة */
                 .icon-x { background: linear-gradient(135deg, #333, #000); border: 1px solid #555; color: white; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
                 .icon-tg { background: linear-gradient(135deg, #0088cc, #005580); border: 1px solid #00aaff; color: white; box-shadow: 0 0 15px rgba(0, 136, 204, 0.3); }
                 .icon-yt { background: linear-gradient(135deg, #ff0000, #990000); border: 1px solid #ff4444; color: white; box-shadow: 0 0 15px rgba(255, 0, 0, 0.3); }
@@ -289,13 +288,11 @@
         await syncTasksFromDB();
         const isAr = (typeof userState !== 'undefined' && userState.lang === 'ar');
 
-        // بناء قائمة المهام بتصميمها الجديد
         let tasksHtml = userState.tasks.map(task => {
-            // تحديد شكل الأيقونة واللون بناءً على نوع المهمة
             let iconClass = 'icon-tg';
             let iconSymbol = '✈️';
             
-            if (task.id === 'x') {
+            if (task.id === 'x' || task.id === 'connect_x') {
                 iconClass = 'icon-x';
                 iconSymbol = '𝕏';
             } else if (task.id === 'youtube') {
@@ -303,10 +300,15 @@
                 iconSymbol = '▶️';
             }
 
-            // تحديد شكل الزر حسب حالة الاكتمال
             const btnClass = task.completed ? 'btn-task-done' : 'btn-task-go';
             const btnText = task.completed ? (isAr ? 'مكتمل ✅' : 'Done ✅') : (isAr ? 'انطلق 🚀' : 'Go 🚀');
             const btnState = task.completed ? 'disabled' : '';
+
+            // التفريق بين أمر مهمة تويتر الخاصة وباقي المهام
+            let buttonAction = `onclick="executeTask('${task.id}', '${task.url}', ${task.points})"`;
+            if (task.id === 'connect_x') {
+                buttonAction = `onclick="startXLogin('${task.id}', ${task.points})"`;
+            }
 
             return `
                 <div class="task-premium-card" style="border-${isAr ? 'right' : 'left'}: 3px solid ${task.completed ? '#10b981' : 'transparent'};">
@@ -321,7 +323,7 @@
                     
                     <button id="btn-task-${task.id}" 
                             class="${btnClass}" 
-                            onclick="executeTask('${task.id}', '${task.url}', ${task.points})" 
+                            ${buttonAction} 
                             ${btnState}>
                         ${btnText}
                     </button>
@@ -329,7 +331,6 @@
             `;
         }).join('');
 
-        // تجميع الهيكل النهائي للصفحة
         container.innerHTML = styles + `
             <div style="text-align: center; margin-bottom: 20px;">
                 <h2 style="color: var(--accent-gold); margin: 0 0 5px 0; font-weight: 900; text-shadow: 0 2px 10px rgba(252, 176, 69, 0.4);">
@@ -340,7 +341,6 @@
                 </p>
             </div>
 
-            <!-- بطاقة المكافأة اليومية الأسطورية -->
             <div class="legendary-daily-card">
                 <div style="text-align: ${isAr ? 'right' : 'left'}; z-index: 1;">
                     <h3 style="margin: 0 0 5px 0; color: #fff; font-size: 1.3rem; font-weight: 900; display:flex; align-items:center; gap:8px;">
@@ -397,7 +397,7 @@
         const btn = document.getElementById(`btn-task-${taskId}`);
         if (btn) {
             btn.innerHTML = isAr ? "⏳ جاري التحقق..." : "⏳ Verifying...";
-            btn.className = "btn-task-done"; // إعطاء شكل معطل مؤقتاً
+            btn.className = "btn-task-done"; 
             btn.disabled = true;
         }
 
@@ -474,4 +474,39 @@
             }
         }
     };
+
+    // ==========================================
+    // 🔐 دالة تسجيل الدخول عبر منصة X (المهمة الخاصة)
+    // ==========================================
+    window.startXLogin = function(taskId, points) {
+        const isAr = (typeof userState !== 'undefined' && userState.lang === 'ar');
+        
+        // قم بوضع Client ID الجديد الذي حصلت عليه من تويتر هنا بدلاً من النص
+        const CLIENT_ID = "b3V3Qm5ITUhoMlV2RFA1OE9mWWs6MTpjaQ"; 
+        
+        const REDIRECT_URI = encodeURIComponent("https://ttyfcwtlasvphkariqhw.supabase.co/functions/v1/auth-callback");
+        
+        const state = userState.userId || 'unknown';
+
+        const authUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=users.read%20tweet.read&state=${state}&code_challenge=challenge&code_challenge_method=plain`;
+
+        const btn = document.getElementById(`btn-task-${taskId}`);
+        if (btn) {
+            btn.innerHTML = isAr ? "⏳ جاري الربط..." : "⏳ Connecting...";
+            btn.className = "btn-task-done";
+            btn.disabled = true;
+        }
+
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+            window.Telegram.WebApp.openLink(authUrl);
+        } else {
+            window.open(authUrl, '_blank');
+        }
+
+        // إعطاء وقت أطول لعملية توثيق تويتر قبل محاولة جلب النقاط
+        setTimeout(() => {
+            executeTask(taskId, "#", points);
+        }, 10000);
+    };
+
 })();
