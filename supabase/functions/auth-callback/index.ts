@@ -7,7 +7,10 @@ serve(async (req) => {
   const state = url.searchParams.get("state") 
 
   if (!code) {
-    return new Response(JSON.stringify({ error: "لا يوجد كود" }), { status: 400 })
+    return new Response(JSON.stringify({ error: "لا يوجد كود" }), {
+      status: 400,
+      headers: new Headers({ "Content-Type": "application/json; charset=utf-8" })
+    })
   }
 
   const TWITTER_CLIENT_ID = Deno.env.get("TWITTER_CLIENT_ID")
@@ -43,7 +46,6 @@ serve(async (req) => {
       twitter_username: userData.data.username 
     }).eq("telegram_id", state)
 
-    // التعديل الجذري هنا
     const htmlContent = `
     <!DOCTYPE html>
     <html lang="ar" dir="rtl">
@@ -58,14 +60,18 @@ serve(async (req) => {
     </html>
     `;
 
+    // التعديل الحاسم هنا: إجبار السيرفر على قراءة الملف كـ HTML و UTF-8
     return new Response(htmlContent, {
       status: 200,
-      headers: {
-        "content-type": "text/html; charset=utf-8"
-      }
+      headers: new Headers({
+        "Content-Type": "text/html; charset=utf-8"
+      })
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 })
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: new Headers({ "Content-Type": "application/json; charset=utf-8" })
+    })
   }
 })
