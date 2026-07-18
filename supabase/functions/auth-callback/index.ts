@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 serve(async (req) => {
   const url = new URL(req.url)
   const code = url.searchParams.get("code")
-  const state = url.searchParams.get("state") // معرف التليجرام
+  const state = url.searchParams.get("state") 
 
   if (!code) {
     return new Response(JSON.stringify({ error: "لا يوجد كود" }), { status: 400 })
@@ -16,7 +16,6 @@ serve(async (req) => {
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 
   try {
-    // 1. استبدال الكود بـ Access Token
     const response = await fetch("https://api.twitter.com/2/oauth2/token", {
       method: "POST",
       headers: {
@@ -33,23 +32,38 @@ serve(async (req) => {
 
     const tokenData = await response.json()
     
-    // 2. جلب بيانات المستخدم
     const userRes = await fetch("https://api.twitter.com/2/users/me", {
       headers: { "Authorization": `Bearer ${tokenData.access_token}` }
     })
     const userData = await userRes.json()
 
-    // 3. التحديث في Supabase
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
     await supabase.from("users").update({ 
       twitter_user_id: userData.data.id,
       twitter_username: userData.data.username 
     }).eq("telegram_id", state)
 
-    // التعديل هنا: إضافة charset=utf-8
-    return new Response("<html><body style='text-align:center; padding-top:50px;'><h1>✅ تم ربط حساب X بنجاح!</h1></body></html>", {
-      headers: { "Content-Type": "text/html; charset=utf-8" }
-    })
+    // التعديل الجذري هنا
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>نجاح الربط</title>
+    </head>
+    <body style="text-align:center; padding-top:50px; font-family:sans-serif;">
+      <h1>🌟 تم ربط حساب X بنجاح يا خميس! 🌟</h1>
+    </body>
+    </html>
+    `;
+
+    return new Response(htmlContent, {
+      status: 200,
+      headers: {
+        "content-type": "text/html; charset=utf-8"
+      }
+    });
 
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 })
