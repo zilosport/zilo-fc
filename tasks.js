@@ -3,9 +3,11 @@
 // ==========================================
 
 (function() {
-    // 1. تحديث الروابط والأسماء إلى Zelo Sport مع إضافة مهمة ربط X
+    // 1. تحديث الروابط والأسماء إلى Zelo Sport مع إضافة مهمة Pump.fun
     window.defaultTasksData = [
         { id: "connect_x", textAr: "ربط حسابك في منصة X (مهمة خاصة)", textEn: "Connect X Account (VIP)", points: 1000, completed: false, url: "#" },
+        // 👇 المهمة الجديدة المخصصة لمنصة Pump.fun لدعم العملة
+        { id: "pump_fun", textAr: "دعم وشراء عملة ZELO FC على Pump.fun", textEn: "Support & Buy ZELO FC on Pump.fun", points: 1500, completed: false, url: "https://pump.fun/coin/BBQmpKimKwAHBoJN2TyRG2CSEYRZhkxfksu1D1q9pump" },
         { id: "x", textAr: "متابعة حساب Zelo Sport على X", textEn: "Follow Zelo Sport on X", points: 500, completed: false, url: "https://x.com/Zelo_Sport" },
         { id: "tg_channel", textAr: "الانضمام لقناة تليجرام", textEn: "Join Telegram Channel", points: 400, completed: false, url: "https://t.me/ZeloSport" },
         { id: "youtube", textAr: "الاشتراك في اليوتيوب", textEn: "Subscribe on YouTube", points: 600, completed: false, url: "https://www.youtube.com/@Zelo_Sport" },
@@ -233,6 +235,8 @@
                 .icon-x { background: linear-gradient(135deg, #333, #000); border: 1px solid #555; color: white; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
                 .icon-tg { background: linear-gradient(135deg, #0088cc, #005580); border: 1px solid #00aaff; color: white; box-shadow: 0 0 15px rgba(0, 136, 204, 0.3); }
                 .icon-yt { background: linear-gradient(135deg, #ff0000, #990000); border: 1px solid #ff4444; color: white; box-shadow: 0 0 15px rgba(255, 0, 0, 0.3); }
+                /* 👇 تصميم أيقونة Pump.fun الجديدة باللون الأخضر المميز */
+                .icon-pump { background: linear-gradient(135deg, #10b981, #047857); border: 1px solid #34d399; color: white; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
 
                 .task-info {
                     flex-grow: 1;
@@ -292,12 +296,16 @@
             let iconClass = 'icon-tg';
             let iconSymbol = '✈️';
             
-            if (task.id === 'x' || task.id === 'connect_x') {
+            if (task.id.startsWith('x') || task.id === 'connect_x') {
                 iconClass = 'icon-x';
                 iconSymbol = '𝕏';
             } else if (task.id === 'youtube') {
                 iconClass = 'icon-yt';
                 iconSymbol = '▶️';
+            // 👇 تعيين أيقونة Pump.fun إذا كان معرف المهمة هو pump_fun
+            } else if (task.id === 'pump_fun') {
+                iconClass = 'icon-pump';
+                iconSymbol = '💊'; // رمز الحبة المميز للمنصة
             }
 
             const btnClass = task.completed ? 'btn-task-done' : 'btn-task-go';
@@ -488,7 +496,6 @@
         
         const state = userState.userId || 'unknown';
 
-        // تمت إضافة الصلاحيات الشاملة هنا (like.read و follows.read) 
         const authUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=users.read%20tweet.read%20like.read%20follows.read&state=${state}&code_challenge=challenge&code_challenge_method=plain`;
 
         const btn = document.getElementById(`btn-task-${taskId}`);
