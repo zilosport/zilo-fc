@@ -115,33 +115,6 @@ function getLanguageSelector() {
     `;
 }
 
-// ====================== صندوق التنبيه والتوضيح (زجاجي) ======================
-function getTutorialBox() {
-    const isAr = userState.lang === 'ar';
-    return `
-        <div class="glass-card-elegant" style="background: linear-gradient(135deg, rgba(252, 176, 69, 0.08), rgba(255, 152, 0, 0.03)); 
-                    border: 1px solid rgba(252, 176, 69, 0.2); 
-                    padding: 20px; margin-bottom: 30px; text-align: center; font-size: 0.95rem; line-height: 1.6; border-radius: 20px;">
-            
-            <strong style="font-size: 1.15rem; color: var(--accent-gold, #fcb045); display: block; margin-bottom: 8px;">
-                ${isAr ? '⚠️ كيفية التسجيل' : '⚠️ How to Register'}
-            </strong>
-            
-            <span style="color: #e0e0e0; display: block; margin-bottom: 15px;">
-                ${isAr 
-                    ? 'اختر نادي <strong style="color:#fff;">محلي</strong> ونادي <strong style="color:#fff;">عالمي</strong> (حد أقصى ناديين)' 
-                    : 'Choose one <strong style="color:#fff;">Local</strong> club and one <strong style="color:#fff;">Global</strong> club (max 2)'}
-            </span>
-            
-            <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" 
-               style="display: inline-flex; align-items: center; gap: 8px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; 
-                      padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.3); transition: all 0.3s;">
-                <span style="font-size: 1.2rem;">🎥</span> ${isAr ? 'شاهد الفيديو التعليمي' : 'Watch Tutorial Video'}
-            </a>
-        </div>
-    `;
-}
-
 // ====================== تغيير اللغة ======================
 window.setLanguage = async function(lang) {
     userState.lang = lang;
@@ -229,9 +202,8 @@ window.renderLoginScreen = function() {
         <div class="animate-screen" style="padding: 25px 15px; text-align: center; max-width: 500px; margin: 0 auto; padding-bottom: 120px; position: relative;">
             
             ${getLanguageSelector()}
-            ${getTutorialBox()}
 
-            <div style="margin-bottom: 25px;">
+            <div style="margin-top: 15px; margin-bottom: 25px;">
                 <div style="font-size: 4rem; margin-bottom: 10px; filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.3));">🌍</div>
                 <h2 style="color: #fff; margin-bottom: 8px; font-weight: 900; font-size: 1.7rem; text-shadow: 0 4px 10px rgba(0,0,0,0.5);">
                     ${isAr ? 'اختر أنديتك المفضلة' : 'Choose Your Clubs'}
